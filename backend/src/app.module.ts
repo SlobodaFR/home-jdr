@@ -4,6 +4,7 @@ import { ServeStaticModule } from '@nestjs/serve-static';
 import { join } from 'path';
 import { DatabaseModule } from './infrastructure/persistence/database.module';
 import { AuthModule } from './interfaces/http/modules/auth.module';
+import { CharacterModule } from './interfaces/http/modules/character.module';
 
 @Module({
   imports: [
@@ -14,6 +15,7 @@ import { AuthModule } from './interfaces/http/modules/auth.module';
       exclude: ['/api*'],
     }),
     AuthModule,
+    CharacterModule,
   ],
 })
 export class AppModule {}
