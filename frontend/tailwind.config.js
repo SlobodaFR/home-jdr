@@ -3,6 +3,12 @@ export default {
   content: ['./index.html', './src/**/*.{ts,tsx}'],
   theme: {
     extend: {
+      screens: {
+        // DESIGN.md > Responsive Behavior: mobile 320-599px (default, no
+        // min-width needed), tablet 600-1023px, desktop 1024px+.
+        tablet: '600px',
+        desktop: '1024px',
+      },
       colors: {
         primary: '#14110f',
         'on-primary': '#f7f2ea',

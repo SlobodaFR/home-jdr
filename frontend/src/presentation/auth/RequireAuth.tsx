@@ -5,7 +5,11 @@ export function RequireAuth({ children }: { children: JSX.Element }) {
   const { user, loading } = useAuth();
 
   if (loading) {
-    return <div className="px-lg py-section text-center text-mute font-body-md">Chargement...</div>;
+    return (
+      <div className="px-lg py-section text-center text-mute font-sans-body text-body-md">
+        Chargement...
+      </div>
+    );
   }
 
   if (!user) {
