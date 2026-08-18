@@ -1,5 +1,6 @@
 import { INestApplication, ValidationPipe } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
+import { EventEmitterModule } from '@nestjs/event-emitter';
 import { Test } from '@nestjs/testing';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import request from 'supertest';
@@ -49,6 +50,9 @@ describe('SessionController (integration)', () => {
     const moduleRef = await Test.createTestingModule({
       imports: [
         ConfigModule.forRoot({ isGlobal: true, ignoreEnvFile: true }),
+        // SubmitTurnActionUseCase emits a TurnResolvedEvent on resolution
+        // (see 06-notifications-push.md) - needs the event bus available.
+        EventEmitterModule.forRoot(),
         TypeOrmModule.forRoot({
           type: 'better-sqlite3',
           database: ':memory:',

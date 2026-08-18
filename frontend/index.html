@@ -7,6 +7,17 @@
       href="https://fonts.googleapis.com/css2?family=Fraunces:wght@600&family=Inter:wght@400;500;600;700&display=swap"
       rel="stylesheet"
     />
+    <!-- PWA installability (tasks/06-notifications-push.md) -->
+    <link rel="manifest" href="/manifest.json" />
+    <link rel="icon" href="/icons/icon-192.png" />
+    <link rel="apple-touch-icon" href="/icons/icon-192.png" />
+    <meta name="theme-color" content="#14110f" />
+    <!-- iOS/iPadOS does not read manifest.json for "Add to Home Screen":
+         these tags are the only way to get a standalone window there
+         (PRD.md - contrainte Apple, not a technical choice). -->
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="home-jdr" />
     <title>home-jdr</title>
   </head>
   <body>

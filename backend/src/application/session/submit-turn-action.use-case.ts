@@ -4,6 +4,7 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { GameSession } from '../../domain/session/game-session';
 import { GameSessionRepository } from '../../domain/session/game-session.repository';
 import { SceneResolverPort } from '../../domain/session/scene-resolver.port';
@@ -12,6 +13,10 @@ import { TurnResolution } from '../../domain/session/turn-resolution';
 import { TurnResolutionRepository } from '../../domain/session/turn-resolution.repository';
 import { TurnSubmission } from '../../domain/session/turn-submission';
 import { TurnSubmissionRepository } from '../../domain/session/turn-submission.repository';
+import {
+  TURN_RESOLVED_EVENT,
+  TurnResolvedEvent,
+} from '../../domain/session/turn-resolved.event';
 
 export interface SubmitTurnActionInput {
   sessionId: string;
@@ -47,6 +52,7 @@ export class SubmitTurnActionUseCase {
     private readonly turnSubmissionRepository: TurnSubmissionRepository,
     private readonly turnResolutionRepository: TurnResolutionRepository,
     private readonly sceneResolver: SceneResolverPort,
+    private readonly eventEmitter: EventEmitter2,
   ) {}
 
   async execute(input: SubmitTurnActionInput): Promise<SubmitTurnActionResult> {
@@ -125,6 +131,21 @@ export class SubmitTurnActionUseCase {
 
     session = session.completeResolution();
     await this.gameSessionRepository.save(session);
+
+    // Isolated event-emitter call (see `CLAUDE.md` /
+    // `tasks/06-notifications-push.md`): every active player now has a
+    // pending action for the next turn - decoupled listeners (push
+    // notifications...) react to this without this use-case knowing they
+    // exist.
+    this.eventEmitter.emit(
+      TURN_RESOLVED_EVENT,
+      new TurnResolvedEvent(
+        session.id,
+        session.name,
+        session.currentTurnNumber,
+        activePlayers.map((activePlayer) => activePlayer.userId),
+      ),
+    );
 
     return { session, submission, resolution };
   }

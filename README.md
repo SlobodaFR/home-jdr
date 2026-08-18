@@ -72,6 +72,31 @@ stade avec des placeholders — elles seront consommées par les tâches
 `tasks/04-llm-orchestration.md`, `05-world-map.md`, `06-notifications-push.md`
 et `08-admin-quotas-cost-guardrails.md`.
 
+### Notifications push (clés VAPID)
+
+`VAPID_PUBLIC_KEY`/`VAPID_PRIVATE_KEY` (`backend/.env.example`) sont la paire
+de clés Web Push (voir `tasks/06-notifications-push.md` et `WebPushAdapter`).
+La clé publique est envoyée telle quelle au navigateur (`GET
+/api/push-subscriptions/vapid-public-key`) ; la clé privée ne doit **jamais**
+quitter le serveur.
+
+Pour (re)générer une paire, une seule fois :
+
+```bash
+npx web-push generate-vapid-keys
+```
+
+En local, collez les deux valeurs dans `backend/.env`. Pour la production,
+stockez-les dans le même item 1Password que les autres secrets du projet
+(`TECH/thomassloboda_home_secrets`, voir `.github/workflows/deploy-vps.yml`)
+sous des champs `JDR_VAPID_PUBLIC_KEY`/`JDR_VAPID_PRIVATE_KEY`, puis
+ajoutez-les à l'étape "Load secrets from 1Password" de ce workflow
+(`VAPID_PUBLIC_KEY: op://TECH/thomassloboda_home_secrets/JDR_VAPID_PUBLIC_KEY`,
+même schéma que `AUTH_CLIENT_SECRET`) ainsi qu'à la liste `envs:` de l'étape
+d'écriture du `.env` distant — non fait dans cette tâche pour rester dans son
+périmètre déclaré (voir `tasks/README.md` — signaler plutôt que modifier un
+fichier hors périmètre), à faire par la session qui merge/déploie.
+
 ## Structure du repo
 
 Voir `tasks/README.md` pour le découpage du travail en lots et leur ordre de
