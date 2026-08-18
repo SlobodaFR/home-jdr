@@ -24,4 +24,14 @@ export class InMemoryCharacterRepository extends CharacterRepository {
     ];
     return Promise.resolve();
   }
+
+  deleteById(id: string): Promise<void> {
+    this.characters = this.characters.filter((c) => c.id !== id);
+    return Promise.resolve();
+  }
+
+  deleteBySessionId(sessionId: string): Promise<void> {
+    this.characters = this.characters.filter((c) => c.sessionId !== sessionId);
+    return Promise.resolve();
+  }
 }

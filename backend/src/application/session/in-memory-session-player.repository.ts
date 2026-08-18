@@ -34,4 +34,16 @@ export class InMemorySessionPlayerRepository extends SessionPlayerRepository {
     ];
     return Promise.resolve();
   }
+
+  deleteBySessionAndUser(sessionId: string, userId: string): Promise<void> {
+    this.players = this.players.filter(
+      (p) => !(p.sessionId === sessionId && p.userId === userId),
+    );
+    return Promise.resolve();
+  }
+
+  deleteBySessionId(sessionId: string): Promise<void> {
+    this.players = this.players.filter((p) => p.sessionId !== sessionId);
+    return Promise.resolve();
+  }
 }

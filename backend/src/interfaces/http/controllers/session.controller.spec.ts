@@ -22,11 +22,13 @@ import { CharacterOrmEntity } from '../../../infrastructure/persistence/entities
 import { GameSessionOrmEntity } from '../../../infrastructure/persistence/entities/game-session.orm-entity';
 import { GameSystemOrmEntity } from '../../../infrastructure/persistence/entities/game-system.orm-entity';
 import { LlmUsageRecordOrmEntity } from '../../../infrastructure/persistence/entities/llm-usage-record.orm-entity';
+import { MapPinOrmEntity } from '../../../infrastructure/persistence/entities/map-pin.orm-entity';
 import { PendingCharacterDeltaOrmEntity } from '../../../infrastructure/persistence/entities/pending-character-delta.orm-entity';
 import { SessionPlayerOrmEntity } from '../../../infrastructure/persistence/entities/session-player.orm-entity';
 import { TurnResolutionOrmEntity } from '../../../infrastructure/persistence/entities/turn-resolution.orm-entity';
 import { TurnSubmissionOrmEntity } from '../../../infrastructure/persistence/entities/turn-submission.orm-entity';
 import { UserProfileOrmEntity } from '../../../infrastructure/persistence/entities/user-profile.orm-entity';
+import { WorldMapOrmEntity } from '../../../infrastructure/persistence/entities/world-map.orm-entity';
 import { CharacterCreationModule } from '../modules/character-creation.module';
 import { SessionModule } from '../modules/session.module';
 import { CurrentUserPayload } from '../decorators/current-user.decorator';
@@ -144,6 +146,8 @@ describe('SessionController (integration)', () => {
             LlmUsageRecordOrmEntity,
             AppSettingOrmEntity,
             CharacterCreationSessionOrmEntity,
+            WorldMapOrmEntity,
+            MapPinOrmEntity,
           ],
         }),
         SessionModule,
@@ -217,6 +221,11 @@ describe('SessionController (integration)', () => {
       post: (path: string) =>
         request(app.getHttpServer())
           .post(path)
+          .set('x-test-user-id', user.id)
+          .set('x-test-user-email', user.email),
+      delete: (path: string) =>
+        request(app.getHttpServer())
+          .delete(path)
           .set('x-test-user-id', user.id)
           .set('x-test-user-email', user.email),
     };
@@ -534,5 +543,141 @@ describe('SessionController (integration)', () => {
     );
     expect(rejectResponse.status).toBe(201);
     expect((rejectResponse.body as { status: string }).status).toBe('rejected');
+  });
+
+  it('lets the sole player delete their solo session (DELETE /sessions/:id -> 204), removing it from their list', async () => {
+    const createResponse = await asUser(creator).post('/sessions').send({
+      gameSystemId: ADULT_ONLY_GAME_SYSTEM_ID,
+      name: 'Partie solo a supprimer',
+      charactersVisibleToOthers: false,
+    });
+    const sessionId = (createResponse.body as { id: string }).id;
+    await seatPlayer(
+      creator,
+      (createResponse.body as { characterCreationSessionId: string })
+        .characterCreationSessionId,
+      'Solo Perso',
+    );
+
+    const deleteResponse = await asUser(creator).delete(
+      `/sessions/${sessionId}`,
+    );
+    expect(deleteResponse.status).toBe(204);
+
+    const listResponse = await asUser(creator).get('/sessions');
+    const ids = (listResponse.body as { id: string }[]).map((s) => s.id);
+    expect(ids).not.toContain(sessionId);
+  });
+
+  it('rejects DELETE /sessions/:id when the session has 2+ active players, even from one of them (403)', async () => {
+    const createResponse = await asUser(creator).post('/sessions').send({
+      gameSystemId: ADULT_ONLY_GAME_SYSTEM_ID,
+      name: 'Partie a deux joueurs',
+      charactersVisibleToOthers: false,
+    });
+    const sessionId = (createResponse.body as { id: string }).id;
+    const inviteCode = (createResponse.body as { inviteCode: string })
+      .inviteCode;
+    await seatPlayer(
+      creator,
+      (createResponse.body as { characterCreationSessionId: string })
+        .characterCreationSessionId,
+      'Joueur 1',
+    );
+    const otherPlayer: TestUser = { id: 'user-del-2p', email: 'p2@test.dev' };
+    const joinResponse = await asUser(otherPlayer)
+      .post('/sessions/join')
+      .send({ inviteCode });
+    await seatPlayer(
+      otherPlayer,
+      (joinResponse.body as { characterCreationSessionId: string })
+        .characterCreationSessionId,
+      'Joueur 2',
+    );
+
+    const deleteResponse = await asUser(creator).delete(
+      `/sessions/${sessionId}`,
+    );
+    expect(deleteResponse.status).toBe(403);
+
+    const stateResponse = await asUser(creator).get(
+      `/sessions/${sessionId}/state`,
+    );
+    expect(stateResponse.status).toBe(200);
+  });
+
+  it('lets one player leave a 3-player session without deleting it, then the last player leaving deletes it (POST /sessions/:id/leave)', async () => {
+    const createResponse = await asUser(creator).post('/sessions').send({
+      gameSystemId: ADULT_ONLY_GAME_SYSTEM_ID,
+      name: 'Partie a quitter',
+      charactersVisibleToOthers: false,
+    });
+    const sessionId = (createResponse.body as { id: string }).id;
+    const inviteCode = (createResponse.body as { inviteCode: string })
+      .inviteCode;
+    await seatPlayer(
+      creator,
+      (createResponse.body as { characterCreationSessionId: string })
+        .characterCreationSessionId,
+      'Joueur 1',
+    );
+
+    const playerTwo: TestUser = { id: 'user-leave-2', email: 'l2@test.dev' };
+    const joinTwo = await asUser(playerTwo)
+      .post('/sessions/join')
+      .send({ inviteCode });
+    await seatPlayer(
+      playerTwo,
+      (joinTwo.body as { characterCreationSessionId: string })
+        .characterCreationSessionId,
+      'Joueur 2',
+    );
+
+    // Player two leaves - session survives with the creator still seated.
+    const leaveTwoResponse = await asUser(playerTwo).post(
+      `/sessions/${sessionId}/leave`,
+    );
+    expect(leaveTwoResponse.status).toBe(201);
+    expect(
+      (leaveTwoResponse.body as { sessionDeleted: boolean }).sessionDeleted,
+    ).toBe(false);
+    const stateAfterFirstLeave = await asUser(creator).get(
+      `/sessions/${sessionId}/state`,
+    );
+    expect(stateAfterFirstLeave.status).toBe(200);
+
+    // The creator (now the last active player) leaves too - cascades away.
+    const leaveCreatorResponse = await asUser(creator).post(
+      `/sessions/${sessionId}/leave`,
+    );
+    expect(leaveCreatorResponse.status).toBe(201);
+    expect(
+      (leaveCreatorResponse.body as { sessionDeleted: boolean }).sessionDeleted,
+    ).toBe(true);
+    const stateAfterLastLeave = await asUser(creator).get(
+      `/sessions/${sessionId}/state`,
+    );
+    expect(stateAfterLastLeave.status).toBe(404);
+  });
+
+  it('rejects a non-player leaving a session (403)', async () => {
+    const createResponse = await asUser(creator).post('/sessions').send({
+      gameSystemId: ADULT_ONLY_GAME_SYSTEM_ID,
+      name: 'Partie protegee',
+      charactersVisibleToOthers: false,
+    });
+    const sessionId = (createResponse.body as { id: string }).id;
+    await seatPlayer(
+      creator,
+      (createResponse.body as { characterCreationSessionId: string })
+        .characterCreationSessionId,
+      'Joueur seul',
+    );
+
+    const intruder: TestUser = { id: 'user-intruder', email: 'i@test.dev' };
+    const leaveResponse = await asUser(intruder).post(
+      `/sessions/${sessionId}/leave`,
+    );
+    expect(leaveResponse.status).toBe(403);
   });
 });

@@ -43,6 +43,10 @@ export class TypeOrmPendingCharacterDeltaRepository extends PendingCharacterDelt
       createdAt: pendingDelta.createdAt,
     });
   }
+
+  async deleteBySessionId(sessionId: string): Promise<void> {
+    await this.repository.delete({ sessionId });
+  }
 }
 
 function toDomain(row: PendingCharacterDeltaOrmEntity): PendingCharacterDelta {

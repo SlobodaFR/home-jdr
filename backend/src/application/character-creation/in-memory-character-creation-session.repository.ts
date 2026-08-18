@@ -29,4 +29,11 @@ export class InMemoryCharacterCreationSessionRepository extends CharacterCreatio
     ];
     return Promise.resolve();
   }
+
+  deleteByGameSessionId(gameSessionId: string): Promise<void> {
+    this.sessions = this.sessions.filter(
+      (s) => s.gameSessionId !== gameSessionId,
+    );
+    return Promise.resolve();
+  }
 }

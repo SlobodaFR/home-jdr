@@ -24,4 +24,11 @@ export class InMemoryTurnResolutionRepository extends TurnResolutionRepository {
     ];
     return Promise.resolve();
   }
+
+  deleteBySessionId(sessionId: string): Promise<void> {
+    this.resolutions = this.resolutions.filter(
+      (r) => r.sessionId !== sessionId,
+    );
+    return Promise.resolve();
+  }
 }

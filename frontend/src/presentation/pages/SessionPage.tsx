@@ -1,5 +1,5 @@
 import { FormEvent, useCallback, useEffect, useState } from 'react';
-import { Link, useParams } from 'react-router-dom';
+import { Link, useNavigate, useParams } from 'react-router-dom';
 import { Character } from '../../domain/character';
 import { GameSystem, MechanicalAction } from '../../domain/game-system';
 import { DiceRoll, PendingCharacterDeltaView, SessionState } from '../../domain/session';
@@ -9,7 +9,9 @@ import { QuotaExceededClientError, sessionApiClient } from '../../infrastructure
 import { useAuth } from '../auth/AuthProvider';
 import { ActionInput } from '../components/ActionInput';
 import { BackButton } from '../components/BackButton';
+import { ButtonDanger } from '../components/ButtonDanger';
 import { ButtonPrimary } from '../components/ButtonPrimary';
+import { ButtonSecondary } from '../components/ButtonSecondary';
 import { DeltaProposalCard, DeltaProposalItem } from '../components/DeltaProposalCard';
 import { DiceRollChip } from '../components/DiceRollChip';
 import { InviteCodeBadge } from '../components/InviteCodeBadge';
@@ -68,6 +70,7 @@ function deltaProposalItems(delta: PendingCharacterDeltaView): DeltaProposalItem
 
 export function SessionPage() {
   const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
   const { user } = useAuth();
   const [state, setState] = useState<SessionState | null>(null);
   const [gameSystem, setGameSystem] = useState<GameSystem | null>(null);
@@ -77,6 +80,7 @@ export function SessionPage() {
   const [mechanicalActionKey, setMechanicalActionKey] = useState(FREE_ACTION_VALUE);
   const [submitting, setSubmitting] = useState(false);
   const [pendingDeltaAction, setPendingDeltaAction] = useState<string | null>(null);
+  const [leavingOrDeleting, setLeavingOrDeleting] = useState(false);
 
   const refresh = useCallback(() => {
     if (!id) {
@@ -182,6 +186,42 @@ export function SessionPage() {
     }
   }
 
+  async function handleDeleteSession() {
+    if (!id) {
+      return;
+    }
+    if (!window.confirm('Supprimer definitivement cette partie ? Cette action est irreversible.')) {
+      return;
+    }
+    setLeavingOrDeleting(true);
+    setError(null);
+    try {
+      await sessionApiClient.deleteSession(id);
+      navigate('/');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'La suppression de la partie a échoué.');
+      setLeavingOrDeleting(false);
+    }
+  }
+
+  async function handleLeaveSession() {
+    if (!id) {
+      return;
+    }
+    if (!window.confirm('Quitter cette partie ?')) {
+      return;
+    }
+    setLeavingOrDeleting(true);
+    setError(null);
+    try {
+      await sessionApiClient.leaveSession(id);
+      navigate('/');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Le fait de quitter la partie a échoué.');
+      setLeavingOrDeleting(false);
+    }
+  }
+
   if (error && !state) {
     return (
       <main className="min-h-screen bg-canvas px-lg py-section">
@@ -212,6 +252,16 @@ export function SessionPage() {
             Carte du monde
           </Link>
           <InviteCodeBadge code={state.session.inviteCode} />
+          {state.players.length === 1 && (
+            <ButtonDanger onClick={() => void handleDeleteSession()} disabled={leavingOrDeleting}>
+              Supprimer la partie
+            </ButtonDanger>
+          )}
+          {state.players.length > 1 && (
+            <ButtonSecondary onClick={() => void handleLeaveSession()} disabled={leavingOrDeleting}>
+              Quitter la partie
+            </ButtonSecondary>
+          )}
         </div>
       </div>
 

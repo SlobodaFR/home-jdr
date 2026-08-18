@@ -18,8 +18,16 @@ vi.mock('../../infrastructure/session-api-client', async () => {
       submitTurnAction: vi.fn(),
       validateDelta: vi.fn(),
       rejectDelta: vi.fn(),
+      deleteSession: vi.fn(),
+      leaveSession: vi.fn(),
     },
   };
+});
+
+const mockedNavigate = vi.fn();
+vi.mock('react-router-dom', async () => {
+  const actual = await vi.importActual<typeof import('react-router-dom')>('react-router-dom');
+  return { ...actual, useNavigate: () => mockedNavigate };
 });
 
 vi.mock('../../infrastructure/api-client', () => ({
@@ -77,6 +85,7 @@ describe('SessionPage', () => {
 
   afterEach(() => {
     vi.restoreAllMocks();
+    mockedNavigate.mockReset();
     cleanup();
   });
 
@@ -271,6 +280,100 @@ describe('SessionPage', () => {
       expect(
         screen.getByText('Le MJ numérique a atteint sa limite du jour, réessaie plus tard'),
       ).toBeInTheDocument();
+    });
+  });
+
+  it('shows "Supprimer la partie" for a solo session and deletes it on confirm', async () => {
+    vi.mocked(sessionApiClient.getState).mockResolvedValue({
+      session: baseSession,
+      players: [{ userId: 'user-1', characterId: 'character-1', hasSubmittedCurrentTurn: false }],
+      recentTurns: [],
+    });
+    vi.mocked(apiClient.fetchGameSystems).mockResolvedValue([gameSystem]);
+    vi.mocked(sessionApiClient.deleteSession).mockResolvedValue(undefined);
+    vi.spyOn(window, 'confirm').mockReturnValue(true);
+
+    const user = userEvent.setup();
+    renderPage();
+
+    const deleteButton = await screen.findByRole('button', { name: 'Supprimer la partie' });
+    expect(screen.queryByRole('button', { name: 'Quitter la partie' })).not.toBeInTheDocument();
+    await user.click(deleteButton);
+
+    await waitFor(() => {
+      expect(sessionApiClient.deleteSession).toHaveBeenCalledWith('session-1');
+    });
+    await waitFor(() => {
+      expect(mockedNavigate).toHaveBeenCalledWith('/');
+    });
+  });
+
+  it('does not delete a solo session when the confirm dialog is dismissed', async () => {
+    vi.mocked(sessionApiClient.getState).mockResolvedValue({
+      session: baseSession,
+      players: [{ userId: 'user-1', characterId: 'character-1', hasSubmittedCurrentTurn: false }],
+      recentTurns: [],
+    });
+    vi.mocked(apiClient.fetchGameSystems).mockResolvedValue([gameSystem]);
+    vi.spyOn(window, 'confirm').mockReturnValue(false);
+
+    const user = userEvent.setup();
+    renderPage();
+
+    await user.click(await screen.findByRole('button', { name: 'Supprimer la partie' }));
+
+    expect(sessionApiClient.deleteSession).not.toHaveBeenCalled();
+    expect(mockedNavigate).not.toHaveBeenCalled();
+  });
+
+  it('shows "Quitter la partie" for a group session and leaves it on confirm', async () => {
+    vi.mocked(sessionApiClient.getState).mockResolvedValue({
+      session: baseSession,
+      players: [
+        { userId: 'user-1', characterId: 'character-1', hasSubmittedCurrentTurn: false },
+        { userId: 'user-2', characterId: 'character-2', hasSubmittedCurrentTurn: false },
+      ],
+      recentTurns: [],
+    });
+    vi.mocked(apiClient.fetchGameSystems).mockResolvedValue([gameSystem]);
+    vi.mocked(sessionApiClient.leaveSession).mockResolvedValue({ sessionDeleted: false });
+    vi.spyOn(window, 'confirm').mockReturnValue(true);
+
+    const user = userEvent.setup();
+    renderPage();
+
+    const leaveButton = await screen.findByRole('button', { name: 'Quitter la partie' });
+    expect(screen.queryByRole('button', { name: 'Supprimer la partie' })).not.toBeInTheDocument();
+    await user.click(leaveButton);
+
+    await waitFor(() => {
+      expect(sessionApiClient.leaveSession).toHaveBeenCalledWith('session-1');
+    });
+    await waitFor(() => {
+      expect(mockedNavigate).toHaveBeenCalledWith('/');
+    });
+  });
+
+  it('navigates away after leaving even when the leave cascaded the whole session away', async () => {
+    vi.mocked(sessionApiClient.getState).mockResolvedValue({
+      session: baseSession,
+      players: [
+        { userId: 'user-1', characterId: 'character-1', hasSubmittedCurrentTurn: false },
+        { userId: 'user-2', characterId: 'character-2', hasSubmittedCurrentTurn: false },
+      ],
+      recentTurns: [],
+    });
+    vi.mocked(apiClient.fetchGameSystems).mockResolvedValue([gameSystem]);
+    vi.mocked(sessionApiClient.leaveSession).mockResolvedValue({ sessionDeleted: true });
+    vi.spyOn(window, 'confirm').mockReturnValue(true);
+
+    const user = userEvent.setup();
+    renderPage();
+
+    await user.click(await screen.findByRole('button', { name: 'Quitter la partie' }));
+
+    await waitFor(() => {
+      expect(mockedNavigate).toHaveBeenCalledWith('/');
     });
   });
 });

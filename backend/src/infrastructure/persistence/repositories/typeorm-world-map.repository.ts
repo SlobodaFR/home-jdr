@@ -28,6 +28,10 @@ export class TypeOrmWorldMapRepository extends WorldMapRepository {
       createdAt: worldMap.createdAt,
     });
   }
+
+  async deleteBySessionId(sessionId: string): Promise<void> {
+    await this.repository.delete({ sessionId });
+  }
 }
 
 function toDomain(row: WorldMapOrmEntity): WorldMap {

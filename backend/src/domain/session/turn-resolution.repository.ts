@@ -15,4 +15,6 @@ export abstract class TurnResolutionRepository {
     limit: number,
   ): Promise<TurnResolution[]>;
   abstract save(resolution: TurnResolution): Promise<void>;
+  /** Bulk delete for `DeleteSessionCascade`. */
+  abstract deleteBySessionId(sessionId: string): Promise<void>;
 }
