@@ -36,6 +36,16 @@ jobs:
           FRONTEND_URL: op://TECH/thomassloboda_home_secrets/JDR_FRONTEND_URL
           ADMIN_EMAILS: op://TECH/thomassloboda_home_secrets/JDR_ADMIN_EMAILS
           DATABASE_PATH: op://TECH/thomassloboda_home_secrets/JDR_DATABASE_PATH
+          LLM_PROVIDER: op://TECH/thomassloboda_home_secrets/JDR_LLM_PROVIDER
+          ANTHROPIC_API_KEY: op://TECH/thomassloboda_home_secrets/JDR_ANTHROPIC_API_KEY
+          ANTHROPIC_MODEL: op://TECH/thomassloboda_home_secrets/JDR_ANTHROPIC_MODEL
+          OPENAI_API_KEY: op://TECH/thomassloboda_home_secrets/JDR_OPENAI_API_KEY
+          OPENAI_MODEL: op://TECH/thomassloboda_home_secrets/JDR_OPENAI_MODEL
+          ROLLING_SUMMARY_INTERVAL: op://TECH/thomassloboda_home_secrets/JDR_ROLLING_SUMMARY_INTERVAL
+          IMAGE_PROVIDER: op://TECH/thomassloboda_home_secrets/JDR_IMAGE_PROVIDER
+          VAPID_PUBLIC_KEY: op://TECH/thomassloboda_home_secrets/JDR_VAPID_PUBLIC_KEY
+          VAPID_PRIVATE_KEY: op://TECH/thomassloboda_home_secrets/JDR_VAPID_PRIVATE_KEY
+          DAILY_LLM_QUOTA: op://TECH/thomassloboda_home_secrets/JDR_DAILY_LLM_QUOTA
           MINIO_ENDPOINT: op://TECH/thomassloboda_home_secrets/MINIO_ENDPOINT
           MINIO_BUCKET: op://TECH/thomassloboda_home_secrets/MINIO_BUCKET
           MINIO_REPLICA_PATH: op://TECH/thomassloboda_home_secrets/JDR_MINIO_REPLICA_PATH
@@ -76,7 +86,7 @@ jobs:
           host: ${{ env.VPS_HOST }}
           username: ${{ env.VPS_USER }}
           key: ${{ env.VPS_SSH_KEY }}
-          envs: AUTH_SERVICE_URL,AUTH_CLIENT_ID,AUTH_CLIENT_SECRET,AUTH_WEBHOOK_SECRET,FRONTEND_URL,DATABASE_PATH,MINIO_ENDPOINT,MINIO_BUCKET,MINIO_REPLICA_PATH,MINIO_REGION,MINIO_ACCESS_KEY_ID,MINIO_SECRET_ACCESS_KEY,ADMIN_EMAILS
+          envs: AUTH_SERVICE_URL,AUTH_CLIENT_ID,AUTH_CLIENT_SECRET,AUTH_WEBHOOK_SECRET,FRONTEND_URL,DATABASE_PATH,MINIO_ENDPOINT,MINIO_BUCKET,MINIO_REPLICA_PATH,MINIO_REGION,MINIO_ACCESS_KEY_ID,MINIO_SECRET_ACCESS_KEY,ADMIN_EMAILS,LLM_PROVIDER,ANTHROPIC_API_KEY,ANTHROPIC_MODEL,OPENAI_API_KEY,OPENAI_MODEL,ROLLING_SUMMARY_INTERVAL,IMAGE_PROVIDER,VAPID_PUBLIC_KEY,VAPID_PRIVATE_KEY,DAILY_LLM_QUOTA
           script: |
             mkdir -p /opt/jdr/deploy
             cat > /opt/jdr/deploy/.env <<EOF
@@ -95,6 +105,16 @@ jobs:
             MINIO_ACCESS_KEY_ID=$MINIO_ACCESS_KEY_ID
             MINIO_SECRET_ACCESS_KEY=$MINIO_SECRET_ACCESS_KEY
             ADMIN_EMAILS=$ADMIN_EMAILS
+            LLM_PROVIDER=$LLM_PROVIDER
+            ANTHROPIC_API_KEY=$ANTHROPIC_API_KEY
+            ANTHROPIC_MODEL=$ANTHROPIC_MODEL
+            OPENAI_API_KEY=$OPENAI_API_KEY
+            OPENAI_MODEL=$OPENAI_MODEL
+            ROLLING_SUMMARY_INTERVAL=$ROLLING_SUMMARY_INTERVAL
+            IMAGE_PROVIDER=$IMAGE_PROVIDER
+            VAPID_PUBLIC_KEY=$VAPID_PUBLIC_KEY
+            VAPID_PRIVATE_KEY=$VAPID_PRIVATE_KEY
+            DAILY_LLM_QUOTA=$DAILY_LLM_QUOTA
             EOF
 
       - name: Sync deploy files
