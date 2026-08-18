@@ -37,6 +37,7 @@ interface SessionSummaryResponse {
   inviteCode: string;
   status: SessionStatus;
   currentTurnNumber: number;
+  createdByUserId: string;
   createdAt: Date;
 }
 
@@ -69,6 +70,7 @@ function toSummaryResponse(session: GameSession): SessionSummaryResponse {
     inviteCode: session.inviteCode,
     status: session.status,
     currentTurnNumber: session.currentTurnNumber,
+    createdByUserId: session.createdByUserId,
     createdAt: session.createdAt,
   };
 }

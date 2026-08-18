@@ -7,6 +7,7 @@ export interface SessionSummary {
   inviteCode: string;
   status: SessionStatus;
   currentTurnNumber: number;
+  createdByUserId: string;
   createdAt: string;
 }
 
