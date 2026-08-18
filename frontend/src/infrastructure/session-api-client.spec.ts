@@ -13,6 +13,8 @@ describe('sessionApiClient', () => {
     inviteCode: 'XK4R2P',
     status: 'waiting_for_players' as const,
     currentTurnNumber: 1,
+    createdByUserId: 'user-1',
+    charactersVisibleToOthers: false,
     createdAt: '2026-01-01T00:00:00.000Z',
   };
 
@@ -28,20 +30,20 @@ describe('sessionApiClient', () => {
   });
 
   describe('create', () => {
-    it('posts the session payload and returns the created session with characterId', async () => {
+    it('posts the session payload and returns the created session with a characterCreationSessionId', async () => {
       const fetchMock = vi.fn().mockResolvedValue({
         ok: true,
-        json: async () => ({ ...session, characterId: 'character-1' }),
+        json: async () => ({ ...session, characterCreationSessionId: 'creation-1' }),
       });
       vi.stubGlobal('fetch', fetchMock);
 
       const result = await sessionApiClient.create({
         gameSystemId: 'game-system-1',
         name: 'La quete du dragon',
-        characterName: 'Aragorn',
+        charactersVisibleToOthers: false,
       });
 
-      expect(result.characterId).toBe('character-1');
+      expect(result.characterCreationSessionId).toBe('creation-1');
       expect(fetchMock).toHaveBeenCalledWith(
         '/api/sessions',
         expect.objectContaining({ method: 'POST', credentials: 'include' }),
@@ -62,25 +64,23 @@ describe('sessionApiClient', () => {
         sessionApiClient.create({
           gameSystemId: 'game-system-1',
           name: 'La quete du dragon',
-          characterName: 'Aragorn',
+          charactersVisibleToOthers: false,
         }),
       ).rejects.toThrow(/enfant/);
     });
   });
 
   describe('join', () => {
-    it('posts the invite code and character name', async () => {
+    it('posts the invite code and returns the session with a characterCreationSessionId', async () => {
       const fetchMock = vi.fn().mockResolvedValue({
         ok: true,
-        json: async () => ({ ...session, characterId: 'character-2' }),
+        json: async () => ({ ...session, characterCreationSessionId: 'creation-2' }),
       });
       vi.stubGlobal('fetch', fetchMock);
 
-      await sessionApiClient.join({
-        inviteCode: 'XK4R2P',
-        characterName: 'Legolas',
-      });
+      const result = await sessionApiClient.join({ inviteCode: 'XK4R2P' });
 
+      expect(result.characterCreationSessionId).toBe('creation-2');
       expect(fetchMock).toHaveBeenCalledWith(
         '/api/sessions/join',
         expect.objectContaining({ method: 'POST', credentials: 'include' }),

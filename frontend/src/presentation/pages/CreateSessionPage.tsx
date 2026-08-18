@@ -1,28 +1,27 @@
 import { FormEvent, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { GameSystem } from '../../domain/game-system';
-import { SessionWithCharacter } from '../../domain/session';
 import { apiClient } from '../../infrastructure/api-client';
 import { sessionApiClient } from '../../infrastructure/session-api-client';
 import { ButtonPrimary } from '../components/ButtonPrimary';
 import { ButtonSecondary } from '../components/ButtonSecondary';
-import { InviteCodeBadge } from '../components/InviteCodeBadge';
 
 /**
- * "Créer une partie": picks a JdR, names the session and the creator's
- * character, then shows the generated invite code (InviteCodeBadge) for
- * sharing before entering the session - see
- * tasks/03-session-engine.md ("Rejoindre une partie" / code d'invitation).
+ * "Créer une partie": picks a JdR and names the session, chooses whether
+ * character sheets are visible between players, then navigates to the
+ * creator's guided character-creation chat - see
+ * `CharacterCreationChatPage.tsx`. Character creation is no longer an
+ * instant name field here: it is a guided AI conversation started once the
+ * session exists (see `PRD.md` addendum).
  */
 export function CreateSessionPage() {
   const navigate = useNavigate();
   const [gameSystems, setGameSystems] = useState<GameSystem[]>([]);
   const [gameSystemId, setGameSystemId] = useState('');
   const [name, setName] = useState('');
-  const [characterName, setCharacterName] = useState('');
+  const [charactersVisibleToOthers, setCharactersVisibleToOthers] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [created, setCreated] = useState<SessionWithCharacter | null>(null);
 
   useEffect(() => {
     apiClient
@@ -36,7 +35,7 @@ export function CreateSessionPage() {
 
   async function handleSubmit(event: FormEvent) {
     event.preventDefault();
-    if (!gameSystemId || !name.trim() || !characterName.trim()) {
+    if (!gameSystemId || !name.trim()) {
       setError('Tous les champs sont requis.');
       return;
     }
@@ -47,31 +46,14 @@ export function CreateSessionPage() {
       const session = await sessionApiClient.create({
         gameSystemId,
         name,
-        characterName,
+        charactersVisibleToOthers,
       });
-      setCreated(session);
+      navigate(`/character-creation/${session.characterCreationSessionId}`);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'La création de la partie a échoué.');
     } finally {
       setSubmitting(false);
     }
-  }
-
-  if (created) {
-    return (
-      <main className="min-h-screen bg-canvas px-lg py-section flex flex-col gap-xl">
-        <h1 className="font-sans-ui text-heading-xl text-ink">Partie créée</h1>
-        <div className="flex flex-col gap-sm">
-          <p className="font-sans-body text-body-md text-ash">
-            Partagez ce code pour inviter d&apos;autres joueurs :
-          </p>
-          <InviteCodeBadge code={created.inviteCode} />
-        </div>
-        <ButtonPrimary onClick={() => navigate(`/sessions/${created.id}`)}>
-          Aller à la partie
-        </ButtonPrimary>
-      </main>
-    );
   }
 
   return (
@@ -103,13 +85,13 @@ export function CreateSessionPage() {
           />
         </label>
 
-        <label className="flex flex-col gap-xs">
-          <span className="font-body-strong text-ink">Nom de votre personnage</span>
+        <label className="flex items-center gap-sm">
           <input
-            className="border border-hairline rounded-sm px-md py-sm font-body-md text-ink bg-canvas focus:border-2 focus:border-ink outline-none"
-            value={characterName}
-            onChange={(event) => setCharacterName(event.target.value)}
+            type="checkbox"
+            checked={charactersVisibleToOthers}
+            onChange={(event) => setCharactersVisibleToOthers(event.target.checked)}
           />
+          <span className="font-body-md text-ink">Fiches visibles entre joueurs</span>
         </label>
 
         {error && <p className="font-body-md text-danger">{error}</p>}

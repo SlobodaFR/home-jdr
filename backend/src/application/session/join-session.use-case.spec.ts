@@ -1,4 +1,5 @@
-import { InMemoryCharacterRepository } from '../character/in-memory-character.repository';
+import { CharacterCreationSession } from '../../domain/character-creation/character-creation-session';
+import { InMemoryCharacterCreationSessionRepository } from '../character-creation/in-memory-character-creation-session.repository';
 import { CharacterSheetSchema } from '../../domain/game-system/character-sheet-schema';
 import { GameSystem } from '../../domain/game-system/game-system';
 import {
@@ -8,7 +9,6 @@ import {
 import { GameSession } from '../../domain/session/game-session';
 import { JoinSessionUseCase } from './join-session.use-case';
 import { InMemoryGameSessionRepository } from './in-memory-game-session.repository';
-import { InMemorySessionPlayerRepository } from './in-memory-session-player.repository';
 
 class InMemoryGameSystemRepository extends GameSystemRepository {
   constructor(private gameSystems: GameSystem[] = []) {
@@ -64,34 +64,32 @@ function buildSession(overrides: Partial<{ gameSystemId: string }> = {}) {
 }
 
 describe('JoinSessionUseCase', () => {
-  it('lets a second user join with the invite code, creating their character and seat', async () => {
+  it('lets a second user join with the invite code, starting their character-creation conversation', async () => {
     const session = buildSession();
     const gameSessionRepository = new InMemoryGameSessionRepository([session]);
     const gameSystemRepository = new InMemoryGameSystemRepository([
       buildGameSystem(),
     ]);
-    const sessionPlayerRepository = new InMemorySessionPlayerRepository();
-    const characterRepository = new InMemoryCharacterRepository();
+    const characterCreationSessionRepository =
+      new InMemoryCharacterCreationSessionRepository();
     const useCase = new JoinSessionUseCase(
       gameSessionRepository,
       gameSystemRepository,
-      sessionPlayerRepository,
-      characterRepository,
+      characterCreationSessionRepository,
     );
 
-    const { character } = await useCase.execute({
+    const { characterCreationSessionId } = await useCase.execute({
       inviteCode: 'XK4R2P',
       userId: 'user-2',
       userRole: 'adult',
-      characterName: 'Legolas',
     });
 
-    expect(character.sessionId).toBe(session.id);
-    const player = await sessionPlayerRepository.findBySessionAndUser(
-      session.id,
-      'user-2',
+    const creationSession = await characterCreationSessionRepository.findById(
+      characterCreationSessionId,
     );
-    expect(player?.characterId).toBe(character.id);
+    expect(creationSession?.gameSessionId).toBe(session.id);
+    expect(creationSession?.userId).toBe('user-2');
+    expect(creationSession?.status).toBe('in_progress');
   });
 
   it('accepts an invite code regardless of casing', async () => {
@@ -99,8 +97,7 @@ describe('JoinSessionUseCase', () => {
     const useCase = new JoinSessionUseCase(
       new InMemoryGameSessionRepository([session]),
       new InMemoryGameSystemRepository([buildGameSystem()]),
-      new InMemorySessionPlayerRepository(),
-      new InMemoryCharacterRepository(),
+      new InMemoryCharacterCreationSessionRepository(),
     );
 
     await expect(
@@ -108,7 +105,6 @@ describe('JoinSessionUseCase', () => {
         inviteCode: 'xk4r2p',
         userId: 'user-2',
         userRole: 'adult',
-        characterName: 'Legolas',
       }),
     ).resolves.toBeDefined();
   });
@@ -117,8 +113,7 @@ describe('JoinSessionUseCase', () => {
     const useCase = new JoinSessionUseCase(
       new InMemoryGameSessionRepository(),
       new InMemoryGameSystemRepository([buildGameSystem()]),
-      new InMemorySessionPlayerRepository(),
-      new InMemoryCharacterRepository(),
+      new InMemoryCharacterCreationSessionRepository(),
     );
 
     await expect(
@@ -126,7 +121,6 @@ describe('JoinSessionUseCase', () => {
         inviteCode: 'NOPE12',
         userId: 'user-2',
         userRole: 'adult',
-        characterName: 'Legolas',
       }),
     ).rejects.toThrow();
   });
@@ -138,8 +132,7 @@ describe('JoinSessionUseCase', () => {
       new InMemoryGameSystemRepository([
         buildGameSystem({ adaptedForChildren: false }),
       ]),
-      new InMemorySessionPlayerRepository(),
-      new InMemoryCharacterRepository(),
+      new InMemoryCharacterCreationSessionRepository(),
     );
 
     await expect(
@@ -147,7 +140,6 @@ describe('JoinSessionUseCase', () => {
         inviteCode: 'XK4R2P',
         userId: 'child-1',
         userRole: 'child',
-        characterName: 'Petit hero',
       }),
     ).rejects.toThrow(/enfant/);
   });
@@ -159,8 +151,7 @@ describe('JoinSessionUseCase', () => {
       new InMemoryGameSystemRepository([
         buildGameSystem({ adaptedForChildren: true }),
       ]),
-      new InMemorySessionPlayerRepository(),
-      new InMemoryCharacterRepository(),
+      new InMemoryCharacterCreationSessionRepository(),
     );
 
     await expect(
@@ -168,37 +159,65 @@ describe('JoinSessionUseCase', () => {
         inviteCode: 'XK4R2P',
         userId: 'child-1',
         userRole: 'child',
-        characterName: 'Petit hero',
       }),
     ).resolves.toBeDefined();
   });
 
-  it('is idempotent: re-joining an already-seated user returns the existing seat', async () => {
+  it('is idempotent: re-joining an already-mid-creation user returns the SAME creation session, never a duplicate', async () => {
     const session = buildSession();
-    const sessionPlayerRepository = new InMemorySessionPlayerRepository();
-    const characterRepository = new InMemoryCharacterRepository();
+    const characterCreationSessionRepository =
+      new InMemoryCharacterCreationSessionRepository();
     const useCase = new JoinSessionUseCase(
       new InMemoryGameSessionRepository([session]),
       new InMemoryGameSystemRepository([buildGameSystem()]),
-      sessionPlayerRepository,
-      characterRepository,
+      characterCreationSessionRepository,
     );
 
     const first = await useCase.execute({
       inviteCode: 'XK4R2P',
       userId: 'user-2',
       userRole: 'adult',
-      characterName: 'Legolas',
     });
     const second = await useCase.execute({
       inviteCode: 'XK4R2P',
       userId: 'user-2',
       userRole: 'adult',
-      characterName: 'Legolas (nouvelle tentative)',
     });
 
-    expect(second.character.id).toBe(first.character.id);
-    const players = await sessionPlayerRepository.findBySessionId(session.id);
-    expect(players).toHaveLength(1);
+    expect(second.characterCreationSessionId).toBe(
+      first.characterCreationSessionId,
+    );
+  });
+
+  it('is idempotent: re-joining an already-finalized (seated) user returns their completed creation session, never starts a new one', async () => {
+    const session = buildSession();
+    const finalizedCreationSession = CharacterCreationSession.create({
+      gameSessionId: session.id,
+      gameSystemId: 'game-system-1',
+      userId: 'user-2',
+    })
+      .appendExchange({
+        userMessage: 'Legolas',
+        assistantMessage: 'Ok',
+        draftUpdates: { name: 'Legolas' },
+      })
+      .complete();
+    const characterCreationSessionRepository =
+      new InMemoryCharacterCreationSessionRepository([
+        finalizedCreationSession,
+      ]);
+    const useCase = new JoinSessionUseCase(
+      new InMemoryGameSessionRepository([session]),
+      new InMemoryGameSystemRepository([buildGameSystem()]),
+      characterCreationSessionRepository,
+    );
+
+    const result = await useCase.execute({
+      inviteCode: 'XK4R2P',
+      userId: 'user-2',
+      userRole: 'adult',
+    });
+
+    expect(result.characterCreationSessionId).toBe(finalizedCreationSession.id);
   });
 });

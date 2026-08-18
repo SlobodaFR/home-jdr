@@ -3,7 +3,7 @@ import { randomUUID } from 'crypto';
 export type LlmProvider = 'claude' | 'openai';
 
 export type LlmUsageCallType =
-  'scene_resolution' | 'summary' | 'image_generation';
+  'scene_resolution' | 'summary' | 'image_generation' | 'character_creation';
 
 export interface LlmUsageRecordProps {
   id: string;

@@ -2,7 +2,7 @@ import {
   PendingCharacterDeltaView,
   SessionState,
   SessionSummary,
-  SessionWithCharacter,
+  SessionWithCharacterCreation,
   SubmitTurnActionResult,
 } from '../domain/session';
 
@@ -11,12 +11,11 @@ const BASE_URL = '/api';
 export interface CreateSessionInput {
   gameSystemId: string;
   name: string;
-  characterName: string;
+  charactersVisibleToOthers: boolean;
 }
 
 export interface JoinSessionInput {
   inviteCode: string;
-  characterName: string;
 }
 
 async function extractErrorMessage(response: Response): Promise<string> {
@@ -60,24 +59,24 @@ export const sessionApiClient = {
     return parseJsonOrThrow<SessionSummary[]>(response);
   },
 
-  async create(input: CreateSessionInput): Promise<SessionWithCharacter> {
+  async create(input: CreateSessionInput): Promise<SessionWithCharacterCreation> {
     const response = await fetch(`${BASE_URL}/sessions`, {
       method: 'POST',
       credentials: 'include',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(input),
     });
-    return parseJsonOrThrow<SessionWithCharacter>(response);
+    return parseJsonOrThrow<SessionWithCharacterCreation>(response);
   },
 
-  async join(input: JoinSessionInput): Promise<SessionWithCharacter> {
+  async join(input: JoinSessionInput): Promise<SessionWithCharacterCreation> {
     const response = await fetch(`${BASE_URL}/sessions/join`, {
       method: 'POST',
       credentials: 'include',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(input),
     });
-    return parseJsonOrThrow<SessionWithCharacter>(response);
+    return parseJsonOrThrow<SessionWithCharacterCreation>(response);
   },
 
   async submitTurnAction(

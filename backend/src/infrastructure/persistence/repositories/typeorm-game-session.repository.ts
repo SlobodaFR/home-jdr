@@ -61,6 +61,7 @@ export class TypeOrmGameSessionRepository extends GameSessionRepository {
       currentTurnNumber: session.currentTurnNumber,
       rollingSummary: session.rollingSummary,
       createdByUserId: session.createdByUserId,
+      charactersVisibleToOthers: session.charactersVisibleToOthers,
       createdAt: session.createdAt,
     });
   }
@@ -76,6 +77,7 @@ function toDomain(row: GameSessionOrmEntity): GameSession {
     currentTurnNumber: row.currentTurnNumber,
     rollingSummary: row.rollingSummary,
     createdByUserId: row.createdByUserId,
+    charactersVisibleToOthers: row.charactersVisibleToOthers,
     createdAt: row.createdAt,
   });
 }

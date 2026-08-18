@@ -1,7 +1,7 @@
 import { IsNotEmpty, IsString } from 'class-validator';
 
-export class JoinSessionDto {
+export class SendCharacterCreationMessageDto {
   @IsString()
   @IsNotEmpty()
-  inviteCode!: string;
+  message!: string;
 }

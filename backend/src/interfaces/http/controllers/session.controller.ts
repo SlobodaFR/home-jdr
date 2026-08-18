@@ -40,7 +40,12 @@ import { QuotaExceededFilter } from '../filters/quota-exceeded.filter';
 import { resolveDefaultRole } from '../user-role-policy';
 
 interface SessionResponse extends SessionSummaryResponse {
-  characterId: string;
+  /**
+   * Id of the `CharacterCreationSession` the caller should now converse
+   * with (`GET/POST /api/character-creation-sessions/:id...`) before they
+   * become an active player - see `CharacterCreationController`.
+   */
+  characterCreationSessionId: string;
 }
 
 interface SessionSummaryResponse {
@@ -51,6 +56,7 @@ interface SessionSummaryResponse {
   status: SessionStatus;
   currentTurnNumber: number;
   createdByUserId: string;
+  charactersVisibleToOthers: boolean;
   createdAt: Date;
 }
 
@@ -96,6 +102,7 @@ function toSummaryResponse(session: GameSession): SessionSummaryResponse {
     status: session.status,
     currentTurnNumber: session.currentTurnNumber,
     createdByUserId: session.createdByUserId,
+    charactersVisibleToOthers: session.charactersVisibleToOthers,
     createdAt: session.createdAt,
   };
 }
@@ -132,14 +139,15 @@ export class SessionController {
       user.id,
       resolveDefaultRole(user.email, this.config),
     );
-    const { session, character } = await this.createSession.execute({
-      gameSystemId: dto.gameSystemId,
-      name: dto.name,
-      createdByUserId: user.id,
-      createdByUserRole: profile.role,
-      characterName: dto.characterName,
-    });
-    return { ...toSummaryResponse(session), characterId: character.id };
+    const { session, characterCreationSessionId } =
+      await this.createSession.execute({
+        gameSystemId: dto.gameSystemId,
+        name: dto.name,
+        createdByUserId: user.id,
+        createdByUserRole: profile.role,
+        charactersVisibleToOthers: dto.charactersVisibleToOthers,
+      });
+    return { ...toSummaryResponse(session), characterCreationSessionId };
   }
 
   @Post('join')
@@ -151,13 +159,13 @@ export class SessionController {
       user.id,
       resolveDefaultRole(user.email, this.config),
     );
-    const { session, character } = await this.joinSession.execute({
-      inviteCode: dto.inviteCode,
-      userId: user.id,
-      userRole: profile.role,
-      characterName: dto.characterName,
-    });
-    return { ...toSummaryResponse(session), characterId: character.id };
+    const { session, characterCreationSessionId } =
+      await this.joinSession.execute({
+        inviteCode: dto.inviteCode,
+        userId: user.id,
+        userRole: profile.role,
+      });
+    return { ...toSummaryResponse(session), characterCreationSessionId };
   }
 
   // `QuotaExceededError` can bubble up from `ResolveSceneUseCase` (via

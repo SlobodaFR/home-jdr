@@ -1,19 +1,27 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import {
+  CharacterCreationAssistInput,
+  CharacterCreationAssistOutput,
   LlmGameMasterPort,
   SceneResolutionInput,
   SceneResolutionOutput,
   SummarizeSceneInput,
 } from '../../domain/session/llm-game-master.port';
 import {
+  ASSIST_CHARACTER_CREATION_TOOL_NAME,
+  ASSIST_CHARACTER_CREATION_TOOL_SCHEMA,
+  AssistCharacterCreationToolInput,
   RESOLVE_SCENE_TOOL_NAME,
   RESOLVE_SCENE_TOOL_SCHEMA,
   ResolveSceneToolInput,
   SUMMARIZE_USER_MESSAGE,
+  buildAssistCharacterCreationSystemPrompt,
+  buildAssistCharacterCreationUserMessage,
   buildResolveSceneSystemPrompt,
   buildResolveSceneUserMessage,
   buildSummarizeSystemPrompt,
+  toCharacterCreationAssistOutput,
   toSceneResolutionOutput,
 } from './llm-game-master-prompt';
 
@@ -91,6 +99,40 @@ export class ClaudeGameMasterAdapter extends LlmGameMasterPort {
     return (textBlock?.text ?? '').trim();
   }
 
+  async assistCharacterCreation(
+    input: CharacterCreationAssistInput,
+  ): Promise<CharacterCreationAssistOutput> {
+    const body = await this.call({
+      system: buildAssistCharacterCreationSystemPrompt(input),
+      userMessage: buildAssistCharacterCreationUserMessage(input),
+      tools: [
+        {
+          name: ASSIST_CHARACTER_CREATION_TOOL_NAME,
+          description:
+            'Retourne le prochain message du MJ et les mises à jour de brouillon de fiche pour cette étape de création de personnage.',
+          input_schema: ASSIST_CHARACTER_CREATION_TOOL_SCHEMA,
+        },
+      ],
+      toolChoice: { type: 'tool', name: ASSIST_CHARACTER_CREATION_TOOL_NAME },
+      maxTokens: 1024,
+    });
+
+    const toolUse = body.content?.find((block) => block.type === 'tool_use');
+    if (
+      !toolUse ||
+      typeof toolUse.input !== 'object' ||
+      toolUse.input === null
+    ) {
+      throw new Error(
+        `Claude did not return a "${ASSIST_CHARACTER_CREATION_TOOL_NAME}" tool call`,
+      );
+    }
+
+    return toCharacterCreationAssistOutput(
+      toolUse.input as AssistCharacterCreationToolInput,
+    );
+  }
+
   private async call(options: {
     system: string;
     userMessage: string;
@@ -98,7 +140,9 @@ export class ClaudeGameMasterAdapter extends LlmGameMasterPort {
     tools?: {
       name: string;
       description: string;
-      input_schema: typeof RESOLVE_SCENE_TOOL_SCHEMA;
+      input_schema:
+        | typeof RESOLVE_SCENE_TOOL_SCHEMA
+        | typeof ASSIST_CHARACTER_CREATION_TOOL_SCHEMA;
     }[];
     toolChoice?: { type: 'tool'; name: string };
   }): Promise<AnthropicMessageResponse> {

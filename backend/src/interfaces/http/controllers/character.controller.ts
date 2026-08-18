@@ -67,16 +67,23 @@ export class CharacterController {
   }
 
   @Get('characters/:id')
-  async findOne(@Param('id') id: string): Promise<CharacterResponse> {
-    const character = await this.getCharacter.execute(id);
+  async findOne(
+    @Param('id') id: string,
+    @CurrentUser() user: CurrentUserPayload,
+  ): Promise<CharacterResponse> {
+    const character = await this.getCharacter.execute(id, user.id);
     return toResponse(character);
   }
 
   @Get('sessions/:sessionId/characters')
   async findBySession(
     @Param('sessionId') sessionId: string,
+    @CurrentUser() user: CurrentUserPayload,
   ): Promise<CharacterResponse[]> {
-    const characters = await this.listCharactersForSession.execute(sessionId);
+    const characters = await this.listCharactersForSession.execute(
+      sessionId,
+      user.id,
+    );
     return characters.map(toResponse);
   }
 

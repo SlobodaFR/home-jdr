@@ -11,18 +11,33 @@ export interface GameSessionProps {
   currentTurnNumber: number;
   rollingSummary: string;
   createdByUserId: string;
+  /**
+   * Per-session choice made by the creator at creation time, immutable
+   * afterwards: whether every player's character sheet is visible to every
+   * other player of this session, or only to its own owner (see
+   * `ListCharactersForSessionUseCase`/`GetCharacterUseCase`). Defaults to
+   * `false` (private sheets) so existing call sites across the codebase
+   * that predate this field keep working unchanged.
+   */
+  charactersVisibleToOthers: boolean;
   createdAt: Date;
 }
 
 export type NewGameSessionProps = Omit<
   GameSessionProps,
-  'id' | 'status' | 'currentTurnNumber' | 'rollingSummary' | 'createdAt'
+  | 'id'
+  | 'status'
+  | 'currentTurnNumber'
+  | 'rollingSummary'
+  | 'createdAt'
+  | 'charactersVisibleToOthers'
 > & {
   id?: string;
   status?: SessionStatus;
   currentTurnNumber?: number;
   rollingSummary?: string;
   createdAt?: Date;
+  charactersVisibleToOthers?: boolean;
 };
 
 /**
@@ -58,6 +73,7 @@ export class GameSession {
       status: props.status ?? 'waiting_for_players',
       currentTurnNumber: props.currentTurnNumber ?? 1,
       rollingSummary: props.rollingSummary ?? '',
+      charactersVisibleToOthers: props.charactersVisibleToOthers ?? false,
       createdAt: props.createdAt ?? new Date(),
     });
   }
@@ -93,6 +109,10 @@ export class GameSession {
 
   get createdByUserId(): string {
     return this.props.createdByUserId;
+  }
+
+  get charactersVisibleToOthers(): boolean {
+    return this.props.charactersVisibleToOthers;
   }
 
   get createdAt(): Date {

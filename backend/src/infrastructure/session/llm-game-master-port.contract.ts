@@ -1,5 +1,6 @@
 import { CharacterSheetSchema } from '../../domain/character/character-sheet-schema';
 import {
+  CharacterCreationAssistInput,
   LlmGameMasterPort,
   SceneResolutionInput,
 } from '../../domain/session/llm-game-master.port';
@@ -27,6 +28,17 @@ export interface LlmGameMasterContractHarness {
   }): void;
   /** Programs the mocked HTTP client to answer the next `summarize()` call. */
   mockSummarizeReply(summary: string): void;
+  /** Programs the mocked HTTP client to answer the next `assistCharacterCreation()` call. */
+  mockAssistCharacterCreationReply(reply: {
+    assistantMessage: string;
+    draftUpdates?: {
+      name?: string;
+      hitPointsMax?: number;
+      inventory?: string[];
+      customAttributes?: Record<string, number | string>;
+    };
+    readyToFinalize: boolean;
+  }): void;
   /** The JSON body of the most recent outgoing HTTP request. */
   lastRequestBody(): Record<string, unknown>;
 }
@@ -70,6 +82,21 @@ function buildInput(): SceneResolutionInput {
         total: 17,
       },
     ],
+  };
+}
+
+function buildCharacterCreationInput(): CharacterCreationAssistInput {
+  return {
+    rulesText: 'Un d20 sous la stat reussit.',
+    characterSheetSchema: schema,
+    messages: [
+      {
+        role: 'assistant',
+        content: 'Bienvenue ! Parle-moi de ton personnage.',
+      },
+      { role: 'user', content: 'Je veux jouer un nain guerrier.' },
+    ],
+    draftCharacter: {},
   };
 }
 
@@ -138,6 +165,44 @@ export function runLlmGameMasterPortContractTests(
       expect(summary).toBe(
         'Les heros ont vaincu le gobelin et pille son campement.',
       );
+    });
+
+    it('assistCharacterCreation() returns the assistant message, draft updates, and readiness hint from the provider', async () => {
+      const harness = createHarness();
+      harness.mockAssistCharacterCreationReply({
+        assistantMessage: 'Quel est le nom de ton personnage ?',
+        draftUpdates: { name: 'Grognak', inventory: ['hache'] },
+        readyToFinalize: false,
+      });
+
+      const output = await harness.adapter.assistCharacterCreation(
+        buildCharacterCreationInput(),
+      );
+
+      expect(output.assistantMessage).toBe(
+        'Quel est le nom de ton personnage ?',
+      );
+      expect(output.draftUpdates).toEqual({
+        name: 'Grognak',
+        inventory: ['hache'],
+      });
+      expect(output.readyToFinalize).toBe(false);
+    });
+
+    it('assistCharacterCreation() sends the full rules text and target schema (no RAG - see PRD.md)', async () => {
+      const harness = createHarness();
+      harness.mockAssistCharacterCreationReply({
+        assistantMessage: 'texte',
+        readyToFinalize: false,
+      });
+
+      await harness.adapter.assistCharacterCreation(
+        buildCharacterCreationInput(),
+      );
+
+      const body = JSON.stringify(harness.lastRequestBody());
+      expect(body).toContain('Un d20 sous la stat reussit.');
+      expect(body).toContain('Je veux jouer un nain guerrier.');
     });
 
     it('never puts the API key in the request body', async () => {

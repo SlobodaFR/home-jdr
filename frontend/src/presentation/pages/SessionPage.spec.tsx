@@ -1,8 +1,9 @@
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { apiClient } from '../../infrastructure/api-client';
+import { characterApiClient } from '../../infrastructure/character-api-client';
 import { QuotaExceededClientError, sessionApiClient } from '../../infrastructure/session-api-client';
 import { SessionPage } from './SessionPage';
 
@@ -25,6 +26,14 @@ vi.mock('../../infrastructure/api-client', () => ({
   apiClient: { fetchGameSystems: vi.fn() },
 }));
 
+vi.mock('../../infrastructure/character-api-client', () => ({
+  characterApiClient: { listBySession: vi.fn() },
+}));
+
+vi.mock('../auth/AuthProvider', () => ({
+  useAuth: () => ({ user: { id: 'user-1', email: 'user@test.dev', name: 'Test User' } }),
+}));
+
 const baseSession = {
   id: 'session-1',
   gameSystemId: 'gs-1',
@@ -33,6 +42,7 @@ const baseSession = {
   status: 'narrating' as const,
   currentTurnNumber: 2,
   createdByUserId: 'gm-1',
+  charactersVisibleToOthers: false,
   createdAt: '2026-01-01T00:00:00.000Z',
 };
 
@@ -61,6 +71,10 @@ function renderPage() {
 }
 
 describe('SessionPage', () => {
+  beforeEach(() => {
+    vi.mocked(characterApiClient.listBySession).mockResolvedValue([]);
+  });
+
   afterEach(() => {
     vi.restoreAllMocks();
     cleanup();

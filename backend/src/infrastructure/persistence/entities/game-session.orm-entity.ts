@@ -34,6 +34,13 @@ export class GameSessionOrmEntity {
   @Column({ type: 'text', name: 'created_by_user_id' })
   createdByUserId!: string;
 
+  @Column({
+    type: 'boolean',
+    name: 'characters_visible_to_others',
+    default: false,
+  })
+  charactersVisibleToOthers!: boolean;
+
   @CreateDateColumn({ type: 'datetime', name: 'created_at' })
   createdAt!: Date;
 }

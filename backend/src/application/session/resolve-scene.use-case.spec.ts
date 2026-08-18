@@ -8,6 +8,7 @@ import {
 } from '../../domain/session/dice-roller.port';
 import { GameSession } from '../../domain/session/game-session';
 import {
+  CharacterCreationAssistOutput,
   LlmGameMasterPort,
   SceneResolutionInput,
   SceneResolutionOutput,
@@ -50,6 +51,10 @@ class RecordingLlmGameMasterPort extends LlmGameMasterPort {
 
   summarize(): Promise<string> {
     return Promise.resolve('résumé');
+  }
+
+  assistCharacterCreation(): Promise<CharacterCreationAssistOutput> {
+    throw new Error('not used in this spec');
   }
 }
 

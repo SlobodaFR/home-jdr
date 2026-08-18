@@ -7,18 +7,20 @@ import { ButtonSecondary } from '../components/ButtonSecondary';
 /**
  * "Rejoindre une partie": enter an invite code shared out-of-app (Discord,
  * SMS...) - see PRD.md, no invitation nominative / no public session list.
+ * On success, navigates to the guided character-creation chat screen (see
+ * `CharacterCreationChatPage.tsx`) rather than an instant character-name
+ * field.
  */
 export function JoinSessionPage() {
   const navigate = useNavigate();
   const [inviteCode, setInviteCode] = useState('');
-  const [characterName, setCharacterName] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   async function handleSubmit(event: FormEvent) {
     event.preventDefault();
-    if (!inviteCode.trim() || !characterName.trim()) {
-      setError('Le code et le nom de personnage sont requis.');
+    if (!inviteCode.trim()) {
+      setError("Le code d'invitation est requis.");
       return;
     }
 
@@ -27,9 +29,8 @@ export function JoinSessionPage() {
     try {
       const session = await sessionApiClient.join({
         inviteCode: inviteCode.trim(),
-        characterName,
       });
-      navigate(`/sessions/${session.id}`);
+      navigate(`/character-creation/${session.characterCreationSessionId}`);
     } catch (err) {
       setError(
         err instanceof Error ? err.message : 'Impossible de rejoindre cette partie.',
@@ -51,15 +52,6 @@ export function JoinSessionPage() {
             value={inviteCode}
             onChange={(event) => setInviteCode(event.target.value.toUpperCase())}
             placeholder="XK4R2P"
-          />
-        </label>
-
-        <label className="flex flex-col gap-xs">
-          <span className="font-body-strong text-ink">Nom de votre personnage</span>
-          <input
-            className="border border-hairline rounded-sm px-md py-sm font-body-md text-ink bg-canvas focus:border-2 focus:border-ink outline-none"
-            value={characterName}
-            onChange={(event) => setCharacterName(event.target.value)}
           />
         </label>
 

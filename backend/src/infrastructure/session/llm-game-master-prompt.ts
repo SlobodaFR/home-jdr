@@ -1,5 +1,8 @@
 import { CharacterStateDelta } from '../../domain/character/character-state-delta';
 import {
+  CharacterCreationAssistInput,
+  CharacterCreationAssistOutput,
+  CharacterCreationMessage,
   SceneResolutionCharacterDelta,
   SceneResolutionInput,
   SceneResolutionOutput,
@@ -181,3 +184,119 @@ export function buildSummarizeSystemPrompt(input: SummarizeSceneInput): string {
 
 export const SUMMARIZE_USER_MESSAGE =
   "Condense l'historique ci-dessus en un résumé glissant mis à jour.";
+
+export const ASSIST_CHARACTER_CREATION_TOOL_NAME = 'assist_character_creation';
+
+/** JSON Schema, valid both as Claude's `tool.input_schema` and OpenAI's `function.parameters`. */
+export const ASSIST_CHARACTER_CREATION_TOOL_SCHEMA = {
+  type: 'object',
+  properties: {
+    assistant_message: {
+      type: 'string',
+      description:
+        'Le prochain message du MJ au joueur - une question ou une proposition pour avancer la creation du personnage.',
+    },
+    draft_updates: {
+      type: 'object',
+      description:
+        'Uniquement les champs du brouillon que tu proposes de changer suite a ce message - omettre un champ le laisse inchange, jamais destructif.',
+      properties: {
+        name: { type: 'string' },
+        hit_points_max: { type: 'integer' },
+        inventory: { type: 'array', items: { type: 'string' } },
+        custom_attribute_changes: {
+          type: 'object',
+          description:
+            'Nouvelle valeur par cle d’attribut personnalise du schema cible.',
+        },
+      },
+    },
+    ready_to_finalize: {
+      type: 'boolean',
+      description:
+        'Indication seulement (le joueur/l’UI decide reellement) : penses-tu que la fiche est prete a etre validee ?',
+    },
+  },
+  required: ['assistant_message', 'draft_updates', 'ready_to_finalize'],
+} as const;
+
+export interface AssistCharacterCreationToolInput {
+  assistant_message: string;
+  draft_updates: {
+    name?: string;
+    hit_points_max?: number;
+    inventory?: string[];
+    custom_attribute_changes?: Record<string, number | string>;
+  };
+  ready_to_finalize: boolean;
+}
+
+export function toCharacterCreationAssistOutput(
+  toolInput: AssistCharacterCreationToolInput,
+): CharacterCreationAssistOutput {
+  const rawUpdates = toolInput.draft_updates ?? {};
+  return {
+    assistantMessage: toolInput.assistant_message,
+    draftUpdates: {
+      ...(rawUpdates.name !== undefined ? { name: rawUpdates.name } : {}),
+      ...(rawUpdates.hit_points_max !== undefined
+        ? { hitPointsMax: rawUpdates.hit_points_max }
+        : {}),
+      ...(rawUpdates.inventory !== undefined
+        ? { inventory: rawUpdates.inventory }
+        : {}),
+      ...(rawUpdates.custom_attribute_changes !== undefined
+        ? { customAttributes: rawUpdates.custom_attribute_changes }
+        : {}),
+    },
+    readyToFinalize: Boolean(toolInput.ready_to_finalize),
+  };
+}
+
+function formatCharacterCreationMessages(
+  messages: CharacterCreationMessage[],
+): string {
+  if (messages.length === 0) {
+    return '(aucun message pour le moment)';
+  }
+  return messages
+    .map(
+      (message) =>
+        `${message.role === 'assistant' ? 'MJ' : 'Joueur'} : ${message.content}`,
+    )
+    .join('\n');
+}
+
+/** System prompt for `assistCharacterCreation()` - full rules text, target schema, and the draft built so far. */
+export function buildAssistCharacterCreationSystemPrompt(
+  input: CharacterCreationAssistInput,
+): string {
+  return [
+    "Tu es le maître du jeu (MJ) d'un jeu de rôle. Tu aides un joueur à créer son personnage par une conversation guidée, pas par un formulaire. Voici les règles du jeu, dans leur intégralité :",
+    input.rulesText,
+    '',
+    'Schéma structuré cible de la fiche de personnage (à quoi le personnage doit converger) :',
+    JSON.stringify(input.characterSheetSchema),
+    '',
+    'Brouillon actuel de la fiche, construit au fil de la conversation :',
+    JSON.stringify(input.draftCharacter),
+    '',
+    'Historique de la conversation :',
+    formatCharacterCreationMessages(input.messages),
+    '',
+    `Réponds en appelant l'outil "${ASSIST_CHARACTER_CREATION_TOOL_NAME}" avec ton prochain message (une question ou une proposition concrète), les mises à jour de brouillon que ce message justifie (ne jamais réinventer un champ déjà acté sans raison exprimée par le joueur), et si tu penses la fiche prête à être finalisée. Un nom de personnage clair suffit à considérer que la fiche peut être finalisée - n'exige jamais plus que ce que le schéma cible requiert.`,
+  ].join('\n');
+}
+
+/** User message for `assistCharacterCreation()` - the player's latest message in the conversation. */
+export function buildAssistCharacterCreationUserMessage(
+  input: CharacterCreationAssistInput,
+): string {
+  const lastUserMessage = [...input.messages]
+    .reverse()
+    .find((message) => message.role === 'user');
+  return (
+    lastUserMessage?.content ??
+    '(le joueur vient de démarrer la création de son personnage)'
+  );
+}

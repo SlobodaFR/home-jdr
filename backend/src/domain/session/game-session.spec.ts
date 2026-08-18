@@ -19,6 +19,27 @@ describe('GameSession', () => {
       expect(session.rollingSummary).toBe('');
     });
 
+    it('defaults charactersVisibleToOthers to false when not specified', () => {
+      const session = createSession();
+
+      expect(session.charactersVisibleToOthers).toBe(false);
+    });
+
+    it('honors an explicit charactersVisibleToOthers, immutable after creation', () => {
+      const session = GameSession.create({
+        gameSystemId: 'game-system-1',
+        name: 'La quete du dragon',
+        inviteCode: 'XK4R2P',
+        createdByUserId: 'user-1',
+        charactersVisibleToOthers: true,
+      });
+
+      expect(session.charactersVisibleToOthers).toBe(true);
+      // No setter exists on the entity - every transition method (beginResolving,
+      // completeResolution, startNextTurn, updateRollingSummary) must preserve it.
+      expect(session.beginResolving().charactersVisibleToOthers).toBe(true);
+    });
+
     it('rejects a blank name', () => {
       expect(() =>
         GameSession.create({

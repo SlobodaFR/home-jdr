@@ -8,6 +8,7 @@ import {
 } from '../../domain/session/dice-roller.port';
 import { GameSession } from '../../domain/session/game-session';
 import {
+  CharacterCreationAssistOutput,
   LlmGameMasterPort,
   SceneResolutionInput,
   SceneResolutionOutput,
@@ -49,6 +50,10 @@ class FakeLlmGameMasterPort extends LlmGameMasterPort {
   summarize(input: SummarizeSceneInput): Promise<string> {
     const turns = input.turnsToSummarize.map((t) => t.turnNumber).join(',');
     return Promise.resolve(`Résumé après les tours ${turns}.`);
+  }
+
+  assistCharacterCreation(): Promise<CharacterCreationAssistOutput> {
+    throw new Error('not used in this spec');
   }
 }
 

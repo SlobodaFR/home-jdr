@@ -8,6 +8,8 @@ import { CharacterStateDelta } from '../../../domain/character/character-state-d
 import { GameSystem } from '../../../domain/game-system/game-system';
 import { GameSystemRepository } from '../../../domain/game-system/game-system.repository';
 import {
+  CharacterCreationAssistInput,
+  CharacterCreationAssistOutput,
   LlmGameMasterPort,
   SceneResolutionInput,
   SceneResolutionOutput,
@@ -15,6 +17,7 @@ import {
 import { UserProfile } from '../../../domain/user/user-profile';
 import { UserProfileRepository } from '../../../domain/user/user-profile.repository';
 import { AppSettingOrmEntity } from '../../../infrastructure/persistence/entities/app-setting.orm-entity';
+import { CharacterCreationSessionOrmEntity } from '../../../infrastructure/persistence/entities/character-creation-session.orm-entity';
 import { CharacterOrmEntity } from '../../../infrastructure/persistence/entities/character.orm-entity';
 import { GameSessionOrmEntity } from '../../../infrastructure/persistence/entities/game-session.orm-entity';
 import { GameSystemOrmEntity } from '../../../infrastructure/persistence/entities/game-system.orm-entity';
@@ -24,6 +27,7 @@ import { SessionPlayerOrmEntity } from '../../../infrastructure/persistence/enti
 import { TurnResolutionOrmEntity } from '../../../infrastructure/persistence/entities/turn-resolution.orm-entity';
 import { TurnSubmissionOrmEntity } from '../../../infrastructure/persistence/entities/turn-submission.orm-entity';
 import { UserProfileOrmEntity } from '../../../infrastructure/persistence/entities/user-profile.orm-entity';
+import { CharacterCreationModule } from '../modules/character-creation.module';
 import { SessionModule } from '../modules/session.module';
 import { CurrentUserPayload } from '../decorators/current-user.decorator';
 
@@ -35,6 +39,11 @@ import { CurrentUserPayload } from '../decorators/current-user.decorator';
  * `openai-game-master.adapter.spec.ts` for that) - so it overrides
  * `LlmGameMasterPort` with a deterministic fake, exactly like it already
  * fakes authentication via the `x-test-user-*` headers below.
+ *
+ * `assistCharacterCreation()` is a similarly deterministic fake: it always
+ * proposes the player's message verbatim as the draft character's name, so
+ * this suite's helper (`seatPlayer()`) can finalize a character in exactly
+ * one message + one finalize call.
  */
 class FakeLlmGameMasterPort extends LlmGameMasterPort {
   resolveScene(input: SceneResolutionInput): Promise<SceneResolutionOutput> {
@@ -58,6 +67,19 @@ class FakeLlmGameMasterPort extends LlmGameMasterPort {
 
   summarize(): Promise<string> {
     return Promise.resolve('');
+  }
+
+  assistCharacterCreation(
+    input: CharacterCreationAssistInput,
+  ): Promise<CharacterCreationAssistOutput> {
+    const lastUserMessage = [...input.messages]
+      .reverse()
+      .find((message) => message.role === 'user');
+    return Promise.resolve({
+      assistantMessage: 'Bien noté.',
+      draftUpdates: { name: lastUserMessage?.content ?? 'Héros' },
+      readyToFinalize: true,
+    });
   }
 }
 
@@ -121,9 +143,11 @@ describe('SessionController (integration)', () => {
             PendingCharacterDeltaOrmEntity,
             LlmUsageRecordOrmEntity,
             AppSettingOrmEntity,
+            CharacterCreationSessionOrmEntity,
           ],
         }),
         SessionModule,
+        CharacterCreationModule,
       ],
     })
       .overrideProvider(LlmGameMasterPort)
@@ -198,6 +222,32 @@ describe('SessionController (integration)', () => {
     };
   }
 
+  /**
+   * Advances the given user's character-creation chat by one message (the
+   * fake LLM proposes `characterName` as the draft name from it - see
+   * `FakeLlmGameMasterPort.assistCharacterCreation()`) then finalizes it.
+   * This is the only way a caller becomes an active `SessionPlayer` now
+   * that `CreateSessionUseCase`/`JoinSessionUseCase` no longer seat one
+   * synchronously - most turn-submission tests below need this first.
+   */
+  async function seatPlayer(
+    user: TestUser,
+    characterCreationSessionId: string,
+    characterName: string,
+  ) {
+    await asUser(user)
+      .post(
+        `/character-creation-sessions/${characterCreationSessionId}/messages`,
+      )
+      .send({ message: characterName });
+    const finalizeResponse = await asUser(user)
+      .post(
+        `/character-creation-sessions/${characterCreationSessionId}/finalize`,
+      )
+      .send();
+    return finalizeResponse;
+  }
+
   const creator: TestUser = { id: 'user-creator', email: 'creator@test.dev' };
   const joiner: TestUser = { id: 'user-joiner', email: 'joiner@test.dev' };
   const child: TestUser = { id: 'child-1', email: 'child@test.dev' };
@@ -206,7 +256,7 @@ describe('SessionController (integration)', () => {
     const createResponse = await asUser(creator).post('/sessions').send({
       gameSystemId: ADULT_ONLY_GAME_SYSTEM_ID,
       name: 'La quete du dragon',
-      characterName: 'Aragorn',
+      charactersVisibleToOthers: false,
     });
 
     expect(createResponse.status).toBe(201);
@@ -214,30 +264,36 @@ describe('SessionController (integration)', () => {
       .inviteCode;
     expect(typeof inviteCode).toBe('string');
     expect(inviteCode.length).toBeGreaterThan(0);
+    expect(
+      (createResponse.body as { characterCreationSessionId: string })
+        .characterCreationSessionId,
+    ).toBeTruthy();
 
     const joinResponse = await asUser(joiner).post('/sessions/join').send({
       inviteCode,
-      characterName: 'Legolas',
     });
 
     expect(joinResponse.status).toBe(201);
     expect((joinResponse.body as { id: string }).id).toBe(
       (createResponse.body as { id: string }).id,
     );
+    expect(
+      (joinResponse.body as { characterCreationSessionId: string })
+        .characterCreationSessionId,
+    ).toBeTruthy();
   });
 
   it('rejects a child account joining a session whose JdR is not adapted for children, with a clear message', async () => {
     const createResponse = await asUser(creator).post('/sessions').send({
       gameSystemId: ADULT_ONLY_GAME_SYSTEM_ID,
       name: 'Partie adulte',
-      characterName: 'Aragorn',
+      charactersVisibleToOthers: false,
     });
     const inviteCode = (createResponse.body as { inviteCode: string })
       .inviteCode;
 
     const joinResponse = await asUser(child).post('/sessions/join').send({
       inviteCode,
-      characterName: 'Petit hero',
     });
 
     expect(joinResponse.status).toBe(403);
@@ -250,14 +306,13 @@ describe('SessionController (integration)', () => {
     const createResponse = await asUser(creator).post('/sessions').send({
       gameSystemId: CHILD_ADAPTED_GAME_SYSTEM_ID,
       name: 'Partie familiale',
-      characterName: 'Aragorn',
+      charactersVisibleToOthers: false,
     });
     const inviteCode = (createResponse.body as { inviteCode: string })
       .inviteCode;
 
     const joinResponse = await asUser(child).post('/sessions/join').send({
       inviteCode,
-      characterName: 'Petit hero',
     });
 
     expect(joinResponse.status).toBe(201);
@@ -267,9 +322,15 @@ describe('SessionController (integration)', () => {
     const createResponse = await asUser(creator).post('/sessions').send({
       gameSystemId: ADULT_ONLY_GAME_SYSTEM_ID,
       name: 'Partie solo',
-      characterName: 'Aragorn',
+      charactersVisibleToOthers: false,
     });
     const sessionId = (createResponse.body as { id: string }).id;
+    await seatPlayer(
+      creator,
+      (createResponse.body as { characterCreationSessionId: string })
+        .characterCreationSessionId,
+      'Aragorn',
+    );
 
     const turnResponse = await asUser(creator)
       .post(`/sessions/${sessionId}/turns`)
@@ -294,20 +355,38 @@ describe('SessionController (integration)', () => {
     const createResponse = await asUser(creator).post('/sessions').send({
       gameSystemId: ADULT_ONLY_GAME_SYSTEM_ID,
       name: 'Partie a trois',
-      characterName: 'Joueur 1',
+      charactersVisibleToOthers: false,
     });
     const sessionId = (createResponse.body as { id: string }).id;
     const inviteCode = (createResponse.body as { inviteCode: string })
       .inviteCode;
+    await seatPlayer(
+      creator,
+      (createResponse.body as { characterCreationSessionId: string })
+        .characterCreationSessionId,
+      'Joueur 1',
+    );
 
     const playerTwo: TestUser = { id: 'user-3p-2', email: 'p2@test.dev' };
     const playerThree: TestUser = { id: 'user-3p-3', email: 'p3@test.dev' };
-    await asUser(playerTwo)
+    const joinTwo = await asUser(playerTwo)
       .post('/sessions/join')
-      .send({ inviteCode, characterName: 'Joueur 2' });
-    await asUser(playerThree)
+      .send({ inviteCode });
+    await seatPlayer(
+      playerTwo,
+      (joinTwo.body as { characterCreationSessionId: string })
+        .characterCreationSessionId,
+      'Joueur 2',
+    );
+    const joinThree = await asUser(playerThree)
       .post('/sessions/join')
-      .send({ inviteCode, characterName: 'Joueur 3' });
+      .send({ inviteCode });
+    await seatPlayer(
+      playerThree,
+      (joinThree.body as { characterCreationSessionId: string })
+        .characterCreationSessionId,
+      'Joueur 3',
+    );
 
     const first = await asUser(creator)
       .post(`/sessions/${sessionId}/turns`)
@@ -330,7 +409,7 @@ describe('SessionController (integration)', () => {
     await asUser(solo).post('/sessions').send({
       gameSystemId: ADULT_ONLY_GAME_SYSTEM_ID,
       name: 'Ma partie a moi',
-      characterName: 'Perso',
+      charactersVisibleToOthers: false,
     });
 
     const listResponse = await asUser(solo).get('/sessions');
@@ -344,9 +423,15 @@ describe('SessionController (integration)', () => {
     const createResponse = await asUser(creator).post('/sessions').send({
       gameSystemId: MECHANICAL_GAME_SYSTEM_ID,
       name: 'Partie avec des des',
-      characterName: 'Grognak',
+      charactersVisibleToOthers: false,
     });
     const sessionId = (createResponse.body as { id: string }).id;
+    await seatPlayer(
+      creator,
+      (createResponse.body as { characterCreationSessionId: string })
+        .characterCreationSessionId,
+      'Grognak',
+    );
 
     const turnResponse = await asUser(creator)
       .post(`/sessions/${sessionId}/turns`)
@@ -379,9 +464,15 @@ describe('SessionController (integration)', () => {
     const createResponse = await asUser(creator).post('/sessions').send({
       gameSystemId: ADULT_ONLY_GAME_SYSTEM_ID,
       name: 'Partie avec deltas',
-      characterName: 'Grognak',
+      charactersVisibleToOthers: false,
     });
     const sessionId = (createResponse.body as { id: string }).id;
+    await seatPlayer(
+      creator,
+      (createResponse.body as { characterCreationSessionId: string })
+        .characterCreationSessionId,
+      'Grognak',
+    );
 
     await asUser(creator)
       .post(`/sessions/${sessionId}/turns`)
@@ -415,9 +506,15 @@ describe('SessionController (integration)', () => {
     const createResponse = await asUser(creator).post('/sessions').send({
       gameSystemId: ADULT_ONLY_GAME_SYSTEM_ID,
       name: 'Partie avec deltas rejetes',
-      characterName: 'Grognak',
+      charactersVisibleToOthers: false,
     });
     const sessionId = (createResponse.body as { id: string }).id;
+    await seatPlayer(
+      creator,
+      (createResponse.body as { characterCreationSessionId: string })
+        .characterCreationSessionId,
+      'Grognak',
+    );
 
     await asUser(creator)
       .post(`/sessions/${sessionId}/turns`)
