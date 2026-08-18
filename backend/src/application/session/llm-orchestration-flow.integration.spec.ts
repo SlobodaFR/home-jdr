@@ -17,6 +17,7 @@ import { SessionPlayer } from '../../domain/session/session-player';
 import { InMemoryCharacterRepository } from '../character/in-memory-character.repository';
 import { InMemoryPendingCharacterDeltaRepository } from '../character/in-memory-pending-character-delta.repository';
 import { InMemoryGameSystemRepository } from '../game-system/in-memory-game-system.repository';
+import { InMemoryUsageQuotaPort } from '../usage-quota/in-memory-usage-quota.port';
 import { InMemoryGameSessionRepository } from './in-memory-game-session.repository';
 import { InMemorySessionPlayerRepository } from './in-memory-session-player.repository';
 import { InMemoryTurnResolutionRepository } from './in-memory-turn-resolution.repository';
@@ -116,11 +117,13 @@ describe('LLM orchestration flow - rolling summary is re-injected into the next 
       new InMemoryPendingCharacterDeltaRepository();
     const llm = new FakeLlmGameMasterPort();
     const config = fakeConfig({ ROLLING_SUMMARY_INTERVAL: 2 });
+    const usageQuotaPort = new InMemoryUsageQuotaPort();
 
     const maintainRollingSummary = new MaintainRollingSummaryUseCase(
       gameSessionRepository,
       turnResolutionRepository,
       llm,
+      usageQuotaPort,
     );
     const resolveScene = new ResolveSceneUseCase(
       characterRepository,
@@ -132,6 +135,7 @@ describe('LLM orchestration flow - rolling summary is re-injected into the next 
       turnResolutionRepository,
       maintainRollingSummary,
       config,
+      usageQuotaPort,
     );
     const submitTurnAction = new SubmitTurnActionUseCase(
       gameSessionRepository,

@@ -18,6 +18,8 @@ import { SessionPlayerRepository } from '../../domain/session/session-player.rep
 import { TurnResolutionDiceRoll } from '../../domain/session/turn-resolution';
 import { TurnResolutionRepository } from '../../domain/session/turn-resolution.repository';
 import { TurnSubmission } from '../../domain/session/turn-submission';
+import { QuotaExceededError } from '../../domain/usage-quota/quota-exceeded.error';
+import { UsageQuotaPort } from '../../domain/usage-quota/usage-quota.port';
 import { toCharacterDomainSchema } from './character-schema-adapter';
 import { MaintainRollingSummaryUseCase } from './maintain-rolling-summary.use-case';
 
@@ -43,8 +45,10 @@ export const DEFAULT_ROLLING_SUMMARY_INTERVAL = 20;
  * `CLAUDE.md` - "Idempotence des appels de résolution de scène").
  *
  * Left as a single entry point (`resolve()`) so `08-admin-quotas-cost-guardrails`
- * can wrap it with a quota check later without restructuring anything here
- * (out of scope for this task - see `tasks/04-llm-orchestration.md`).
+ * could wrap it with a quota check without restructuring anything here (see
+ * `tasks/04-llm-orchestration.md`) - and indeed the only change that task
+ * made is the `UsageQuotaPort.checkQuotaAvailable()` guard at the top of
+ * `resolve()` plus the `recordUsage()` call after the billed LLM call.
  */
 @Injectable()
 export class ResolveSceneUseCase extends SceneResolverPort {
@@ -58,6 +62,7 @@ export class ResolveSceneUseCase extends SceneResolverPort {
     private readonly turnResolutionRepository: TurnResolutionRepository,
     private readonly maintainRollingSummary: MaintainRollingSummaryUseCase,
     private readonly config: ConfigService,
+    private readonly usageQuotaPort: UsageQuotaPort,
   ) {
     super();
   }
@@ -66,6 +71,13 @@ export class ResolveSceneUseCase extends SceneResolverPort {
     session: GameSession,
     submissions: TurnSubmission[],
   ): Promise<TurnResolutionResult> {
+    // Guard-rail (see CLAUDE.md - "Jamais d'appel LLM sans vérification de
+    // quota au préalable"): checked before any work that leads to a billed
+    // LLM call or a dice roll, so quota exhaustion never consumes either.
+    if (!(await this.usageQuotaPort.checkQuotaAvailable())) {
+      throw new QuotaExceededError();
+    }
+
     const gameSystem = await this.gameSystemRepository.findById(
       session.gameSystemId,
     );
@@ -130,6 +142,20 @@ export class ResolveSceneUseCase extends SceneResolverPort {
       diceFacts: diceRolls,
     });
 
+    const llmProvider = this.config.get<'claude' | 'openai'>(
+      'LLM_PROVIDER',
+      'claude',
+    );
+    // Audit-only, post-hoc: the billed call already happened above - this
+    // never gates it (see `checkQuotaAvailable()` at the top of this
+    // method, and `tasks/08-admin-quotas-cost-guardrails.md`).
+    await this.usageQuotaPort.recordUsage({
+      sessionId: session.id,
+      turnNumber: session.currentTurnNumber,
+      provider: llmProvider,
+      callType: 'scene_resolution',
+    });
+
     // Deltas are proposed only - never applied here (see `PendingCharacterDelta`
     // / `ValidateCharacterDeltaUseCase` / `CLAUDE.md`).
     for (const characterDelta of output.characterDeltas) {
@@ -161,6 +187,7 @@ export class ResolveSceneUseCase extends SceneResolverPort {
       await this.maintainRollingSummary.execute({
         sessionId: session.id,
         rulesText: gameSystem.rulesText,
+        provider: llmProvider,
       });
     }
 

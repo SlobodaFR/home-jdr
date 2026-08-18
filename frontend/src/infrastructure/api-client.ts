@@ -1,5 +1,6 @@
 import { CurrentUser } from '../domain/user';
 import { GameSystem } from '../domain/game-system';
+import { UsageStats } from '../domain/usage-stats';
 import { UserProfile } from '../domain/user-profile';
 
 const BASE_URL = '/api';
@@ -56,5 +57,24 @@ export const apiClient = {
       throw new Error(await extractErrorMessage(response));
     }
     return (await response.json()) as GameSystem;
+  },
+  async fetchUsageStats(): Promise<UsageStats> {
+    const response = await fetch(`${BASE_URL}/admin/usage`, { credentials: 'include' });
+    if (!response.ok) {
+      throw new Error(await extractErrorMessage(response));
+    }
+    return (await response.json()) as UsageStats;
+  },
+  async updateDailyLlmQuota(value: number): Promise<{ key: string; value: string }> {
+    const response = await fetch(`${BASE_URL}/admin/settings/daily-llm-quota`, {
+      method: 'PATCH',
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ value }),
+    });
+    if (!response.ok) {
+      throw new Error(await extractErrorMessage(response));
+    }
+    return (await response.json()) as { key: string; value: string };
   },
 };

@@ -37,6 +37,21 @@ async function parseJsonOrThrow<T>(response: Response): Promise<T> {
   return (await response.json()) as T;
 }
 
+/**
+ * Thrown when a turn submission fails with HTTP 429 (daily LLM quota
+ * exhausted - see `QuotaExceededFilter` on the backend). Deliberately
+ * carries no server-provided message: `SessionPage.tsx` always shows its
+ * own curated, non-technical copy on this error (see
+ * `tasks/08-admin-quotas-cost-guardrails.md` - "jamais d'erreur technique
+ * brute affichée au joueur").
+ */
+export class QuotaExceededClientError extends Error {
+  constructor() {
+    super('Daily LLM quota exceeded');
+    this.name = 'QuotaExceededClientError';
+  }
+}
+
 export const sessionApiClient = {
   async listMine(): Promise<SessionSummary[]> {
     const response = await fetch(`${BASE_URL}/sessions`, {
@@ -76,6 +91,9 @@ export const sessionApiClient = {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ actionText, mechanicalActionKey }),
     });
+    if (response.status === 429) {
+      throw new QuotaExceededClientError();
+    }
     return parseJsonOrThrow<SubmitTurnActionResult>(response);
   },
 

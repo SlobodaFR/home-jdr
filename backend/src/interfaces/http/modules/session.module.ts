@@ -41,6 +41,7 @@ import { OpenAiGameMasterAdapter } from '../../../infrastructure/session/openai-
 import { RandomDiceRollerAdapter } from '../../../infrastructure/session/random-dice-roller.adapter';
 import { RandomInviteCodeGenerator } from '../../../infrastructure/session/random-invite-code-generator';
 import { SessionController } from '../controllers/session.controller';
+import { UsageQuotaModule } from './usage-quota.module';
 import { UserProfileModule } from './user-profile.module';
 
 /** Selects the active `LlmGameMasterPort` adapter from `LLM_PROVIDER` (see `.env.example`). Defaults to Claude. */
@@ -68,6 +69,10 @@ function llmGameMasterProviderFactory(
       PendingCharacterDeltaOrmEntity,
     ]),
     UserProfileModule,
+    // Provides `UsageQuotaPort`, consumed by `ResolveSceneUseCase` and
+    // `MaintainRollingSummaryUseCase` below - see
+    // `tasks/08-admin-quotas-cost-guardrails.md`.
+    UsageQuotaModule,
   ],
   controllers: [SessionController],
   providers: [
