@@ -35,6 +35,7 @@ interface OpenAiToolCall {
 
 interface OpenAiChatCompletionResponse {
   choices?: {
+    finish_reason?: string;
     message?: {
       content?: string | null;
       tool_calls?: OpenAiToolCall[];
@@ -79,6 +80,7 @@ export class OpenAiGameMasterAdapter extends LlmGameMasterPort {
         type: 'function',
         function: { name: RESOLVE_SCENE_TOOL_NAME },
       },
+      maxTokens: 2048,
     });
 
     const toolCall = body.choices?.[0]?.message?.tool_calls?.find(
@@ -100,6 +102,7 @@ export class OpenAiGameMasterAdapter extends LlmGameMasterPort {
     const body = await this.call({
       system: buildSummarizeSystemPrompt(input),
       userMessage: SUMMARIZE_USER_MESSAGE,
+      maxTokens: 1024,
     });
 
     return (body.choices?.[0]?.message?.content ?? '').trim();
@@ -126,6 +129,7 @@ export class OpenAiGameMasterAdapter extends LlmGameMasterPort {
         type: 'function',
         function: { name: ASSIST_CHARACTER_CREATION_TOOL_NAME },
       },
+      maxTokens: 1024,
     });
 
     const toolCall = body.choices?.[0]?.message?.tool_calls?.find(
@@ -157,6 +161,7 @@ export class OpenAiGameMasterAdapter extends LlmGameMasterPort {
       };
     }[];
     toolChoice?: { type: 'function'; function: { name: string } };
+    maxTokens: number;
   }): Promise<OpenAiChatCompletionResponse> {
     const apiKey = this.config.get<string>('OPENAI_API_KEY');
     if (!apiKey) {
@@ -176,6 +181,7 @@ export class OpenAiGameMasterAdapter extends LlmGameMasterPort {
           { role: 'system', content: options.system },
           { role: 'user', content: options.userMessage },
         ],
+        max_tokens: options.maxTokens,
         ...(options.tools ? { tools: options.tools } : {}),
         ...(options.toolChoice ? { tool_choice: options.toolChoice } : {}),
       }),
@@ -185,6 +191,12 @@ export class OpenAiGameMasterAdapter extends LlmGameMasterPort {
       throw new Error(`OpenAI API call failed: ${response.status}`);
     }
 
-    return (await response.json()) as OpenAiChatCompletionResponse;
+    const body = (await response.json()) as OpenAiChatCompletionResponse;
+    if (body.choices?.[0]?.finish_reason === 'length') {
+      throw new Error(
+        `OpenAI response was truncated (finish_reason=length, max_tokens=${options.maxTokens}) - the model ran out of room before finishing its answer`,
+      );
+    }
+    return body;
   }
 }

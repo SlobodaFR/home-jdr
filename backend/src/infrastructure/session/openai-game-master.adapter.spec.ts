@@ -180,4 +180,72 @@ describe('OpenAiGameMasterAdapter', () => {
       }),
     ).rejects.toThrow('OPENAI_API_KEY is not configured');
   });
+
+  it('sends max_tokens on every call so the model has room to finish its JSON output', async () => {
+    const harness = buildHarness();
+    harness.mockResolveSceneReply({
+      narrationText: 'texte',
+      characterDeltas: [],
+    });
+
+    await harness.adapter.resolveScene({
+      rulesText: 'regles',
+      characterSheetSchema: {
+        baseAttributes: { hitPoints: { max: 1 }, inventory: [] },
+        customAttributes: [],
+      },
+      characters: [],
+      recentTurns: [],
+      rollingSummary: '',
+      submittedActions: [],
+      diceFacts: [],
+    });
+
+    const body = harness.lastRequestBody() as { max_tokens?: number };
+    expect(body.max_tokens).toBe(2048);
+  });
+
+  it('throws a clear error instead of a JSON parse error when the response was truncated (finish_reason=length)', async () => {
+    const adapter = new OpenAiGameMasterAdapter(
+      fakeConfig({ OPENAI_API_KEY: 'test-api-key' }),
+    );
+    const mockFetch = jest.fn().mockResolvedValueOnce({
+      ok: true,
+      status: 200,
+      json: () =>
+        Promise.resolve({
+          choices: [
+            {
+              finish_reason: 'length',
+              message: {
+                tool_calls: [
+                  {
+                    function: {
+                      name: 'resolve_scene',
+                      arguments: '{"narration_text": "coupé au milieu',
+                    },
+                  },
+                ],
+              },
+            },
+          ],
+        }),
+    });
+    global.fetch = mockFetch;
+
+    await expect(
+      adapter.resolveScene({
+        rulesText: 'regles',
+        characterSheetSchema: {
+          baseAttributes: { hitPoints: { max: 1 }, inventory: [] },
+          customAttributes: [],
+        },
+        characters: [],
+        recentTurns: [],
+        rollingSummary: '',
+        submittedActions: [],
+        diceFacts: [],
+      }),
+    ).rejects.toThrow('finish_reason=length');
+  });
 });
