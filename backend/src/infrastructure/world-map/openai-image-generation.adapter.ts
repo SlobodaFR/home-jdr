@@ -51,7 +51,10 @@ export class OpenAiImageGenerationAdapter extends ImageGenerationPort {
       },
     );
     if (!response.ok) {
-      throw new Error(`Image generation failed: ${response.status}`);
+      const errorBody = await response.text().catch(() => '');
+      throw new Error(
+        `Image generation failed: ${response.status} ${errorBody.slice(0, 500)}`,
+      );
     }
 
     const body = (await response.json()) as OpenAiImagesResponse;
