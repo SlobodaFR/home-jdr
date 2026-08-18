@@ -8,4 +8,6 @@ export abstract class MapPinRepository {
   abstract findByWorldMapId(worldMapId: string): Promise<MapPin[]>;
   abstract save(pin: MapPin): Promise<void>;
   abstract delete(id: string): Promise<void>;
+  /** Bulk delete for `DeleteSessionCascade`. */
+  abstract deleteByWorldMapId(worldMapId: string): Promise<void>;
 }

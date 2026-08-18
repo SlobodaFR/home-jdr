@@ -5,8 +5,11 @@ import { ApplyCharacterDeltaUseCase } from '../../../application/character/apply
 import { RejectCharacterDeltaUseCase } from '../../../application/character/reject-character-delta.use-case';
 import { ValidateCharacterDeltaUseCase } from '../../../application/character/validate-character-delta.use-case';
 import { CreateSessionUseCase } from '../../../application/session/create-session.use-case';
+import { DeleteSessionCascade } from '../../../application/session/delete-session-cascade';
+import { DeleteSoloSessionUseCase } from '../../../application/session/delete-solo-session.use-case';
 import { GetSessionStateUseCase } from '../../../application/session/get-session-state.use-case';
 import { JoinSessionUseCase } from '../../../application/session/join-session.use-case';
+import { LeaveSessionUseCase } from '../../../application/session/leave-session.use-case';
 import { ListSessionsForUserUseCase } from '../../../application/session/list-sessions-for-user.use-case';
 import { MaintainRollingSummaryUseCase } from '../../../application/session/maintain-rolling-summary.use-case';
 import { ResolveSceneUseCase } from '../../../application/session/resolve-scene.use-case';
@@ -23,22 +26,28 @@ import { SceneResolverPort } from '../../../domain/session/scene-resolver.port';
 import { SessionPlayerRepository } from '../../../domain/session/session-player.repository';
 import { TurnResolutionRepository } from '../../../domain/session/turn-resolution.repository';
 import { TurnSubmissionRepository } from '../../../domain/session/turn-submission.repository';
+import { MapPinRepository } from '../../../domain/world-map/map-pin.repository';
+import { WorldMapRepository } from '../../../domain/world-map/world-map.repository';
 import { TypeOrmCharacterCreationSessionRepository } from '../../../infrastructure/character-creation/typeorm-character-creation-session.repository';
 import { CharacterCreationSessionOrmEntity } from '../../../infrastructure/persistence/entities/character-creation-session.orm-entity';
 import { CharacterOrmEntity } from '../../../infrastructure/persistence/entities/character.orm-entity';
 import { GameSessionOrmEntity } from '../../../infrastructure/persistence/entities/game-session.orm-entity';
 import { GameSystemOrmEntity } from '../../../infrastructure/persistence/entities/game-system.orm-entity';
+import { MapPinOrmEntity } from '../../../infrastructure/persistence/entities/map-pin.orm-entity';
 import { PendingCharacterDeltaOrmEntity } from '../../../infrastructure/persistence/entities/pending-character-delta.orm-entity';
 import { SessionPlayerOrmEntity } from '../../../infrastructure/persistence/entities/session-player.orm-entity';
 import { TurnResolutionOrmEntity } from '../../../infrastructure/persistence/entities/turn-resolution.orm-entity';
 import { TurnSubmissionOrmEntity } from '../../../infrastructure/persistence/entities/turn-submission.orm-entity';
+import { WorldMapOrmEntity } from '../../../infrastructure/persistence/entities/world-map.orm-entity';
 import { TypeOrmCharacterRepository } from '../../../infrastructure/persistence/repositories/typeorm-character.repository';
 import { TypeOrmGameSessionRepository } from '../../../infrastructure/persistence/repositories/typeorm-game-session.repository';
 import { TypeOrmGameSystemRepository } from '../../../infrastructure/persistence/repositories/typeorm-game-system.repository';
+import { TypeOrmMapPinRepository } from '../../../infrastructure/persistence/repositories/typeorm-map-pin.repository';
 import { TypeOrmPendingCharacterDeltaRepository } from '../../../infrastructure/persistence/repositories/typeorm-pending-character-delta.repository';
 import { TypeOrmSessionPlayerRepository } from '../../../infrastructure/persistence/repositories/typeorm-session-player.repository';
 import { TypeOrmTurnResolutionRepository } from '../../../infrastructure/persistence/repositories/typeorm-turn-resolution.repository';
 import { TypeOrmTurnSubmissionRepository } from '../../../infrastructure/persistence/repositories/typeorm-turn-submission.repository';
+import { TypeOrmWorldMapRepository } from '../../../infrastructure/persistence/repositories/typeorm-world-map.repository';
 import { ClaudeGameMasterAdapter } from '../../../infrastructure/session/claude-game-master.adapter';
 import { OpenAiGameMasterAdapter } from '../../../infrastructure/session/openai-game-master.adapter';
 import { RandomDiceRollerAdapter } from '../../../infrastructure/session/random-dice-roller.adapter';
@@ -71,6 +80,12 @@ function llmGameMasterProviderFactory(
       GameSystemOrmEntity,
       PendingCharacterDeltaOrmEntity,
       CharacterCreationSessionOrmEntity,
+      // Needed only by `DeleteSessionCascade` (deletes a session's
+      // `WorldMap`/`MapPin`s too) - duplicated here from `WorldMapModule`,
+      // matching the existing pattern of that module also duplicating
+      // `GameSessionRepository`/`SessionPlayerRepository`/`GameSystemRepository`.
+      WorldMapOrmEntity,
+      MapPinOrmEntity,
     ]),
     UserProfileModule,
     // Provides `UsageQuotaPort`, consumed by `ResolveSceneUseCase` and
@@ -103,6 +118,8 @@ function llmGameMasterProviderFactory(
       provide: CharacterCreationSessionRepository,
       useClass: TypeOrmCharacterCreationSessionRepository,
     },
+    { provide: WorldMapRepository, useClass: TypeOrmWorldMapRepository },
+    { provide: MapPinRepository, useClass: TypeOrmMapPinRepository },
     { provide: InviteCodeGeneratorPort, useClass: RandomInviteCodeGenerator },
     { provide: DiceRollerPort, useClass: RandomDiceRollerAdapter },
     // Concrete LLM adapters registered under their own class token so the
@@ -121,6 +138,9 @@ function llmGameMasterProviderFactory(
     { provide: SceneResolverPort, useClass: ResolveSceneUseCase },
     CreateSessionUseCase,
     JoinSessionUseCase,
+    DeleteSessionCascade,
+    DeleteSoloSessionUseCase,
+    LeaveSessionUseCase,
     SubmitTurnActionUseCase,
     GetSessionStateUseCase,
     ListSessionsForUserUseCase,

@@ -11,4 +11,6 @@ export abstract class CharacterCreationSessionRepository {
     userId: string,
   ): Promise<CharacterCreationSession | null>;
   abstract save(session: CharacterCreationSession): Promise<void>;
+  /** Bulk delete for `DeleteSessionCascade` - including sessions still `in_progress`. */
+  abstract deleteByGameSessionId(gameSessionId: string): Promise<void>;
 }

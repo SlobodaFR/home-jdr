@@ -30,4 +30,9 @@ export class InMemoryGameSessionRepository extends GameSessionRepository {
     ];
     return Promise.resolve();
   }
+
+  deleteById(id: string): Promise<void> {
+    this.sessions = this.sessions.filter((s) => s.id !== id);
+    return Promise.resolve();
+  }
 }

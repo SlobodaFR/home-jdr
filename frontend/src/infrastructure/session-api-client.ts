@@ -1,4 +1,5 @@
 import {
+  LeaveSessionResult,
   PendingCharacterDeltaView,
   SessionState,
   SessionSummary,
@@ -125,5 +126,25 @@ export const sessionApiClient = {
       { method: 'POST', credentials: 'include' },
     );
     return parseJsonOrThrow<PendingCharacterDeltaView>(response);
+  },
+
+  /** Solo sessions only (one active player, the requester) - see `DeleteSoloSessionUseCase`. */
+  async deleteSession(sessionId: string): Promise<void> {
+    const response = await fetch(`${BASE_URL}/sessions/${sessionId}`, {
+      method: 'DELETE',
+      credentials: 'include',
+    });
+    if (!response.ok) {
+      throw new Error(await extractErrorMessage(response));
+    }
+  },
+
+  /** Leaves a group session - cascades the whole session away if this was the last active player (`sessionDeleted`). */
+  async leaveSession(sessionId: string): Promise<LeaveSessionResult> {
+    const response = await fetch(`${BASE_URL}/sessions/${sessionId}/leave`, {
+      method: 'POST',
+      credentials: 'include',
+    });
+    return parseJsonOrThrow<LeaveSessionResult>(response);
   },
 };

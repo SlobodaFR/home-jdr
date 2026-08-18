@@ -39,6 +39,10 @@ export class TypeOrmTurnResolutionRepository extends TurnResolutionRepository {
       resolvedAt: resolution.resolvedAt,
     });
   }
+
+  async deleteBySessionId(sessionId: string): Promise<void> {
+    await this.repository.delete({ sessionId });
+  }
 }
 
 function toDomain(row: TurnResolutionOrmEntity): TurnResolution {

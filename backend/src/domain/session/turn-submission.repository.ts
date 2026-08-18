@@ -9,4 +9,6 @@ export abstract class TurnSubmissionRepository {
     turnNumber: number,
   ): Promise<TurnSubmission[]>;
   abstract save(submission: TurnSubmission): Promise<void>;
+  /** Bulk delete for `DeleteSessionCascade`. */
+  abstract deleteBySessionId(sessionId: string): Promise<void>;
 }

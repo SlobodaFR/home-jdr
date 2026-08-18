@@ -51,6 +51,10 @@ export class TypeOrmGameSessionRepository extends GameSessionRepository {
       .map(toDomain);
   }
 
+  async deleteById(id: string): Promise<void> {
+    await this.repository.delete({ id });
+  }
+
   async save(session: GameSession): Promise<void> {
     await this.repository.save({
       id: session.id,

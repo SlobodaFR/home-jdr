@@ -7,4 +7,6 @@ import { WorldMap } from './world-map';
 export abstract class WorldMapRepository {
   abstract findBySessionId(sessionId: string): Promise<WorldMap | null>;
   abstract save(worldMap: WorldMap): Promise<void>;
+  /** Bulk delete for `DeleteSessionCascade`. */
+  abstract deleteBySessionId(sessionId: string): Promise<void>;
 }

@@ -26,4 +26,9 @@ export class InMemoryMapPinRepository extends MapPinRepository {
     this.pins = this.pins.filter((p) => p.id !== id);
     return Promise.resolve();
   }
+
+  deleteByWorldMapId(worldMapId: string): Promise<void> {
+    this.pins = this.pins.filter((p) => p.worldMapId !== worldMapId);
+    return Promise.resolve();
+  }
 }

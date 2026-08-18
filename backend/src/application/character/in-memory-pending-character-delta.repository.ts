@@ -32,4 +32,11 @@ export class InMemoryPendingCharacterDeltaRepository extends PendingCharacterDel
     ];
     return Promise.resolve();
   }
+
+  deleteBySessionId(sessionId: string): Promise<void> {
+    this.pendingDeltas = this.pendingDeltas.filter(
+      (delta) => delta.sessionId !== sessionId,
+    );
+    return Promise.resolve();
+  }
 }

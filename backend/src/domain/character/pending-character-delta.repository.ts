@@ -10,4 +10,6 @@ export abstract class PendingCharacterDeltaRepository {
     turnNumber: number,
   ): Promise<PendingCharacterDelta[]>;
   abstract save(pendingDelta: PendingCharacterDelta): Promise<void>;
+  /** Bulk delete for `DeleteSessionCascade`. */
+  abstract deleteBySessionId(sessionId: string): Promise<void>;
 }

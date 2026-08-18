@@ -35,6 +35,10 @@ export class TypeOrmTurnSubmissionRepository extends TurnSubmissionRepository {
       submittedAt: submission.submittedAt,
     });
   }
+
+  async deleteBySessionId(sessionId: string): Promise<void> {
+    await this.repository.delete({ sessionId });
+  }
 }
 
 function toDomain(row: TurnSubmissionOrmEntity): TurnSubmission {

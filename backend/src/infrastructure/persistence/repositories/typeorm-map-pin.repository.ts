@@ -40,6 +40,10 @@ export class TypeOrmMapPinRepository extends MapPinRepository {
   async delete(id: string): Promise<void> {
     await this.repository.delete({ id });
   }
+
+  async deleteByWorldMapId(worldMapId: string): Promise<void> {
+    await this.repository.delete({ worldMapId });
+  }
 }
 
 function toDomain(row: MapPinOrmEntity): MapPin {

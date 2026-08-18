@@ -35,6 +35,17 @@ export class TypeOrmSessionPlayerRepository extends SessionPlayerRepository {
       joinedAt: player.joinedAt,
     });
   }
+
+  async deleteBySessionAndUser(
+    sessionId: string,
+    userId: string,
+  ): Promise<void> {
+    await this.repository.delete({ sessionId, userId });
+  }
+
+  async deleteBySessionId(sessionId: string): Promise<void> {
+    await this.repository.delete({ sessionId });
+  }
 }
 
 function toDomain(row: SessionPlayerOrmEntity): SessionPlayer {

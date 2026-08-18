@@ -39,6 +39,14 @@ export class TypeOrmCharacterRepository extends CharacterRepository {
       updatedAt: character.updatedAt,
     });
   }
+
+  async deleteById(id: string): Promise<void> {
+    await this.repository.delete({ id });
+  }
+
+  async deleteBySessionId(sessionId: string): Promise<void> {
+    await this.repository.delete({ sessionId });
+  }
 }
 
 function toDomain(row: CharacterOrmEntity): Character {

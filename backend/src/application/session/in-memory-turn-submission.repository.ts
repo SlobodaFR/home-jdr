@@ -25,4 +25,11 @@ export class InMemoryTurnSubmissionRepository extends TurnSubmissionRepository {
     ];
     return Promise.resolve();
   }
+
+  deleteBySessionId(sessionId: string): Promise<void> {
+    this.submissions = this.submissions.filter(
+      (s) => s.sessionId !== sessionId,
+    );
+    return Promise.resolve();
+  }
 }

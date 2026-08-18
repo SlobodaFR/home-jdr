@@ -10,4 +10,11 @@ export abstract class SessionPlayerRepository {
     userId: string,
   ): Promise<SessionPlayer | null>;
   abstract save(player: SessionPlayer): Promise<void>;
+  /** Removes a single player's row (`LeaveSessionUseCase`). */
+  abstract deleteBySessionAndUser(
+    sessionId: string,
+    userId: string,
+  ): Promise<void>;
+  /** Bulk delete for `DeleteSessionCascade`. */
+  abstract deleteBySessionId(sessionId: string): Promise<void>;
 }

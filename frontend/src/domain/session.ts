@@ -69,3 +69,9 @@ export interface SubmitTurnActionResult {
   resolved: boolean;
   narrationText: string | null;
 }
+
+/** Response of `POST /api/sessions/:id/leave` - see `LeaveSessionUseCase`. */
+export interface LeaveSessionResult {
+  /** True when this was the last active player: the whole session was cascade-deleted as a side effect. */
+  sessionDeleted: boolean;
+}

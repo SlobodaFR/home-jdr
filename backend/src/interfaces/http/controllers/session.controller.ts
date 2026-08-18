@@ -1,7 +1,10 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
+  HttpCode,
+  HttpStatus,
   Param,
   Post,
   Query,
@@ -11,12 +14,17 @@ import { ConfigService } from '@nestjs/config';
 import { RejectCharacterDeltaUseCase } from '../../../application/character/reject-character-delta.use-case';
 import { ValidateCharacterDeltaUseCase } from '../../../application/character/validate-character-delta.use-case';
 import { CreateSessionUseCase } from '../../../application/session/create-session.use-case';
+import { DeleteSoloSessionUseCase } from '../../../application/session/delete-solo-session.use-case';
 import {
   DEFAULT_RECENT_TURNS_LIMIT,
   GetSessionStateUseCase,
   SessionStateView,
 } from '../../../application/session/get-session-state.use-case';
 import { JoinSessionUseCase } from '../../../application/session/join-session.use-case';
+import {
+  LeaveSessionResult,
+  LeaveSessionUseCase,
+} from '../../../application/session/leave-session.use-case';
 import { ListSessionsForUserUseCase } from '../../../application/session/list-sessions-for-user.use-case';
 import {
   SubmitTurnActionResult,
@@ -58,6 +66,10 @@ interface SessionSummaryResponse {
   createdByUserId: string;
   charactersVisibleToOthers: boolean;
   createdAt: Date;
+}
+
+interface LeaveSessionResponse {
+  sessionDeleted: boolean;
 }
 
 interface SubmitTurnActionResponse {
@@ -112,6 +124,8 @@ export class SessionController {
   constructor(
     private readonly createSession: CreateSessionUseCase,
     private readonly joinSession: JoinSessionUseCase,
+    private readonly deleteSoloSession: DeleteSoloSessionUseCase,
+    private readonly leaveSession: LeaveSessionUseCase,
     private readonly submitTurnAction: SubmitTurnActionUseCase,
     private readonly getSessionState: GetSessionStateUseCase,
     private readonly listSessionsForUser: ListSessionsForUserUseCase,
@@ -166,6 +180,39 @@ export class SessionController {
         userRole: profile.role,
       });
     return { ...toSummaryResponse(session), characterCreationSessionId };
+  }
+
+  /**
+   * Permanent delete, solo sessions only (one active player, the requester
+   * themself) - `DeleteSoloSessionUseCase` rejects anything else (see its
+   * doc comment). Group sessions are dismantled by every player leaving
+   * individually (`POST :id/leave`), which cascade-deletes on the last one.
+   */
+  @Delete(':id')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async remove(
+    @Param('id') id: string,
+    @CurrentUser() user: CurrentUserPayload,
+  ): Promise<void> {
+    await this.deleteSoloSession.execute({ sessionId: id, userId: user.id });
+  }
+
+  /**
+   * A player leaves a group session at any time, including mid-`resolving`
+   * (leaving isn't a turn action). `sessionDeleted` tells the caller
+   * whether this was the last active player, cascading the whole session
+   * away - see `LeaveSessionUseCase`.
+   */
+  @Post(':id/leave')
+  async leave(
+    @Param('id') id: string,
+    @CurrentUser() user: CurrentUserPayload,
+  ): Promise<LeaveSessionResponse> {
+    const result: LeaveSessionResult = await this.leaveSession.execute({
+      sessionId: id,
+      userId: user.id,
+    });
+    return { sessionDeleted: result.sessionDeleted };
   }
 
   // `QuotaExceededError` can bubble up from `ResolveSceneUseCase` (via

@@ -42,6 +42,10 @@ export class TypeOrmCharacterCreationSessionRepository extends CharacterCreation
       updatedAt: session.updatedAt,
     });
   }
+
+  async deleteByGameSessionId(gameSessionId: string): Promise<void> {
+    await this.repository.delete({ gameSessionId });
+  }
 }
 
 function toDomain(

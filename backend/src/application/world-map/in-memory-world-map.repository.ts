@@ -20,4 +20,9 @@ export class InMemoryWorldMapRepository extends WorldMapRepository {
     ];
     return Promise.resolve();
   }
+
+  deleteBySessionId(sessionId: string): Promise<void> {
+    this.worldMaps = this.worldMaps.filter((m) => m.sessionId !== sessionId);
+    return Promise.resolve();
+  }
 }
