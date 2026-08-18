@@ -9,6 +9,7 @@ import { LoginPage } from './pages/LoginPage';
 import { AdminGameCatalogPage } from './pages/AdminGameCatalogPage';
 import { ChooseGamePage } from './pages/ChooseGamePage';
 import { SessionPage } from './pages/SessionPage';
+import { WorldMapPage } from './pages/WorldMapPage';
 import { RequireAdmin } from './user-profile/RequireAdmin';
 
 export default function App() {
@@ -68,6 +69,14 @@ export default function App() {
         element={
           <RequireAuth>
             <SessionPage />
+          </RequireAuth>
+        }
+      />
+      <Route
+        path="/sessions/:id/map"
+        element={
+          <RequireAuth>
+            <WorldMapPage />
           </RequireAuth>
         }
       />

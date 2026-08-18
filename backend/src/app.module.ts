@@ -8,6 +8,7 @@ import { CharacterModule } from './interfaces/http/modules/character.module';
 import { GameSystemModule } from './interfaces/http/modules/game-system.module';
 import { SessionModule } from './interfaces/http/modules/session.module';
 import { UserProfileModule } from './interfaces/http/modules/user-profile.module';
+import { WorldMapModule } from './interfaces/http/modules/world-map.module';
 
 @Module({
   imports: [
@@ -22,6 +23,7 @@ import { UserProfileModule } from './interfaces/http/modules/user-profile.module
     UserProfileModule,
     GameSystemModule,
     SessionModule,
+    WorldMapModule,
   ],
 })
 export class AppModule {}

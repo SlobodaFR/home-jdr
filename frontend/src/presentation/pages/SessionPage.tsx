@@ -1,5 +1,5 @@
 import { FormEvent, useCallback, useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { Link, useParams } from 'react-router-dom';
 import { SessionState } from '../../domain/session';
 import { sessionApiClient } from '../../infrastructure/session-api-client';
 import { ActionInput } from '../components/ActionInput';
@@ -92,7 +92,12 @@ export function SessionPage() {
     <main className="min-h-screen bg-canvas px-lg py-section flex flex-col gap-xl">
       <div className="flex items-center justify-between flex-wrap gap-sm">
         <h1 className="font-sans-ui text-heading-xl text-ink">{state.session.name}</h1>
-        <InviteCodeBadge code={state.session.inviteCode} />
+        <div className="flex items-center gap-md">
+          <Link to={`/sessions/${state.session.id}/map`} className="font-sans-body text-link-md text-ink">
+            Carte du monde
+          </Link>
+          <InviteCodeBadge code={state.session.inviteCode} />
+        </div>
       </div>
 
       <SessionStatusPill variant={statusVariant(state.session.status)} label={statusLabel(state)} />
