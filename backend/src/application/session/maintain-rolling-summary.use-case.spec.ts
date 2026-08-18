@@ -1,5 +1,6 @@
 import { GameSession } from '../../domain/session/game-session';
 import {
+  CharacterCreationAssistOutput,
   LlmGameMasterPort,
   SceneResolutionOutput,
   SummarizeSceneInput,
@@ -22,6 +23,10 @@ class RecordingLlmGameMasterPort extends LlmGameMasterPort {
   summarize(input: SummarizeSceneInput): Promise<string> {
     this.summarizeCalls.push(input);
     return Promise.resolve(this.nextSummary);
+  }
+
+  assistCharacterCreation(): Promise<CharacterCreationAssistOutput> {
+    throw new Error('not used in this spec');
   }
 }
 

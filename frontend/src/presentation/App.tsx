@@ -1,5 +1,6 @@
 import { Route, Routes } from 'react-router-dom';
 import { RequireAuth } from './auth/RequireAuth';
+import { CharacterCreationChatPage } from './pages/CharacterCreationChatPage';
 import { CharacterSheetPage } from './pages/CharacterSheetPage';
 import { CreateCharacterPage } from './pages/CreateCharacterPage';
 import { CreateSessionPage } from './pages/CreateSessionPage';
@@ -71,6 +72,14 @@ export default function App() {
         element={
           <RequireAuth>
             <SessionPage />
+          </RequireAuth>
+        }
+      />
+      <Route
+        path="/character-creation/:id"
+        element={
+          <RequireAuth>
+            <CharacterCreationChatPage />
           </RequireAuth>
         }
       />

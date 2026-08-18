@@ -5,6 +5,7 @@ import { ServeStaticModule } from '@nestjs/serve-static';
 import { join } from 'path';
 import { DatabaseModule } from './infrastructure/persistence/database.module';
 import { AuthModule } from './interfaces/http/modules/auth.module';
+import { CharacterCreationModule } from './interfaces/http/modules/character-creation.module';
 import { CharacterModule } from './interfaces/http/modules/character.module';
 import { GameSystemModule } from './interfaces/http/modules/game-system.module';
 import { PushSubscriptionModule } from './interfaces/http/modules/push-subscription.module';
@@ -30,6 +31,7 @@ import { WorldMapModule } from './interfaces/http/modules/world-map.module';
     UserProfileModule,
     GameSystemModule,
     SessionModule,
+    CharacterCreationModule,
     WorldMapModule,
     PushSubscriptionModule,
     UsageQuotaModule,

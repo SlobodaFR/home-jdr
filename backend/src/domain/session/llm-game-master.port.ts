@@ -72,6 +72,46 @@ export interface SummarizeSceneInput {
   turnsToSummarize: SceneResolutionRecentTurn[];
 }
 
+export type CharacterCreationMessageRole = 'assistant' | 'user';
+
+export interface CharacterCreationMessage {
+  role: CharacterCreationMessageRole;
+  content: string;
+}
+
+/** Fields the guided conversation may propose so far - always a partial view, never the full sheet (schema defaults fill the rest at finalization). */
+export interface CharacterCreationDraftCharacter {
+  name?: string;
+  hitPointsMax?: number;
+  inventory?: string[];
+  customAttributes?: Record<string, number | string>;
+}
+
+export interface CharacterCreationAssistInput {
+  /** Full extracted rules text of the `GameSystem` (no RAG in V1 - see PRD.md). */
+  rulesText: string;
+  /** Target shape/defaults the character sheet should converge toward. */
+  characterSheetSchema: CharacterSheetSchema;
+  /** Full conversation so far, oldest first, including the player's latest message. */
+  messages: CharacterCreationMessage[];
+  draftCharacter: CharacterCreationDraftCharacter;
+}
+
+export interface CharacterCreationAssistOutput {
+  /** The next thing the AI says to the player. */
+  assistantMessage: string;
+  /** Fields to merge into the draft - omitted fields stay as-is (never destructive). */
+  draftUpdates: Partial<CharacterCreationDraftCharacter>;
+  /**
+   * ADVISORY hint only, for the UI (e.g. enabling a "the AI thinks we're
+   * done" nudge) - `FinalizeCharacterCreationUseCase` must independently
+   * verify `draftCharacter.name` is a non-empty string regardless of this
+   * flag. Never treat this as authoritative for the finalize state
+   * transition (see `tasks/` addendum on character creation).
+   */
+  readyToFinalize: boolean;
+}
+
 /**
  * Port (driven side) implemented by the infrastructure layer. `Claude`
  * and `OpenAI` adapters live in `infrastructure/session/`, selected at
@@ -95,4 +135,17 @@ export abstract class LlmGameMasterPort {
    * `MaintainRollingSummaryUseCase`), not on every turn.
    */
   abstract summarize(input: SummarizeSceneInput): Promise<string>;
+
+  /**
+   * One step of the guided character-creation conversation: given the
+   * conversation so far and the current draft, returns the AI's next
+   * message plus any draft field updates. Called from
+   * `SendCharacterCreationMessageUseCase`, gated by
+   * `UsageQuotaPort.checkQuotaAvailable()` exactly like `resolveScene()` -
+   * see `CLAUDE.md` ("Jamais d'appel LLM sans vérification de quota au
+   * préalable" applies to every LLM call, not just scene resolution).
+   */
+  abstract assistCharacterCreation(
+    input: CharacterCreationAssistInput,
+  ): Promise<CharacterCreationAssistOutput>;
 }

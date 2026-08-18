@@ -1,4 +1,4 @@
-import { IsNotEmpty, IsString } from 'class-validator';
+import { IsBoolean, IsNotEmpty, IsString } from 'class-validator';
 
 export class CreateSessionDto {
   @IsString()
@@ -9,7 +9,7 @@ export class CreateSessionDto {
   @IsNotEmpty()
   name!: string;
 
-  @IsString()
-  @IsNotEmpty()
-  characterName!: string;
+  /** Per-session choice, set once by the creator, immutable after - see `GameSession.charactersVisibleToOthers`. */
+  @IsBoolean()
+  charactersVisibleToOthers!: boolean;
 }

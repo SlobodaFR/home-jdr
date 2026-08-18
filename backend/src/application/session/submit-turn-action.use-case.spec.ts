@@ -1,4 +1,5 @@
 import { EventEmitter2 } from '@nestjs/event-emitter';
+import { CharacterCreationSession } from '../../domain/character-creation/character-creation-session';
 import { GameSession } from '../../domain/session/game-session';
 import {
   SceneResolverPort,
@@ -129,6 +130,74 @@ describe('SubmitTurnActionUseCase', () => {
     expect(sceneResolver.calls[0].submissionCount).toBe(3);
     expect(third.session.status).toBe('narrating');
   });
+
+  it(
+    'resolves as soon as every FINALIZED player of a 3-seat session has ' +
+      'submitted, without waiting on a player still mid-character-creation ' +
+      '(see CreateSessionUseCase/JoinSessionUseCase/FinalizeCharacterCreationUseCase - ' +
+      'a player only becomes a SessionPlayer once finalized)',
+    async () => {
+      const session = buildSession();
+      const gameSessionRepository = new InMemoryGameSessionRepository([
+        session,
+      ]);
+      // Only 2 of the "3 seats" are finalized SessionPlayer rows - the third
+      // is still an in_progress CharacterCreationSession, which by design
+      // never produces a SessionPlayer row until FinalizeCharacterCreationUseCase
+      // runs. It is not seeded into sessionPlayerRepository at all.
+      const sessionPlayerRepository = new InMemorySessionPlayerRepository([
+        buildPlayer('user-1', session.id),
+        buildPlayer('user-2', session.id),
+      ]);
+      const midCreationPlayer = CharacterCreationSession.create({
+        gameSessionId: session.id,
+        gameSystemId: 'game-system-1',
+        userId: 'user-3-mid-creation',
+      });
+      expect(midCreationPlayer.status).toBe('in_progress');
+
+      const turnSubmissionRepository = new InMemoryTurnSubmissionRepository();
+      const turnResolutionRepository = new InMemoryTurnResolutionRepository();
+      const sceneResolver = new RecordingSceneResolver();
+      const useCase = new SubmitTurnActionUseCase(
+        gameSessionRepository,
+        sessionPlayerRepository,
+        turnSubmissionRepository,
+        turnResolutionRepository,
+        sceneResolver,
+        new EventEmitter2(),
+      );
+
+      const first = await useCase.execute({
+        sessionId: session.id,
+        userId: 'user-1',
+        actionText: 'Action 1',
+      });
+      expect(first.resolution).toBeNull();
+
+      const second = await useCase.execute({
+        sessionId: session.id,
+        userId: 'user-2',
+        actionText: 'Action 2',
+      });
+
+      // Resolves on the SECOND submission, not waiting for the third
+      // (mid-creation) "seat" at all.
+      expect(second.resolution).not.toBeNull();
+      expect(sceneResolver.calls).toHaveLength(1);
+      expect(sceneResolver.calls[0].submissionCount).toBe(2);
+      expect(second.session.status).toBe('narrating');
+
+      // The mid-creation user cannot even submit - they are not a player yet.
+      await expect(
+        useCase.execute({
+          sessionId: session.id,
+          userId: 'user-3-mid-creation',
+          actionText: 'Je voudrais agir aussi',
+        }),
+      ).rejects.toThrow();
+    },
+  );
 
   it('is idempotent: resubmitting for the same turn does not create a duplicate or re-trigger resolution', async () => {
     const session = buildSession();

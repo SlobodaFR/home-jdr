@@ -11,6 +11,7 @@ import { ListSessionsForUserUseCase } from '../../../application/session/list-se
 import { MaintainRollingSummaryUseCase } from '../../../application/session/maintain-rolling-summary.use-case';
 import { ResolveSceneUseCase } from '../../../application/session/resolve-scene.use-case';
 import { SubmitTurnActionUseCase } from '../../../application/session/submit-turn-action.use-case';
+import { CharacterCreationSessionRepository } from '../../../domain/character-creation/character-creation-session.repository';
 import { CharacterRepository } from '../../../domain/character/character.repository';
 import { PendingCharacterDeltaRepository } from '../../../domain/character/pending-character-delta.repository';
 import { GameSystemRepository } from '../../../domain/game-system/game-system.repository';
@@ -22,6 +23,8 @@ import { SceneResolverPort } from '../../../domain/session/scene-resolver.port';
 import { SessionPlayerRepository } from '../../../domain/session/session-player.repository';
 import { TurnResolutionRepository } from '../../../domain/session/turn-resolution.repository';
 import { TurnSubmissionRepository } from '../../../domain/session/turn-submission.repository';
+import { TypeOrmCharacterCreationSessionRepository } from '../../../infrastructure/character-creation/typeorm-character-creation-session.repository';
+import { CharacterCreationSessionOrmEntity } from '../../../infrastructure/persistence/entities/character-creation-session.orm-entity';
 import { CharacterOrmEntity } from '../../../infrastructure/persistence/entities/character.orm-entity';
 import { GameSessionOrmEntity } from '../../../infrastructure/persistence/entities/game-session.orm-entity';
 import { GameSystemOrmEntity } from '../../../infrastructure/persistence/entities/game-system.orm-entity';
@@ -67,6 +70,7 @@ function llmGameMasterProviderFactory(
       CharacterOrmEntity,
       GameSystemOrmEntity,
       PendingCharacterDeltaOrmEntity,
+      CharacterCreationSessionOrmEntity,
     ]),
     UserProfileModule,
     // Provides `UsageQuotaPort`, consumed by `ResolveSceneUseCase` and
@@ -95,6 +99,10 @@ function llmGameMasterProviderFactory(
       provide: PendingCharacterDeltaRepository,
       useClass: TypeOrmPendingCharacterDeltaRepository,
     },
+    {
+      provide: CharacterCreationSessionRepository,
+      useClass: TypeOrmCharacterCreationSessionRepository,
+    },
     { provide: InviteCodeGeneratorPort, useClass: RandomInviteCodeGenerator },
     { provide: DiceRollerPort, useClass: RandomDiceRollerAdapter },
     // Concrete LLM adapters registered under their own class token so the
@@ -120,6 +128,17 @@ function llmGameMasterProviderFactory(
     ApplyCharacterDeltaUseCase,
     ValidateCharacterDeltaUseCase,
     RejectCharacterDeltaUseCase,
+  ],
+  // Reused by `CharacterCreationModule` (imports this module) so its own
+  // use-cases (send message / finalize / get) don't need to redeclare the
+  // `LlmGameMasterPort` provider-selection factory or duplicate repository
+  // bindings.
+  exports: [
+    CharacterCreationSessionRepository,
+    GameSystemRepository,
+    CharacterRepository,
+    SessionPlayerRepository,
+    LlmGameMasterPort,
   ],
 })
 export class SessionModule {}

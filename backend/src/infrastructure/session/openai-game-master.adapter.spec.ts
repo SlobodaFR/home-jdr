@@ -60,6 +60,39 @@ function buildHarness(): LlmGameMasterContractHarness {
           Promise.resolve({ choices: [{ message: { content: summary } }] }),
       });
     },
+    mockAssistCharacterCreationReply(reply) {
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        json: () =>
+          Promise.resolve({
+            choices: [
+              {
+                message: {
+                  tool_calls: [
+                    {
+                      function: {
+                        name: 'assist_character_creation',
+                        arguments: JSON.stringify({
+                          assistant_message: reply.assistantMessage,
+                          draft_updates: {
+                            name: reply.draftUpdates?.name,
+                            hit_points_max: reply.draftUpdates?.hitPointsMax,
+                            inventory: reply.draftUpdates?.inventory,
+                            custom_attribute_changes:
+                              reply.draftUpdates?.customAttributes,
+                          },
+                          ready_to_finalize: reply.readyToFinalize,
+                        }),
+                      },
+                    },
+                  ],
+                },
+              },
+            ],
+          }),
+      });
+    },
     lastRequestBody() {
       const [, init] = mockFetch.mock.calls[
         mockFetch.mock.calls.length - 1
@@ -102,6 +135,31 @@ describe('OpenAiGameMasterAdapter', () => {
       tool_choice?: { function: { name: string } };
     };
     expect(body.tool_choice?.function.name).toBe('resolve_scene');
+  });
+
+  it('calls the OpenAI Chat Completions API forcing the assist_character_creation function', async () => {
+    const harness = buildHarness();
+    harness.mockAssistCharacterCreationReply({
+      assistantMessage: 'texte',
+      readyToFinalize: false,
+    });
+
+    await harness.adapter.assistCharacterCreation({
+      rulesText: 'regles',
+      characterSheetSchema: {
+        baseAttributes: { hitPoints: { max: 1 }, inventory: [] },
+        customAttributes: [],
+      },
+      messages: [],
+      draftCharacter: {},
+    });
+
+    const mockFetch = global.fetch as unknown as jest.Mock;
+    const [, init] = mockFetch.mock.calls[0] as [string, RequestInit];
+    const body = JSON.parse(init.body as string) as {
+      tool_choice?: { function: { name: string } };
+    };
+    expect(body.tool_choice?.function.name).toBe('assist_character_creation');
   });
 
   it('throws (without leaking the key) when OPENAI_API_KEY is not configured', async () => {

@@ -1,19 +1,27 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import {
+  CharacterCreationAssistInput,
+  CharacterCreationAssistOutput,
   LlmGameMasterPort,
   SceneResolutionInput,
   SceneResolutionOutput,
   SummarizeSceneInput,
 } from '../../domain/session/llm-game-master.port';
 import {
+  ASSIST_CHARACTER_CREATION_TOOL_NAME,
+  ASSIST_CHARACTER_CREATION_TOOL_SCHEMA,
+  AssistCharacterCreationToolInput,
   RESOLVE_SCENE_TOOL_NAME,
   RESOLVE_SCENE_TOOL_SCHEMA,
   ResolveSceneToolInput,
   SUMMARIZE_USER_MESSAGE,
+  buildAssistCharacterCreationSystemPrompt,
+  buildAssistCharacterCreationUserMessage,
   buildResolveSceneSystemPrompt,
   buildResolveSceneUserMessage,
   buildSummarizeSystemPrompt,
+  toCharacterCreationAssistOutput,
   toSceneResolutionOutput,
 } from './llm-game-master-prompt';
 
@@ -97,6 +105,44 @@ export class OpenAiGameMasterAdapter extends LlmGameMasterPort {
     return (body.choices?.[0]?.message?.content ?? '').trim();
   }
 
+  async assistCharacterCreation(
+    input: CharacterCreationAssistInput,
+  ): Promise<CharacterCreationAssistOutput> {
+    const body = await this.call({
+      system: buildAssistCharacterCreationSystemPrompt(input),
+      userMessage: buildAssistCharacterCreationUserMessage(input),
+      tools: [
+        {
+          type: 'function',
+          function: {
+            name: ASSIST_CHARACTER_CREATION_TOOL_NAME,
+            description:
+              'Retourne le prochain message du MJ et les mises à jour de brouillon de fiche pour cette étape de création de personnage.',
+            parameters: ASSIST_CHARACTER_CREATION_TOOL_SCHEMA,
+          },
+        },
+      ],
+      toolChoice: {
+        type: 'function',
+        function: { name: ASSIST_CHARACTER_CREATION_TOOL_NAME },
+      },
+    });
+
+    const toolCall = body.choices?.[0]?.message?.tool_calls?.find(
+      (call) => call.function?.name === ASSIST_CHARACTER_CREATION_TOOL_NAME,
+    );
+    const rawArguments = toolCall?.function?.arguments;
+    if (!rawArguments) {
+      throw new Error(
+        `OpenAI did not return a "${ASSIST_CHARACTER_CREATION_TOOL_NAME}" function call`,
+      );
+    }
+
+    return toCharacterCreationAssistOutput(
+      JSON.parse(rawArguments) as AssistCharacterCreationToolInput,
+    );
+  }
+
   private async call(options: {
     system: string;
     userMessage: string;
@@ -105,7 +151,9 @@ export class OpenAiGameMasterAdapter extends LlmGameMasterPort {
       function: {
         name: string;
         description: string;
-        parameters: typeof RESOLVE_SCENE_TOOL_SCHEMA;
+        parameters:
+          | typeof RESOLVE_SCENE_TOOL_SCHEMA
+          | typeof ASSIST_CHARACTER_CREATION_TOOL_SCHEMA;
       };
     }[];
     toolChoice?: { type: 'function'; function: { name: string } };

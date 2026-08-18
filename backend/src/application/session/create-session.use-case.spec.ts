@@ -1,4 +1,4 @@
-import { InMemoryCharacterRepository } from '../character/in-memory-character.repository';
+import { InMemoryCharacterCreationSessionRepository } from '../character-creation/in-memory-character-creation-session.repository';
 import { CharacterSheetSchema } from '../../domain/game-system/character-sheet-schema';
 import { GameSystem } from '../../domain/game-system/game-system';
 import {
@@ -8,7 +8,6 @@ import {
 import { InviteCodeGeneratorPort } from '../../domain/session/invite-code-generator.port';
 import { CreateSessionUseCase } from './create-session.use-case';
 import { InMemoryGameSessionRepository } from './in-memory-game-session.repository';
-import { InMemorySessionPlayerRepository } from './in-memory-session-player.repository';
 
 class InMemoryGameSystemRepository extends GameSystemRepository {
   constructor(private gameSystems: GameSystem[] = []) {
@@ -72,38 +71,67 @@ function buildGameSystem(
 }
 
 describe('CreateSessionUseCase', () => {
-  it('creates the session, generates an invite code and seats the creator as the first player', async () => {
+  it("creates the session, generates an invite code, and starts (but does not finalize) the creator's character-creation conversation", async () => {
     const gameSystemRepository = new InMemoryGameSystemRepository([
       buildGameSystem(),
     ]);
     const gameSessionRepository = new InMemoryGameSessionRepository();
-    const sessionPlayerRepository = new InMemorySessionPlayerRepository();
-    const characterRepository = new InMemoryCharacterRepository();
+    const characterCreationSessionRepository =
+      new InMemoryCharacterCreationSessionRepository();
     const useCase = new CreateSessionUseCase(
       gameSessionRepository,
       gameSystemRepository,
-      sessionPlayerRepository,
-      characterRepository,
+      characterCreationSessionRepository,
       new QueuedInviteCodeGenerator(['XK4R2P']),
     );
 
-    const { session, character } = await useCase.execute({
+    const { session, characterCreationSessionId } = await useCase.execute({
       gameSystemId: 'game-system-1',
       name: 'La quete du dragon',
       createdByUserId: 'user-1',
       createdByUserRole: 'adult',
-      characterName: 'Aragorn',
+      charactersVisibleToOthers: true,
     });
 
     expect(session.inviteCode).toBe('XK4R2P');
     expect(session.status).toBe('waiting_for_players');
-    expect(character.name).toBe('Aragorn');
-    expect(character.sessionId).toBe(session.id);
+    expect(session.charactersVisibleToOthers).toBe(true);
 
-    const players = await sessionPlayerRepository.findBySessionId(session.id);
-    expect(players).toHaveLength(1);
-    expect(players[0].userId).toBe('user-1');
-    expect(players[0].characterId).toBe(character.id);
+    const creationSession = await characterCreationSessionRepository.findById(
+      characterCreationSessionId,
+    );
+    expect(creationSession).not.toBeNull();
+    expect(creationSession?.gameSessionId).toBe(session.id);
+    expect(creationSession?.userId).toBe('user-1');
+    expect(creationSession?.status).toBe('in_progress');
+  });
+
+  it('does not create a SessionPlayer synchronously - the creator only becomes active once they finalize', async () => {
+    const gameSystemRepository = new InMemoryGameSystemRepository([
+      buildGameSystem(),
+    ]);
+    const gameSessionRepository = new InMemoryGameSessionRepository();
+    const characterCreationSessionRepository =
+      new InMemoryCharacterCreationSessionRepository();
+    const useCase = new CreateSessionUseCase(
+      gameSessionRepository,
+      gameSystemRepository,
+      characterCreationSessionRepository,
+      new QueuedInviteCodeGenerator(['XK4R2P']),
+    );
+
+    const { characterCreationSessionId } = await useCase.execute({
+      gameSystemId: 'game-system-1',
+      name: 'La quete du dragon',
+      createdByUserId: 'user-1',
+      createdByUserRole: 'adult',
+      charactersVisibleToOthers: false,
+    });
+
+    const creationSession = await characterCreationSessionRepository.findById(
+      characterCreationSessionId,
+    );
+    expect(creationSession?.status).toBe('in_progress');
   });
 
   it('retries invite code generation until a unique one is found', async () => {
@@ -114,8 +142,7 @@ describe('CreateSessionUseCase', () => {
     const useCase = new CreateSessionUseCase(
       gameSessionRepository,
       gameSystemRepository,
-      new InMemorySessionPlayerRepository(),
-      new InMemoryCharacterRepository(),
+      new InMemoryCharacterCreationSessionRepository(),
       new QueuedInviteCodeGenerator(['DUPE1', 'DUPE1', 'FRESH1']),
     );
     await useCase.execute({
@@ -123,7 +150,7 @@ describe('CreateSessionUseCase', () => {
       name: 'Premiere partie',
       createdByUserId: 'user-1',
       createdByUserRole: 'adult',
-      characterName: 'Aragorn',
+      charactersVisibleToOthers: false,
     });
 
     const { session } = await useCase.execute({
@@ -131,7 +158,7 @@ describe('CreateSessionUseCase', () => {
       name: 'Deuxieme partie',
       createdByUserId: 'user-2',
       createdByUserRole: 'adult',
-      characterName: 'Legolas',
+      charactersVisibleToOthers: false,
     });
 
     expect(session.inviteCode).toBe('FRESH1');
@@ -144,8 +171,7 @@ describe('CreateSessionUseCase', () => {
     const useCase = new CreateSessionUseCase(
       new InMemoryGameSessionRepository(),
       gameSystemRepository,
-      new InMemorySessionPlayerRepository(),
-      new InMemoryCharacterRepository(),
+      new InMemoryCharacterCreationSessionRepository(),
       new QueuedInviteCodeGenerator(['XK4R2P']),
     );
 
@@ -155,7 +181,7 @@ describe('CreateSessionUseCase', () => {
         name: 'La quete du dragon',
         createdByUserId: 'child-1',
         createdByUserRole: 'child',
-        characterName: 'Petit hero',
+        charactersVisibleToOthers: false,
       }),
     ).rejects.toThrow(/enfant/);
   });
@@ -167,8 +193,7 @@ describe('CreateSessionUseCase', () => {
     const useCase = new CreateSessionUseCase(
       new InMemoryGameSessionRepository(),
       gameSystemRepository,
-      new InMemorySessionPlayerRepository(),
-      new InMemoryCharacterRepository(),
+      new InMemoryCharacterCreationSessionRepository(),
       new QueuedInviteCodeGenerator(['XK4R2P']),
     );
 
@@ -178,7 +203,7 @@ describe('CreateSessionUseCase', () => {
         name: 'La quete du dragon',
         createdByUserId: 'child-1',
         createdByUserRole: 'child',
-        characterName: 'Petit hero',
+        charactersVisibleToOthers: false,
       }),
     ).resolves.toBeDefined();
   });
@@ -187,8 +212,7 @@ describe('CreateSessionUseCase', () => {
     const useCase = new CreateSessionUseCase(
       new InMemoryGameSessionRepository(),
       new InMemoryGameSystemRepository(),
-      new InMemorySessionPlayerRepository(),
-      new InMemoryCharacterRepository(),
+      new InMemoryCharacterCreationSessionRepository(),
       new QueuedInviteCodeGenerator(['XK4R2P']),
     );
 
@@ -198,7 +222,7 @@ describe('CreateSessionUseCase', () => {
         name: 'La quete du dragon',
         createdByUserId: 'user-1',
         createdByUserRole: 'adult',
-        characterName: 'Aragorn',
+        charactersVisibleToOthers: false,
       }),
     ).rejects.toThrow();
   });

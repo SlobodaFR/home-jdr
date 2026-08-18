@@ -1,9 +1,12 @@
 import { FormEvent, useCallback, useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
+import { Character } from '../../domain/character';
 import { GameSystem, MechanicalAction } from '../../domain/game-system';
 import { DiceRoll, PendingCharacterDeltaView, SessionState } from '../../domain/session';
 import { apiClient } from '../../infrastructure/api-client';
+import { characterApiClient } from '../../infrastructure/character-api-client';
 import { QuotaExceededClientError, sessionApiClient } from '../../infrastructure/session-api-client';
+import { useAuth } from '../auth/AuthProvider';
 import { ActionInput } from '../components/ActionInput';
 import { ButtonPrimary } from '../components/ButtonPrimary';
 import { DeltaProposalCard, DeltaProposalItem } from '../components/DeltaProposalCard';
@@ -11,6 +14,7 @@ import { DiceRollChip } from '../components/DiceRollChip';
 import { InviteCodeBadge } from '../components/InviteCodeBadge';
 import { SessionStatusPill, SessionStatusVariant } from '../components/SessionStatusPill';
 import { TurnLogEntry } from '../components/TurnLogEntry';
+import { CharacterStatBar } from '../character/CharacterStatBar';
 
 // PRD.md - "Synchro par polling (pas de WebSocket)": the front interrogates
 // session state every few seconds while the screen is open (per
@@ -63,8 +67,10 @@ function deltaProposalItems(delta: PendingCharacterDeltaView): DeltaProposalItem
 
 export function SessionPage() {
   const { id } = useParams<{ id: string }>();
+  const { user } = useAuth();
   const [state, setState] = useState<SessionState | null>(null);
   const [gameSystem, setGameSystem] = useState<GameSystem | null>(null);
+  const [characters, setCharacters] = useState<Character[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [actionText, setActionText] = useState('');
   const [mechanicalActionKey, setMechanicalActionKey] = useState(FREE_ACTION_VALUE);
@@ -101,6 +107,19 @@ export function SessionPage() {
       })
       .catch(() => setGameSystem(null));
   }, [state?.session.gameSystemId]);
+
+  // Character list, gated server-side by charactersVisibleToOthers: the
+  // caller only ever gets back what they're allowed to see (own sheet, or
+  // every sheet of the session) - see ListCharactersForSessionUseCase.
+  useEffect(() => {
+    if (!id) {
+      return;
+    }
+    characterApiClient
+      .listBySession(id)
+      .then(setCharacters)
+      .catch(() => setCharacters([]));
+  }, [id, state?.session.status]);
 
   async function handleSubmit(event: FormEvent) {
     event.preventDefault();
@@ -193,6 +212,32 @@ export function SessionPage() {
       </div>
 
       <SessionStatusPill variant={statusVariant(state.session.status)} label={statusLabel(state)} />
+
+      {characters.length > 0 && (
+        <section className="flex flex-col gap-sm">
+          <h2 className="font-sans-ui text-heading-md text-ink">
+            {state.session.charactersVisibleToOthers ? 'Personnages de la partie' : 'Mon personnage'}
+          </h2>
+          <div className="flex flex-col gap-md">
+            {characters.map((character) => (
+              <div key={character.id} className="border-b border-hairline pb-sm flex flex-col gap-xs">
+                <div className="flex items-center justify-between">
+                  <span className="font-body-strong text-ink">{character.name}</span>
+                  {character.ownerUserId === user?.id && (
+                    <span className="font-caption-sm text-mute">Moi</span>
+                  )}
+                </div>
+                <CharacterStatBar
+                  label="Points de vie"
+                  current={character.hitPointsCurrent}
+                  max={character.hitPointsMax}
+                  compact
+                />
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
 
       <section className="flex flex-col gap-md">
         {state.recentTurns.length === 0 && (

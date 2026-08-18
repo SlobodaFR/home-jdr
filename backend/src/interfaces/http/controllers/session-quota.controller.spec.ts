@@ -4,14 +4,20 @@ import { EventEmitterModule } from '@nestjs/event-emitter';
 import { Test } from '@nestjs/testing';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import request from 'supertest';
+import { Character } from '../../../domain/character/character';
+import { CharacterRepository } from '../../../domain/character/character.repository';
 import { GameSystem } from '../../../domain/game-system/game-system';
 import { GameSystemRepository } from '../../../domain/game-system/game-system.repository';
 import {
+  CharacterCreationAssistOutput,
   LlmGameMasterPort,
   SceneResolutionInput,
   SceneResolutionOutput,
 } from '../../../domain/session/llm-game-master.port';
+import { SessionPlayer } from '../../../domain/session/session-player';
+import { SessionPlayerRepository } from '../../../domain/session/session-player.repository';
 import { AppSettingOrmEntity } from '../../../infrastructure/persistence/entities/app-setting.orm-entity';
+import { CharacterCreationSessionOrmEntity } from '../../../infrastructure/persistence/entities/character-creation-session.orm-entity';
 import { CharacterOrmEntity } from '../../../infrastructure/persistence/entities/character.orm-entity';
 import { GameSessionOrmEntity } from '../../../infrastructure/persistence/entities/game-session.orm-entity';
 import { GameSystemOrmEntity } from '../../../infrastructure/persistence/entities/game-system.orm-entity';
@@ -46,6 +52,10 @@ class SpyingLlmGameMasterPort extends LlmGameMasterPort {
 
   summarize(): Promise<string> {
     return Promise.resolve('');
+  }
+
+  assistCharacterCreation(): Promise<CharacterCreationAssistOutput> {
+    throw new Error('not used in this spec');
   }
 }
 
@@ -85,6 +95,8 @@ describe('SessionController - quota guard-rail (integration)', () => {
   let app: INestApplication;
   let llm: SpyingLlmGameMasterPort;
   let llmUsageRecordRepository: LlmUsageRecordRepository;
+  let characterRepository: CharacterRepository;
+  let sessionPlayerRepository: SessionPlayerRepository;
 
   beforeAll(async () => {
     llm = new SpyingLlmGameMasterPort();
@@ -116,6 +128,7 @@ describe('SessionController - quota guard-rail (integration)', () => {
             PendingCharacterDeltaOrmEntity,
             LlmUsageRecordOrmEntity,
             AppSettingOrmEntity,
+            CharacterCreationSessionOrmEntity,
           ],
         }),
         SessionModule,
@@ -140,6 +153,9 @@ describe('SessionController - quota guard-rail (integration)', () => {
     const gameSystemRepository = moduleRef.get(GameSystemRepository);
     await gameSystemRepository.save(buildGameSystem());
 
+    characterRepository = moduleRef.get(CharacterRepository);
+    sessionPlayerRepository = moduleRef.get(SessionPlayerRepository);
+
     llmUsageRecordRepository = moduleRef.get(LlmUsageRecordRepository);
     await llmUsageRecordRepository.save(
       LlmUsageRecord.create({
@@ -162,10 +178,35 @@ describe('SessionController - quota guard-rail (integration)', () => {
       .send({
         gameSystemId: GAME_SYSTEM_ID,
         name: 'Partie sans quota',
-        characterName: 'Gimli',
+        charactersVisibleToOthers: false,
       });
     expect(createResponse.status).toBe(201);
     const sessionId = (createResponse.body as { id: string }).id;
+
+    // Seat the creator directly (bypassing the character-creation chat,
+    // which is itself quota-gated and covered by its own use-case spec) so a
+    // turn submission is possible - this test's concern is exclusively
+    // ResolveSceneUseCase's quota gate.
+    const character = Character.fromSchema({
+      id: 'character-quota-test',
+      gameSystemId: GAME_SYSTEM_ID,
+      sessionId,
+      ownerUserId: CREATOR.id,
+      name: 'Gimli',
+      schema: {
+        baseAttributes: { hitPoints: { max: 20 }, inventory: [] },
+        customAttributes: [],
+      },
+      now: new Date(),
+    });
+    await characterRepository.save(character);
+    await sessionPlayerRepository.save(
+      SessionPlayer.create({
+        sessionId,
+        userId: CREATOR.id,
+        characterId: character.id,
+      }),
+    );
 
     const turnResponse = await request(app.getHttpServer())
       .post(`/sessions/${sessionId}/turns`)

@@ -51,6 +51,32 @@ function buildHarness(): LlmGameMasterContractHarness {
           Promise.resolve({ content: [{ type: 'text', text: summary }] }),
       });
     },
+    mockAssistCharacterCreationReply(reply) {
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        json: () =>
+          Promise.resolve({
+            content: [
+              {
+                type: 'tool_use',
+                name: 'assist_character_creation',
+                input: {
+                  assistant_message: reply.assistantMessage,
+                  draft_updates: {
+                    name: reply.draftUpdates?.name,
+                    hit_points_max: reply.draftUpdates?.hitPointsMax,
+                    inventory: reply.draftUpdates?.inventory,
+                    custom_attribute_changes:
+                      reply.draftUpdates?.customAttributes,
+                  },
+                  ready_to_finalize: reply.readyToFinalize,
+                },
+              },
+            ],
+          }),
+      });
+    },
     lastRequestBody() {
       const [, init] = mockFetch.mock.calls[
         mockFetch.mock.calls.length - 1
@@ -93,6 +119,31 @@ describe('ClaudeGameMasterAdapter', () => {
       tool_choice?: { name: string };
     };
     expect(body.tool_choice?.name).toBe('resolve_scene');
+  });
+
+  it('calls the Anthropic Messages API forcing the assist_character_creation tool', async () => {
+    const harness = buildHarness();
+    harness.mockAssistCharacterCreationReply({
+      assistantMessage: 'texte',
+      readyToFinalize: false,
+    });
+
+    await harness.adapter.assistCharacterCreation({
+      rulesText: 'regles',
+      characterSheetSchema: {
+        baseAttributes: { hitPoints: { max: 1 }, inventory: [] },
+        customAttributes: [],
+      },
+      messages: [],
+      draftCharacter: {},
+    });
+
+    const mockFetch = global.fetch as unknown as jest.Mock;
+    const [, init] = mockFetch.mock.calls[0] as [string, RequestInit];
+    const body = JSON.parse(init.body as string) as {
+      tool_choice?: { name: string };
+    };
+    expect(body.tool_choice?.name).toBe('assist_character_creation');
   });
 
   it('throws (without leaking the key) when ANTHROPIC_API_KEY is not configured', async () => {

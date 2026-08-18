@@ -8,11 +8,18 @@ export interface SessionSummary {
   status: SessionStatus;
   currentTurnNumber: number;
   createdByUserId: string;
+  charactersVisibleToOthers: boolean;
   createdAt: string;
 }
 
-export interface SessionWithCharacter extends SessionSummary {
-  characterId: string;
+/**
+ * Returned by create/join now that character creation is a guided AI
+ * conversation instead of an instant sheet: the caller must continue to
+ * `/character-creation/:characterCreationSessionId` before they become an
+ * active player of the session.
+ */
+export interface SessionWithCharacterCreation extends SessionSummary {
+  characterCreationSessionId: string;
 }
 
 export interface SessionPlayerState {
