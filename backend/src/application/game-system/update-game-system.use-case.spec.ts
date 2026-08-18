@@ -29,6 +29,10 @@ class InMemoryGameSystemRepository extends GameSystemRepository {
       gameSystem,
     ];
   }
+
+  async deleteById(id: string): Promise<void> {
+    this.gameSystems = this.gameSystems.filter((g) => g.id !== id);
+  }
 }
 
 class FakePdfTextExtractor extends PdfTextExtractorPort {

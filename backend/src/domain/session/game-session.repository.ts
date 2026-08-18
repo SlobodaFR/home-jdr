@@ -8,7 +8,14 @@ export abstract class GameSessionRepository {
   abstract findByInviteCode(inviteCode: string): Promise<GameSession | null>;
   /** Sessions the user created or is a `SessionPlayer` of ("Mes parties"). */
   abstract findForUser(userId: string): Promise<GameSession[]>;
+  /** Every session in the system, regardless of owner - admin sessions overview only. */
+  abstract findAll(): Promise<GameSession[]>;
   abstract save(session: GameSession): Promise<void>;
   /** Permanent delete - see `DeleteSessionCascade` (solo-delete / last-player-leaves). */
   abstract deleteById(id: string): Promise<void>;
+  /**
+   * True if at least one session - any status, ever created - references
+   * this game system. Used by `DeleteGameSystemUseCase` to guard deletion.
+   */
+  abstract existsByGameSystemId(gameSystemId: string): Promise<boolean>;
 }

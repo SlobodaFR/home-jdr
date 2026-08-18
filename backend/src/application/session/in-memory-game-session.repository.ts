@@ -23,6 +23,16 @@ export class InMemoryGameSessionRepository extends GameSessionRepository {
     );
   }
 
+  findAll(): Promise<GameSession[]> {
+    return Promise.resolve([...this.sessions]);
+  }
+
+  existsByGameSystemId(gameSystemId: string): Promise<boolean> {
+    return Promise.resolve(
+      this.sessions.some((s) => s.gameSystemId === gameSystemId),
+    );
+  }
+
   save(session: GameSession): Promise<void> {
     this.sessions = [
       ...this.sessions.filter((s) => s.id !== session.id),

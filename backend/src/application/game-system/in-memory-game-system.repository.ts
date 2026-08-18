@@ -32,4 +32,11 @@ export class InMemoryGameSystemRepository extends GameSystemRepository {
     ];
     return Promise.resolve();
   }
+
+  deleteById(id: string): Promise<void> {
+    this.gameSystems = this.gameSystems.filter(
+      (existing) => existing.id !== id,
+    );
+    return Promise.resolve();
+  }
 }

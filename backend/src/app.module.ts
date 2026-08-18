@@ -4,6 +4,7 @@ import { EventEmitterModule } from '@nestjs/event-emitter';
 import { ServeStaticModule } from '@nestjs/serve-static';
 import { join } from 'path';
 import { DatabaseModule } from './infrastructure/persistence/database.module';
+import { AdminSessionsModule } from './interfaces/http/modules/admin-sessions.module';
 import { AuthModule } from './interfaces/http/modules/auth.module';
 import { CharacterCreationModule } from './interfaces/http/modules/character-creation.module';
 import { CharacterModule } from './interfaces/http/modules/character.module';
@@ -35,6 +36,7 @@ import { WorldMapModule } from './interfaces/http/modules/world-map.module';
     WorldMapModule,
     PushSubscriptionModule,
     UsageQuotaModule,
+    AdminSessionsModule,
   ],
 })
 export class AppModule {}

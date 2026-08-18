@@ -4,7 +4,11 @@ import { Test } from '@nestjs/testing';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import request from 'supertest';
 import { PdfTextExtractorPort } from '../../../domain/game-system/pdf-text-extractor';
+import { GameSession } from '../../../domain/session/game-session';
+import { GameSessionRepository } from '../../../domain/session/game-session.repository';
+import { GameSessionOrmEntity } from '../../../infrastructure/persistence/entities/game-session.orm-entity';
 import { GameSystemOrmEntity } from '../../../infrastructure/persistence/entities/game-system.orm-entity';
+import { SessionPlayerOrmEntity } from '../../../infrastructure/persistence/entities/session-player.orm-entity';
 import { UserProfileOrmEntity } from '../../../infrastructure/persistence/entities/user-profile.orm-entity';
 import { GameSystemModule } from '../modules/game-system.module';
 import { CurrentUserPayload } from '../decorators/current-user.decorator';
@@ -37,6 +41,12 @@ const ADMIN_USER: CurrentUserPayload = {
   name: 'Admin',
 };
 
+const NON_ADMIN_USER: CurrentUserPayload = {
+  id: 'player-1',
+  email: 'player@test.dev',
+  name: 'Joueur',
+};
+
 function validCharacterSheetSchema() {
   return JSON.stringify({
     hitPoints: { defaultMax: 20 },
@@ -59,6 +69,8 @@ function validMechanicalActions() {
 
 describe('GameSystemController (integration)', () => {
   let app: INestApplication;
+  let currentUser: CurrentUserPayload;
+  let gameSessionRepository: GameSessionRepository;
 
   beforeAll(async () => {
     const moduleRef = await Test.createTestingModule({
@@ -73,7 +85,12 @@ describe('GameSystemController (integration)', () => {
           database: ':memory:',
           dropSchema: true,
           synchronize: true,
-          entities: [GameSystemOrmEntity, UserProfileOrmEntity],
+          entities: [
+            GameSystemOrmEntity,
+            UserProfileOrmEntity,
+            GameSessionOrmEntity,
+            SessionPlayerOrmEntity,
+          ],
         }),
         GameSystemModule,
       ],
@@ -91,15 +108,21 @@ describe('GameSystemController (integration)', () => {
     // authenticated request the same way the guard would.
     app.use(
       (req: { user?: CurrentUserPayload }, _res: unknown, next: () => void) => {
-        req.user = ADMIN_USER;
+        req.user = currentUser;
         next();
       },
     );
     await app.init();
+
+    gameSessionRepository = moduleRef.get(GameSessionRepository);
   });
 
   afterAll(async () => {
     await app.close();
+  });
+
+  beforeEach(() => {
+    currentUser = ADMIN_USER;
   });
 
   it('creates a game system from a valid PDF upload and returns the extracted rules text', async () => {
@@ -190,5 +213,96 @@ describe('GameSystemController (integration)', () => {
     );
     expect(names).toContain('JdR pour enfants');
     expect(names).toContain('Donjons & Dragons');
+  });
+
+  async function createGameSystem(name: string): Promise<string> {
+    const response = await request(app.getHttpServer())
+      .post('/game-systems')
+      .field('name', name)
+      .field('description', '')
+      .field('adaptedForChildren', 'false')
+      .field('characterSheetSchema', validCharacterSheetSchema())
+      .field('mechanicalActions', validMechanicalActions())
+      .attach('rulesFile', MINIMAL_PDF, {
+        filename: 'rules.pdf',
+        contentType: 'application/pdf',
+      })
+      .expect(201);
+    return (response.body as { id: string }).id;
+  }
+
+  describe('DELETE /game-systems/:id', () => {
+    it('deletes a game system with zero linked sessions and actually removes it', async () => {
+      const id = await createGameSystem('JdR sans partie');
+
+      const deleteResponse = await request(app.getHttpServer()).delete(
+        `/game-systems/${id}`,
+      );
+      expect(deleteResponse.status).toBe(204);
+
+      const getResponse = await request(app.getHttpServer()).get(
+        `/game-systems/${id}`,
+      );
+      expect(getResponse.status).toBe(404);
+    });
+
+    it('rejects deleting a game system referenced by at least one session, with a clear specific message', async () => {
+      const id = await createGameSystem('JdR avec une partie');
+      await gameSessionRepository.save(
+        GameSession.create({
+          id: 'session-blocking-deletion',
+          gameSystemId: id,
+          name: 'Une partie en cours',
+          inviteCode: 'ZZZZ99',
+          createdByUserId: ADMIN_USER.id,
+          status: 'waiting_for_players',
+        }),
+      );
+
+      const response = await request(app.getHttpServer()).delete(
+        `/game-systems/${id}`,
+      );
+
+      expect(response.status).toBe(409);
+      expect((response.body as { message: string }).message).toBe(
+        'Ce JdR est utilisé par au moins une partie et ne peut pas être supprimé.',
+      );
+
+      const getResponse = await request(app.getHttpServer()).get(
+        `/game-systems/${id}`,
+      );
+      expect(getResponse.status).toBe(200);
+    });
+
+    it('rejects deletion even when the only referencing session is not active (any session ever, not just currently-active ones)', async () => {
+      const id = await createGameSystem('JdR avec une partie terminee');
+      await gameSessionRepository.save(
+        GameSession.create({
+          id: 'session-narrating-blocking-deletion',
+          gameSystemId: id,
+          name: 'Une partie deja bien avancee',
+          inviteCode: 'YYYY88',
+          createdByUserId: ADMIN_USER.id,
+          status: 'narrating',
+        }),
+      );
+
+      const response = await request(app.getHttpServer()).delete(
+        `/game-systems/${id}`,
+      );
+
+      expect(response.status).toBe(409);
+    });
+
+    it('rejects deletion for a non-admin caller (403) even with zero linked sessions', async () => {
+      const id = await createGameSystem('JdR proteger des non-admins');
+
+      currentUser = NON_ADMIN_USER;
+      const response = await request(app.getHttpServer()).delete(
+        `/game-systems/${id}`,
+      );
+
+      expect(response.status).toBe(403);
+    });
   });
 });
