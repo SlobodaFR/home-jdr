@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { GameSystem } from '../../domain/game-system';
 import { apiClient } from '../../infrastructure/api-client';
 import { sessionApiClient } from '../../infrastructure/session-api-client';
+import { BackButton } from '../components/BackButton';
 import { ButtonPrimary } from '../components/ButtonPrimary';
 import { ButtonSecondary } from '../components/ButtonSecondary';
 
@@ -58,7 +59,10 @@ export function CreateSessionPage() {
 
   return (
     <main className="min-h-screen bg-canvas px-lg py-section">
-      <h1 className="font-sans-ui text-heading-xl text-ink mb-xl">Créer une partie</h1>
+      <div className="flex items-center gap-md mb-xl">
+        <BackButton to="/" />
+        <h1 className="font-sans-ui text-heading-xl text-ink">Créer une partie</h1>
+      </div>
 
       <form onSubmit={(event) => void handleSubmit(event)} className="flex flex-col gap-lg max-w-sm">
         <label className="flex flex-col gap-xs">

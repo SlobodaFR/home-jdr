@@ -2,6 +2,7 @@ import { FormEvent, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { CharacterSheetSchema } from '../../domain/character';
 import { characterApiClient } from '../../infrastructure/character-api-client';
+import { BackButton } from '../components/BackButton';
 
 /**
  * TODO(01-game-catalog): once the game catalog module is merged, fetch the
@@ -58,7 +59,10 @@ export function CreateCharacterPage() {
 
   return (
     <main className="min-h-screen bg-canvas px-lg py-section">
-      <h1 className="font-sans-ui text-heading-xl text-ink mb-xl">Créer mon personnage</h1>
+      <div className="flex items-center gap-md mb-xl">
+        <BackButton to="/" />
+        <h1 className="font-sans-ui text-heading-xl text-ink">Créer mon personnage</h1>
+      </div>
 
       <form
         onSubmit={(event) => void handleSubmit(event)}

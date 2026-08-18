@@ -8,6 +8,7 @@ import { characterApiClient } from '../../infrastructure/character-api-client';
 import { QuotaExceededClientError, sessionApiClient } from '../../infrastructure/session-api-client';
 import { useAuth } from '../auth/AuthProvider';
 import { ActionInput } from '../components/ActionInput';
+import { BackButton } from '../components/BackButton';
 import { ButtonPrimary } from '../components/ButtonPrimary';
 import { DeltaProposalCard, DeltaProposalItem } from '../components/DeltaProposalCard';
 import { DiceRollChip } from '../components/DiceRollChip';
@@ -202,7 +203,10 @@ export function SessionPage() {
   return (
     <main className="min-h-screen bg-canvas px-lg py-section flex flex-col gap-xl">
       <div className="flex items-center justify-between flex-wrap gap-sm">
-        <h1 className="font-sans-ui text-heading-xl text-ink">{state.session.name}</h1>
+        <div className="flex items-center gap-md">
+          <BackButton to="/" />
+          <h1 className="font-sans-ui text-heading-xl text-ink">{state.session.name}</h1>
+        </div>
         <div className="flex items-center gap-md">
           <Link to={`/sessions/${state.session.id}/map`} className="font-sans-body text-link-md text-ink">
             Carte du monde

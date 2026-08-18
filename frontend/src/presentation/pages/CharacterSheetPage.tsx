@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { Character } from '../../domain/character';
 import { characterApiClient } from '../../infrastructure/character-api-client';
+import { BackButton } from '../components/BackButton';
 import { CharacterSheet } from '../character/CharacterSheet';
 
 export function CharacterSheetPage() {
@@ -37,7 +38,10 @@ export function CharacterSheetPage() {
 
   return (
     <main className="min-h-screen bg-canvas px-lg py-section">
-      <h1 className="font-sans-ui text-heading-xl text-ink mb-xl">Fiche personnage</h1>
+      <div className="flex items-center gap-md mb-xl">
+        <BackButton to={`/sessions/${character.sessionId}`} />
+        <h1 className="font-sans-ui text-heading-xl text-ink">Fiche personnage</h1>
+      </div>
       <CharacterSheet character={character} />
     </main>
   );

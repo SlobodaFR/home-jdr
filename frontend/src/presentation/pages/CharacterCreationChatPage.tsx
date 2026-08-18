@@ -7,6 +7,7 @@ import {
 } from '../../infrastructure/character-creation-api-client';
 import { QuotaExceededClientError } from '../../infrastructure/session-api-client';
 import { ActionInput } from '../components/ActionInput';
+import { BackButton } from '../components/BackButton';
 import { ButtonPrimary } from '../components/ButtonPrimary';
 import { ButtonSecondary } from '../components/ButtonSecondary';
 import { CharacterStatBar } from '../character/CharacterStatBar';
@@ -110,7 +111,10 @@ export function CharacterCreationChatPage() {
 
   return (
     <main className="min-h-screen bg-canvas px-lg py-section flex flex-col gap-xl">
-      <h1 className="font-sans-ui text-heading-xl text-ink">Créer mon personnage</h1>
+      <div className="flex items-center gap-md">
+        <BackButton to="/" />
+        <h1 className="font-sans-ui text-heading-xl text-ink">Créer mon personnage</h1>
+      </div>
 
       <section className="flex flex-col gap-md">
         {session.messages.map((message, index) => (

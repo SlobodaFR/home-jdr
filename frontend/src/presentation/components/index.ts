@@ -2,6 +2,7 @@ export * from './ButtonPrimary';
 export * from './ButtonSecondary';
 export * from './ButtonDanger';
 export * from './IconCircularButton';
+export * from './BackButton';
 export * from './ActionInput';
 export * from './SessionStatusPill';
 export * from './GameCard';

@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { pushNotificationApiClient } from '../../infrastructure/push-notification-api-client';
 import { pushNotificationManager } from '../../infrastructure/push-notification-manager';
+import { BackButton } from '../components/BackButton';
 import { ButtonPrimary } from '../components/ButtonPrimary';
 import { ButtonSecondary } from '../components/ButtonSecondary';
 import { NotificationOnboardingBanner } from '../notifications/NotificationOnboardingBanner';
@@ -91,7 +92,10 @@ export function NotificationSettingsPage() {
 
   return (
     <main className="min-h-screen bg-canvas px-lg py-section flex flex-col gap-xl">
-      <h1 className="font-sans-ui text-heading-xl text-ink">Notifications</h1>
+      <div className="flex items-center gap-md">
+        <BackButton to="/" />
+        <h1 className="font-sans-ui text-heading-xl text-ink">Notifications</h1>
+      </div>
 
       <NotificationOnboardingBanner />
 

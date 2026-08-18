@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { GameSystem } from '../../domain/game-system';
 import { apiClient } from '../../infrastructure/api-client';
+import { BackButton } from '../components/BackButton';
 import { CreateGameSystemForm } from '../game-catalog/CreateGameSystemForm';
 
 export function AdminGameCatalogPage() {
@@ -18,7 +19,10 @@ export function AdminGameCatalogPage() {
 
   return (
     <main className="min-h-screen bg-canvas px-lg py-section flex flex-col gap-xl">
-      <h1 className="font-sans-ui text-heading-xl text-ink">Catalogue de JdR</h1>
+      <div className="flex items-center gap-md">
+        <BackButton to="/" />
+        <h1 className="font-sans-ui text-heading-xl text-ink">Catalogue de JdR</h1>
+      </div>
 
       <section className="flex flex-col gap-md">
         <h2 className="font-heading-lg text-ink">JdR existants</h2>

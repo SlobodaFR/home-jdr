@@ -1,6 +1,7 @@
 import { FormEvent, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { sessionApiClient } from '../../infrastructure/session-api-client';
+import { BackButton } from '../components/BackButton';
 import { ButtonPrimary } from '../components/ButtonPrimary';
 import { ButtonSecondary } from '../components/ButtonSecondary';
 
@@ -42,7 +43,10 @@ export function JoinSessionPage() {
 
   return (
     <main className="min-h-screen bg-canvas px-lg py-section">
-      <h1 className="font-sans-ui text-heading-xl text-ink mb-xl">Rejoindre une partie</h1>
+      <div className="flex items-center gap-md mb-xl">
+        <BackButton to="/" />
+        <h1 className="font-sans-ui text-heading-xl text-ink">Rejoindre une partie</h1>
+      </div>
 
       <form onSubmit={(event) => void handleSubmit(event)} className="flex flex-col gap-lg max-w-sm">
         <label className="flex flex-col gap-xs">

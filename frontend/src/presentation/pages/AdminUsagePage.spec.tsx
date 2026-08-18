@@ -1,5 +1,6 @@
 import { cleanup, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { MemoryRouter } from 'react-router-dom';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { apiClient } from '../../infrastructure/api-client';
 import { AdminUsagePage } from './AdminUsagePage';
@@ -36,7 +37,11 @@ describe('AdminUsagePage', () => {
   it('shows the quota meter fed by GET /api/admin/usage', async () => {
     vi.mocked(apiClient.fetchUsageStats).mockResolvedValue(stats);
 
-    render(<AdminUsagePage />);
+    render(
+      <MemoryRouter>
+        <AdminUsagePage />
+      </MemoryRouter>,
+    );
 
     await waitFor(() => {
       expect(screen.getByRole('progressbar')).toBeInTheDocument();
@@ -53,7 +58,11 @@ describe('AdminUsagePage', () => {
     });
 
     const user = userEvent.setup();
-    render(<AdminUsagePage />);
+    render(
+      <MemoryRouter>
+        <AdminUsagePage />
+      </MemoryRouter>,
+    );
 
     const input = await screen.findByLabelText('Quota (appels/jour)');
     await user.clear(input);

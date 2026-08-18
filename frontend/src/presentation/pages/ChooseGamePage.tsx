@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { GameSystem } from '../../domain/game-system';
 import { apiClient } from '../../infrastructure/api-client';
+import { BackButton } from '../components/BackButton';
 
 /**
  * Player-facing catalog browse screen. The list returned by the API is
@@ -24,7 +25,10 @@ export function ChooseGamePage() {
 
   return (
     <main className="min-h-screen bg-canvas px-lg py-section flex flex-col gap-xl">
-      <h1 className="font-sans-ui text-heading-xl text-ink">Choisir un JdR</h1>
+      <div className="flex items-center gap-md">
+        <BackButton to="/" />
+        <h1 className="font-sans-ui text-heading-xl text-ink">Choisir un JdR</h1>
+      </div>
 
       {loading && <p className="font-body-md text-mute">Chargement...</p>}
       {error && <p className="font-body-md text-danger">{error}</p>}

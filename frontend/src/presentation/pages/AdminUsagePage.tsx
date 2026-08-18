@@ -1,6 +1,7 @@
 import { FormEvent, useCallback, useEffect, useState } from 'react';
 import { UsageStats } from '../../domain/usage-stats';
 import { apiClient } from '../../infrastructure/api-client';
+import { BackButton } from '../components/BackButton';
 import { QuotaMeter } from '../components/QuotaMeter';
 
 /** Admin-only usage dashboard + quota form (see tasks/08-admin-quotas-cost-guardrails.md, mirrors AdminGameCatalogPage.tsx). */
@@ -50,7 +51,10 @@ export function AdminUsagePage() {
 
   return (
     <main className="min-h-screen bg-canvas px-lg py-section flex flex-col gap-xl">
-      <h1 className="font-sans-ui text-heading-xl text-ink">Usage &amp; quotas</h1>
+      <div className="flex items-center gap-md">
+        <BackButton to="/" />
+        <h1 className="font-sans-ui text-heading-xl text-ink">Usage &amp; quotas</h1>
+      </div>
 
       {loading && <p className="font-body-md text-mute">Chargement...</p>}
       {error && <p className="font-body-md text-danger">{error}</p>}

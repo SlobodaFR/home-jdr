@@ -11,6 +11,7 @@ import { WorldMapView } from '../../domain/world-map';
 import { worldMapApiClient } from '../../infrastructure/world-map-api-client';
 import { sessionApiClient } from '../../infrastructure/session-api-client';
 import { useAuth } from '../auth/AuthProvider';
+import { BackButton } from '../components/BackButton';
 import { ButtonPrimary } from '../components/ButtonPrimary';
 import { ButtonSecondary } from '../components/ButtonSecondary';
 import { MapPin } from '../components/MapPin';
@@ -189,7 +190,10 @@ export function WorldMapPage() {
   return (
     <main className="min-h-screen bg-canvas flex flex-col gap-lg">
       <div className="px-lg pt-section flex items-center justify-between flex-wrap gap-sm">
-        <h1 className="font-sans-ui text-heading-xl text-ink">Carte - {sessionName}</h1>
+        <div className="flex items-center gap-md">
+          <BackButton to={`/sessions/${id}`} />
+          <h1 className="font-sans-ui text-heading-xl text-ink">Carte - {sessionName}</h1>
+        </div>
         <div className="flex items-center gap-sm">
           {generating && (
             <SessionStatusPill variant="resolving" label="Génération de la carte en cours..." />
