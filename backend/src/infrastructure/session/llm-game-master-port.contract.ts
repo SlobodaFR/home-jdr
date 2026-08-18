@@ -2,6 +2,7 @@ import { CharacterSheetSchema } from '../../domain/character/character-sheet-sch
 import {
   CharacterCreationAssistInput,
   LlmGameMasterPort,
+  OpeningNarrationInput,
   SceneResolutionInput,
 } from '../../domain/session/llm-game-master.port';
 
@@ -39,6 +40,8 @@ export interface LlmGameMasterContractHarness {
     };
     readyToFinalize: boolean;
   }): void;
+  /** Programs the mocked HTTP client to answer the next `narrateOpening()` call. */
+  mockNarrateOpeningReply(reply: { narrationText: string }): void;
   /** The JSON body of the most recent outgoing HTTP request. */
   lastRequestBody(): Record<string, unknown>;
 }
@@ -97,6 +100,25 @@ function buildCharacterCreationInput(): CharacterCreationAssistInput {
       { role: 'user', content: 'Je veux jouer un nain guerrier.' },
     ],
     draftCharacter: {},
+  };
+}
+
+function buildOpeningNarrationInput(): OpeningNarrationInput {
+  return {
+    rulesText: 'Un d20 sous la stat reussit.',
+    characterSheetSchema: schema,
+    gameSystemName: 'Donjons oublies',
+    gameSystemDescription: 'Un JdR de fantasy classique.',
+    characters: [
+      {
+        characterId: 'character-1',
+        name: 'Grognak',
+        hitPointsCurrent: 30,
+        hitPointsMax: 30,
+        inventory: [],
+        customAttributes: {},
+      },
+    ],
   };
 }
 
@@ -203,6 +225,33 @@ export function runLlmGameMasterPortContractTests(
       const body = JSON.stringify(harness.lastRequestBody());
       expect(body).toContain('Un d20 sous la stat reussit.');
       expect(body).toContain('Je veux jouer un nain guerrier.');
+    });
+
+    it('narrateOpening() returns the opening narration text from the provider', async () => {
+      const harness = createHarness();
+      harness.mockNarrateOpeningReply({
+        narrationText:
+          'Le vent souffle sur les ruines de Karak-Dun tandis que Grognak franchit le porche effondre.',
+      });
+
+      const output = await harness.adapter.narrateOpening(
+        buildOpeningNarrationInput(),
+      );
+
+      expect(output.narrationText).toBe(
+        'Le vent souffle sur les ruines de Karak-Dun tandis que Grognak franchit le porche effondre.',
+      );
+    });
+
+    it('narrateOpening() sends the full rules text and the finalized characters by name (no RAG - see PRD.md)', async () => {
+      const harness = createHarness();
+      harness.mockNarrateOpeningReply({ narrationText: 'texte' });
+
+      await harness.adapter.narrateOpening(buildOpeningNarrationInput());
+
+      const body = JSON.stringify(harness.lastRequestBody());
+      expect(body).toContain('Un d20 sous la stat reussit.');
+      expect(body).toContain('Grognak');
     });
 
     it('never puts the API key in the request body', async () => {

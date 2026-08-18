@@ -3,6 +3,8 @@ import {
   CharacterCreationAssistInput,
   CharacterCreationAssistOutput,
   CharacterCreationMessage,
+  OpeningNarrationInput,
+  OpeningNarrationOutput,
   SceneResolutionCharacterDelta,
   SceneResolutionInput,
   SceneResolutionOutput,
@@ -125,6 +127,18 @@ function formatRecentTurns(input: SceneResolutionInput): string {
     .join('\n');
 }
 
+/**
+ * Explicit, strongly-worded roleplay/tone instruction, appended to the
+ * `cacheablePrefix` of every genuinely roleplay-facing prompt builder
+ * (`buildResolveSceneSystemPrompt`, `buildAssistCharacterCreationSystemPrompt`,
+ * `buildOpeningNarrationSystemPrompt`) - static across every call for a given
+ * `GameSystem`, so it belongs in the cacheable part, not the dynamic suffix.
+ * Deliberately NOT added to `buildSummarizeSystemPrompt`: that call is pure
+ * mechanical condensation, not roleplay.
+ */
+const ROLEPLAY_TONE_INSTRUCTION =
+  "Tu incarnes le Maître du Jeu avec un ton, un vocabulaire et un style qui collent strictement au thème et à l'ambiance de ce JdR (déduits des règles fournies ci-dessus) - reste immersif à tout moment, évite un ton neutre, robotique, ou toute sortie de personnage.";
+
 export interface SystemPrompt {
   /**
    * Identical across every call for the same `GameSystem` (rules text +
@@ -148,6 +162,8 @@ export function buildResolveSceneSystemPrompt(
     '',
     'Schéma structuré de la fiche de personnage :',
     JSON.stringify(input.characterSheetSchema),
+    '',
+    ROLEPLAY_TONE_INSTRUCTION,
   ].join('\n');
 
   const dynamicSuffix = [
@@ -300,6 +316,10 @@ export function buildAssistCharacterCreationSystemPrompt(
     '',
     'Schéma structuré cible de la fiche de personnage (à quoi le personnage doit converger) :',
     JSON.stringify(input.characterSheetSchema),
+    '',
+    ROLEPLAY_TONE_INSTRUCTION,
+    '',
+    "Dès ton premier message réel (celui qui répond au tout premier message du joueur), ne te contente pas de réagir passivement à ce qu'il a dit : présente-lui proactivement, de façon concise et engageante, les options de création de personnage qui se dégagent des règles ci-dessus - races, classes ou archétypes si les règles en définissent, et les champs de statistiques concrets attendus (voir les attributs personnalisés du schéma cible ci-dessus) - pour l'aider à se situer avant de creuser plus loin, plutôt que de répondre uniquement à sa première phrase au mot près.",
   ].join('\n');
 
   const dynamicSuffix = [
@@ -327,3 +347,60 @@ export function buildAssistCharacterCreationUserMessage(
     '(le joueur vient de démarrer la création de son personnage)'
   );
 }
+
+export const NARRATE_OPENING_TOOL_NAME = 'narrate_opening';
+
+/** JSON Schema, valid both as Claude's `tool.input_schema` and OpenAI's `function.parameters`. */
+export const NARRATE_OPENING_TOOL_SCHEMA = {
+  type: 'object',
+  properties: {
+    narration_text: {
+      type: 'string',
+      description:
+        "La narration d'ouverture de la partie, en texte libre - plante le décor, introduit la situation/le monde, et nomme les personnages impliqués. Aucun joueur n'a encore agi : ne décris jamais une action ou un jet de dé, seulement le contexte de départ.",
+    },
+  },
+  required: ['narration_text'],
+} as const;
+
+export interface NarrateOpeningToolInput {
+  narration_text: string;
+}
+
+export function toOpeningNarrationOutput(
+  toolInput: NarrateOpeningToolInput,
+): OpeningNarrationOutput {
+  return { narrationText: toolInput.narration_text };
+}
+
+/** System prompt for `narrateOpening()` - full rules text, schema, and the finalized characters to acknowledge by name. */
+export function buildOpeningNarrationSystemPrompt(
+  input: OpeningNarrationInput,
+): SystemPrompt {
+  const cacheablePrefix = [
+    "Tu es le maître du jeu (MJ) d'un jeu de rôle. Voici les règles du jeu, dans leur intégralité - respecte-les strictement :",
+    input.rulesText,
+    '',
+    'Schéma structuré de la fiche de personnage :',
+    JSON.stringify(input.characterSheetSchema),
+    '',
+    ROLEPLAY_TONE_INSTRUCTION,
+  ].join('\n');
+
+  const dynamicSuffix = [
+    `JdR : ${input.gameSystemName} - ${input.gameSystemDescription}`,
+    '',
+    'Personnages qui rejoignent la partie (à nommer et intégrer dans la scène d’ouverture) :',
+    input.characters.map(formatCharacter).join('\n'),
+    '',
+    "Aucun joueur n'a encore soumis d'action - il s'agit d'une narration d'ouverture purement proactive : plante le décor, introduit le monde ou la situation de départ, et nomme chacun des personnages ci-dessus pour les intégrer à la scène. N'invente aucune action, jet de dé, ou conséquence mécanique - rien ne s'est encore passé.",
+    '',
+    `Réponds en appelant l'outil "${NARRATE_OPENING_TOOL_NAME}" avec cette narration d'ouverture.`,
+  ].join('\n');
+
+  return { cacheablePrefix, dynamicSuffix };
+}
+
+/** User message for `narrateOpening()` - there is no player input yet, so this is a fixed kickoff instruction. */
+export const NARRATE_OPENING_USER_MESSAGE =
+  'Tous les personnages sont prêts. Ouvre la scène.';

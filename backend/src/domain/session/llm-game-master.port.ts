@@ -97,6 +97,21 @@ export interface CharacterCreationAssistInput {
   draftCharacter: CharacterCreationDraftCharacter;
 }
 
+export interface OpeningNarrationInput {
+  /** Full extracted rules text of the `GameSystem` (no RAG in V1 - see PRD.md). */
+  rulesText: string;
+  characterSheetSchema: CharacterSheetSchema;
+  gameSystemName: string;
+  gameSystemDescription: string;
+  /** Every character finalized so far for this session, name + starting stats. */
+  characters: SceneResolutionCharacterState[];
+}
+
+export interface OpeningNarrationOutput {
+  /** Proactive scene-setting narration - no deltas, nothing has mechanically happened yet. */
+  narrationText: string;
+}
+
 export interface CharacterCreationAssistOutput {
   /** The next thing the AI says to the player. */
   assistantMessage: string;
@@ -148,4 +163,20 @@ export abstract class LlmGameMasterPort {
   abstract assistCharacterCreation(
     input: CharacterCreationAssistInput,
   ): Promise<CharacterCreationAssistOutput>;
+
+  /**
+   * Genuinely proactive scene-setting narration, generated once every
+   * player of a session has finalized their character and before anyone has
+   * submitted a turn action - sets the scene, introduces the world/situation,
+   * and acknowledges the finalized characters by name. Called from
+   * `NarrateSessionOpeningUseCase`, gated by
+   * `UsageQuotaPort.checkQuotaAvailable()` exactly like `resolveScene()` -
+   * see `CLAUDE.md` ("Jamais d'appel LLM sans vérification de quota au
+   * préalable" applies to every LLM call, not just scene resolution). This
+   * is NOT a `TurnResolution` (no dice, no deltas - see `TurnResolution`'s
+   * `turnNumber >= 1` invariant) and never touches turn-counting.
+   */
+  abstract narrateOpening(
+    input: OpeningNarrationInput,
+  ): Promise<OpeningNarrationOutput>;
 }

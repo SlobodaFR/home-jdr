@@ -295,6 +295,13 @@ export function SessionPage() {
         </section>
       )}
 
+      {state.session.openingNarrationText && (
+        <section className="flex flex-col gap-sm border border-hairline bg-parchment rounded-md px-lg py-md">
+          <span className="font-sans-ui text-caption-md text-mute uppercase">Ouverture de la scène</span>
+          <p className="font-sans-body text-body-md text-ink">{state.session.openingNarrationText}</p>
+        </section>
+      )}
+
       <section className="flex flex-col gap-md">
         {state.recentTurns.length === 0 && (
           <p className="font-body-md text-mute">Aucun tour résolu pour le moment.</p>
