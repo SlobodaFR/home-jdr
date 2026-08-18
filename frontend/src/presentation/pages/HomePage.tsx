@@ -9,6 +9,7 @@ import { ButtonPrimary } from '../components/ButtonPrimary';
 import { ButtonSecondary } from '../components/ButtonSecondary';
 import { GameCard } from '../components/GameCard';
 import { SessionStatusPill, SessionStatusVariant } from '../components/SessionStatusPill';
+import { NotificationOnboardingBanner } from '../notifications/NotificationOnboardingBanner';
 
 function statusVariant(status: SessionStatus): SessionStatusVariant {
   return status === 'resolving' ? 'resolving' : 'waiting';
@@ -50,14 +51,24 @@ export function HomePage() {
     <main className="min-h-screen bg-canvas px-lg py-section flex flex-col gap-xl">
       <div className="flex items-center justify-between flex-wrap gap-sm">
         <h1 className="font-sans-ui text-heading-xl text-ink">Mes parties</h1>
-        <button
-          onClick={() => void logout()}
-          className="border border-hairline text-ink px-lg py-sm rounded-lg font-button-sm"
-        >
-          Se déconnecter
-        </button>
+        <div className="flex items-center gap-md">
+          <button
+            onClick={() => navigate('/settings/notifications')}
+            className="border border-hairline text-ink px-lg py-sm rounded-lg font-button-sm"
+          >
+            Notifications
+          </button>
+          <button
+            onClick={() => void logout()}
+            className="border border-hairline text-ink px-lg py-sm rounded-lg font-button-sm"
+          >
+            Se déconnecter
+          </button>
+        </div>
       </div>
       <p className="font-body-md text-ash">Connecté en tant que {user?.name}.</p>
+
+      <NotificationOnboardingBanner />
 
       <div className="flex gap-md flex-wrap">
         <ButtonPrimary onClick={() => navigate('/sessions/new')}>Créer une partie</ButtonPrimary>

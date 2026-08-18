@@ -1,9 +1,11 @@
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { GameSession } from '../../domain/session/game-session';
 import {
   SceneResolverPort,
   TurnResolutionResult,
 } from '../../domain/session/scene-resolver.port';
 import { SessionPlayer } from '../../domain/session/session-player';
+import { TurnResolvedEvent } from '../../domain/session/turn-resolved.event';
 import { TurnSubmission } from '../../domain/session/turn-submission';
 import { InMemoryGameSessionRepository } from './in-memory-game-session.repository';
 import { InMemorySessionPlayerRepository } from './in-memory-session-player.repository';
@@ -64,6 +66,7 @@ describe('SubmitTurnActionUseCase', () => {
       turnSubmissionRepository,
       turnResolutionRepository,
       sceneResolver,
+      new EventEmitter2(),
     );
 
     const result = await useCase.execute({
@@ -94,6 +97,7 @@ describe('SubmitTurnActionUseCase', () => {
       turnSubmissionRepository,
       turnResolutionRepository,
       sceneResolver,
+      new EventEmitter2(),
     );
 
     const first = await useCase.execute({
@@ -142,6 +146,7 @@ describe('SubmitTurnActionUseCase', () => {
       turnSubmissionRepository,
       turnResolutionRepository,
       sceneResolver,
+      new EventEmitter2(),
     );
 
     const first = await useCase.execute({
@@ -173,6 +178,7 @@ describe('SubmitTurnActionUseCase', () => {
       new InMemoryTurnSubmissionRepository(),
       new InMemoryTurnResolutionRepository(),
       new RecordingSceneResolver(),
+      new EventEmitter2(),
     );
 
     await expect(
@@ -194,6 +200,7 @@ describe('SubmitTurnActionUseCase', () => {
       new InMemoryTurnSubmissionRepository(),
       new InMemoryTurnResolutionRepository(),
       new RecordingSceneResolver(),
+      new EventEmitter2(),
     );
 
     await expect(
@@ -224,6 +231,7 @@ describe('SubmitTurnActionUseCase', () => {
       turnSubmissionRepository,
       turnResolutionRepository,
       sceneResolver,
+      new EventEmitter2(),
     );
 
     const result = await useCase.execute({
@@ -235,5 +243,90 @@ describe('SubmitTurnActionUseCase', () => {
     expect(result.submission.turnNumber).toBe(2);
     expect(result.session.status).toBe('narrating');
     expect(sceneResolver.calls[0].turnNumber).toBe(2);
+  });
+
+  describe('TurnResolvedEvent', () => {
+    it('emits a TurnResolvedEvent with every active player once the turn resolves', async () => {
+      const session = buildSession();
+      const gameSessionRepository = new InMemoryGameSessionRepository([
+        session,
+      ]);
+      const sessionPlayerRepository = new InMemorySessionPlayerRepository([
+        buildPlayer('user-1', session.id),
+        buildPlayer('user-2', session.id),
+      ]);
+      const eventEmitter = new EventEmitter2();
+      const emittedEvents: TurnResolvedEvent[] = [];
+      eventEmitter.on('session.turn-resolved', (event: TurnResolvedEvent) =>
+        emittedEvents.push(event),
+      );
+      const useCase = new SubmitTurnActionUseCase(
+        gameSessionRepository,
+        sessionPlayerRepository,
+        new InMemoryTurnSubmissionRepository(),
+        new InMemoryTurnResolutionRepository(),
+        new RecordingSceneResolver(),
+        eventEmitter,
+      );
+
+      await useCase.execute({
+        sessionId: session.id,
+        userId: 'user-1',
+        actionText: 'Action 1',
+      });
+      expect(emittedEvents).toHaveLength(0);
+
+      await useCase.execute({
+        sessionId: session.id,
+        userId: 'user-2',
+        actionText: 'Action 2',
+      });
+
+      expect(emittedEvents).toHaveLength(1);
+      expect(emittedEvents[0].sessionId).toBe(session.id);
+      expect(emittedEvents[0].sessionName).toBe('La quete du dragon');
+      expect(emittedEvents[0].turnNumber).toBe(1);
+      expect(emittedEvents[0].playerUserIds.sort()).toEqual([
+        'user-1',
+        'user-2',
+      ]);
+    });
+
+    it('does not emit anything for a resubmission that does not re-trigger resolution', async () => {
+      const session = buildSession();
+      const gameSessionRepository = new InMemoryGameSessionRepository([
+        session,
+      ]);
+      const sessionPlayerRepository = new InMemorySessionPlayerRepository([
+        buildPlayer('user-1', session.id),
+        buildPlayer('user-2', session.id),
+      ]);
+      const eventEmitter = new EventEmitter2();
+      const emittedEvents: TurnResolvedEvent[] = [];
+      eventEmitter.on('session.turn-resolved', (event: TurnResolvedEvent) =>
+        emittedEvents.push(event),
+      );
+      const useCase = new SubmitTurnActionUseCase(
+        gameSessionRepository,
+        sessionPlayerRepository,
+        new InMemoryTurnSubmissionRepository(),
+        new InMemoryTurnResolutionRepository(),
+        new RecordingSceneResolver(),
+        eventEmitter,
+      );
+
+      await useCase.execute({
+        sessionId: session.id,
+        userId: 'user-1',
+        actionText: 'Action 1',
+      });
+      await useCase.execute({
+        sessionId: session.id,
+        userId: 'user-1',
+        actionText: 'Action 1 bis (retry)',
+      });
+
+      expect(emittedEvents).toHaveLength(0);
+    });
   });
 });
