@@ -31,6 +31,7 @@ export class TypeOrmTurnSubmissionRepository extends TurnSubmissionRepository {
       turnNumber: submission.turnNumber,
       playerId: submission.playerId,
       actionText: submission.actionText,
+      mechanicalActionKey: submission.mechanicalActionKey ?? null,
       submittedAt: submission.submittedAt,
     });
   }
@@ -43,6 +44,7 @@ function toDomain(row: TurnSubmissionOrmEntity): TurnSubmission {
     turnNumber: row.turnNumber,
     playerId: row.playerId,
     actionText: row.actionText,
+    mechanicalActionKey: row.mechanicalActionKey ?? undefined,
     submittedAt: row.submittedAt,
   });
 }

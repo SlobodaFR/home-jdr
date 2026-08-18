@@ -35,4 +35,22 @@ describe('TurnSubmission', () => {
       before.getTime(),
     );
   });
+
+  it('leaves mechanicalActionKey undefined for a free action', () => {
+    const submission = createSubmission();
+
+    expect(submission.mechanicalActionKey).toBeUndefined();
+  });
+
+  it('carries the mechanicalActionKey chosen by the player', () => {
+    const submission = TurnSubmission.create({
+      sessionId: 'session-1',
+      turnNumber: 1,
+      playerId: 'user-1',
+      actionText: 'Je frappe le gobelin',
+      mechanicalActionKey: 'melee-attack',
+    });
+
+    expect(submission.mechanicalActionKey).toBe('melee-attack');
+  });
 });

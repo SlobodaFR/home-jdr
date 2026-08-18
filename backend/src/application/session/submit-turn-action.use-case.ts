@@ -22,6 +22,13 @@ export interface SubmitTurnActionInput {
   sessionId: string;
   userId: string;
   actionText: string;
+  /**
+   * The `GameSystem.mechanicalActions[].actionKey` the player explicitly
+   * picked for this action (added in `04-llm-orchestration` - see
+   * `tasks/04-llm-orchestration.md` "Note UX"). Undefined for a free,
+   * non-mechanical action.
+   */
+  mechanicalActionKey?: string;
 }
 
 export interface SubmitTurnActionResult {
@@ -100,6 +107,7 @@ export class SubmitTurnActionUseCase {
       turnNumber: session.currentTurnNumber,
       playerId: input.userId,
       actionText: input.actionText,
+      mechanicalActionKey: input.mechanicalActionKey,
     });
     await this.turnSubmissionRepository.save(submission);
 
@@ -122,10 +130,21 @@ export class SubmitTurnActionUseCase {
 
     const result = await this.sceneResolver.resolve(session, allSubmissions);
 
+    // Re-read the session rather than trusting the pre-resolve() in-memory
+    // reference: `ResolveSceneUseCase` (04-llm-orchestration) may have
+    // persisted a mid-flight `rollingSummary` update (via
+    // `MaintainRollingSummaryUseCase`) while resolving this very turn - if
+    // we called `completeResolution()` on the stale reference below, this
+    // save would silently clobber that update. The repository is the
+    // source of truth once `resolve()` returns.
+    session =
+      (await this.gameSessionRepository.findById(session.id)) ?? session;
+
     const resolution = TurnResolution.create({
       sessionId: session.id,
       turnNumber: session.currentTurnNumber,
       narrationText: result.narrationText,
+      diceRolls: result.diceRolls ?? [],
     });
     await this.turnResolutionRepository.save(resolution);
 

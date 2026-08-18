@@ -21,9 +21,32 @@ export interface SessionPlayerState {
   hasSubmittedCurrentTurn: boolean;
 }
 
+export type PendingCharacterDeltaStatus = 'pending' | 'validated' | 'rejected';
+
+export interface DiceRoll {
+  playerId: string;
+  actionKey: string;
+  actionLabel: string;
+  formula: string;
+  rolls: number[];
+  total: number;
+}
+
+export interface PendingCharacterDeltaView {
+  id: string;
+  characterId: string;
+  status: PendingCharacterDeltaStatus;
+  hitPoints?: number;
+  inventoryAdd: string[];
+  inventoryRemove: string[];
+  customAttributeChanges: Record<string, number | string>;
+}
+
 export interface SessionTurnLogEntry {
   turnNumber: number;
   narrationText: string;
+  diceRolls: DiceRoll[];
+  pendingDeltas: PendingCharacterDeltaView[];
   resolvedAt: string;
 }
 

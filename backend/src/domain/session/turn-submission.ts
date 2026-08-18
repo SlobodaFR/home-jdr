@@ -6,6 +6,13 @@ export interface TurnSubmissionProps {
   turnNumber: number;
   playerId: string;
   actionText: string;
+  /**
+   * The `GameSystem.mechanicalActions[].actionKey` the player explicitly
+   * picked at submission time, or undefined for a free (non-mechanical)
+   * action. Explicit player choice, never LLM inference - see
+   * `tasks/04-llm-orchestration.md` ("Note UX").
+   */
+  mechanicalActionKey?: string;
   submittedAt: Date;
 }
 
@@ -59,6 +66,10 @@ export class TurnSubmission {
 
   get actionText(): string {
     return this.props.actionText;
+  }
+
+  get mechanicalActionKey(): string | undefined {
+    return this.props.mechanicalActionKey;
   }
 
   get submittedAt(): Date {

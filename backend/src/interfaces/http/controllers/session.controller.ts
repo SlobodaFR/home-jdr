@@ -1,5 +1,7 @@
 import { Body, Controller, Get, Param, Post, Query } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { RejectCharacterDeltaUseCase } from '../../../application/character/reject-character-delta.use-case';
+import { ValidateCharacterDeltaUseCase } from '../../../application/character/validate-character-delta.use-case';
 import { CreateSessionUseCase } from '../../../application/session/create-session.use-case';
 import {
   DEFAULT_RECENT_TURNS_LIMIT,
@@ -13,10 +15,12 @@ import {
   SubmitTurnActionUseCase,
 } from '../../../application/session/submit-turn-action.use-case';
 import { GetOrCreateUserProfileUseCase } from '../../../application/user/get-or-create-user-profile.use-case';
+import { PendingCharacterDeltaStatus } from '../../../domain/character/pending-character-delta';
 import {
   GameSession,
   SessionStatus,
 } from '../../../domain/session/game-session';
+import { TurnResolutionDiceRoll } from '../../../domain/session/turn-resolution';
 import {
   CurrentUser,
   CurrentUserPayload,
@@ -48,6 +52,16 @@ interface SubmitTurnActionResponse {
   narrationText: string | null;
 }
 
+interface PendingCharacterDeltaResponse {
+  id: string;
+  characterId: string;
+  status: PendingCharacterDeltaStatus;
+  hitPoints?: number;
+  inventoryAdd: string[];
+  inventoryRemove: string[];
+  customAttributeChanges: Record<string, number | string>;
+}
+
 interface SessionStateResponse {
   session: SessionSummaryResponse;
   players: {
@@ -58,6 +72,8 @@ interface SessionStateResponse {
   recentTurns: {
     turnNumber: number;
     narrationText: string;
+    diceRolls: TurnResolutionDiceRoll[];
+    pendingDeltas: PendingCharacterDeltaResponse[];
     resolvedAt: Date;
   }[];
 }
@@ -84,6 +100,8 @@ export class SessionController {
     private readonly getSessionState: GetSessionStateUseCase,
     private readonly listSessionsForUser: ListSessionsForUserUseCase,
     private readonly getOrCreateUserProfile: GetOrCreateUserProfileUseCase,
+    private readonly validateCharacterDelta: ValidateCharacterDeltaUseCase,
+    private readonly rejectCharacterDelta: RejectCharacterDeltaUseCase,
     private readonly config: ConfigService,
   ) {}
 
@@ -143,6 +161,7 @@ export class SessionController {
       sessionId: id,
       userId: user.id,
       actionText: dto.actionText,
+      mechanicalActionKey: dto.mechanicalActionKey,
     });
     return {
       session: toSummaryResponse(result.session),
@@ -175,8 +194,53 @@ export class SessionController {
       recentTurns: state.recentResolutions.map((resolution) => ({
         turnNumber: resolution.turnNumber,
         narrationText: resolution.narrationText,
+        diceRolls: resolution.diceRolls,
+        pendingDeltas: (
+          state.pendingDeltasByTurn[resolution.turnNumber] ?? []
+        ).map(toPendingDeltaResponse),
         resolvedAt: resolution.resolvedAt,
       })),
     };
   }
+
+  /** Validates ("Valider") a pending LLM-proposed delta - the ONLY path that writes it to the character sheet. */
+  @Post(':id/turns/:turnNumber/deltas/:deltaId/validate')
+  async validateDelta(
+    @Param('deltaId') deltaId: string,
+  ): Promise<PendingCharacterDeltaResponse> {
+    const pendingDelta = await this.validateCharacterDelta.execute(deltaId);
+    return toPendingDeltaResponse(pendingDelta);
+  }
+
+  /** Rejects ("Ignorer") a pending LLM-proposed delta - never touches the character sheet. */
+  @Post(':id/turns/:turnNumber/deltas/:deltaId/reject')
+  async rejectDelta(
+    @Param('deltaId') deltaId: string,
+  ): Promise<PendingCharacterDeltaResponse> {
+    const pendingDelta = await this.rejectCharacterDelta.execute(deltaId);
+    return toPendingDeltaResponse(pendingDelta);
+  }
+}
+
+function toPendingDeltaResponse(pendingDelta: {
+  id: string;
+  characterId: string;
+  status: PendingCharacterDeltaStatus;
+  deltaPayload: {
+    hitPoints?: number;
+    inventoryAdd?: string[];
+    inventoryRemove?: string[];
+    customAttributeChanges?: Record<string, number | string>;
+  };
+}): PendingCharacterDeltaResponse {
+  return {
+    id: pendingDelta.id,
+    characterId: pendingDelta.characterId,
+    status: pendingDelta.status,
+    hitPoints: pendingDelta.deltaPayload.hitPoints,
+    inventoryAdd: pendingDelta.deltaPayload.inventoryAdd ?? [],
+    inventoryRemove: pendingDelta.deltaPayload.inventoryRemove ?? [],
+    customAttributeChanges:
+      pendingDelta.deltaPayload.customAttributeChanges ?? {},
+  };
 }

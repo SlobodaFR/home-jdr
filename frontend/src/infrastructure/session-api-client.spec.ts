@@ -131,4 +131,40 @@ describe('sessionApiClient', () => {
       });
     });
   });
+
+  describe('validateDelta', () => {
+    it('posts to the validate endpoint for the given turn and delta', async () => {
+      const fetchMock = vi.fn().mockResolvedValue({
+        ok: true,
+        json: async () => ({ id: 'delta-1', status: 'validated' }),
+      });
+      vi.stubGlobal('fetch', fetchMock);
+
+      const result = await sessionApiClient.validateDelta('session-1', 1, 'delta-1');
+
+      expect(result.status).toBe('validated');
+      expect(fetchMock).toHaveBeenCalledWith(
+        '/api/sessions/session-1/turns/1/deltas/delta-1/validate',
+        expect.objectContaining({ method: 'POST', credentials: 'include' }),
+      );
+    });
+  });
+
+  describe('rejectDelta', () => {
+    it('posts to the reject endpoint for the given turn and delta', async () => {
+      const fetchMock = vi.fn().mockResolvedValue({
+        ok: true,
+        json: async () => ({ id: 'delta-1', status: 'rejected' }),
+      });
+      vi.stubGlobal('fetch', fetchMock);
+
+      const result = await sessionApiClient.rejectDelta('session-1', 1, 'delta-1');
+
+      expect(result.status).toBe('rejected');
+      expect(fetchMock).toHaveBeenCalledWith(
+        '/api/sessions/session-1/turns/1/deltas/delta-1/reject',
+        expect.objectContaining({ method: 'POST', credentials: 'include' }),
+      );
+    });
+  });
 });

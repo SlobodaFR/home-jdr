@@ -1,7 +1,9 @@
+import { PendingCharacterDelta } from '../../domain/character/pending-character-delta';
 import { GameSession } from '../../domain/session/game-session';
 import { SessionPlayer } from '../../domain/session/session-player';
 import { TurnResolution } from '../../domain/session/turn-resolution';
 import { TurnSubmission } from '../../domain/session/turn-submission';
+import { InMemoryPendingCharacterDeltaRepository } from '../character/in-memory-pending-character-delta.repository';
 import { GetSessionStateUseCase } from './get-session-state.use-case';
 import { InMemoryGameSessionRepository } from './in-memory-game-session.repository';
 import { InMemorySessionPlayerRepository } from './in-memory-session-player.repository';
@@ -45,6 +47,7 @@ describe('GetSessionStateUseCase', () => {
       sessionPlayerRepository,
       turnSubmissionRepository,
       new InMemoryTurnResolutionRepository(),
+      new InMemoryPendingCharacterDeltaRepository(),
     );
 
     const state = await useCase.execute(session.id);
@@ -80,6 +83,7 @@ describe('GetSessionStateUseCase', () => {
       new InMemorySessionPlayerRepository(),
       new InMemoryTurnSubmissionRepository(),
       turnResolutionRepository,
+      new InMemoryPendingCharacterDeltaRepository(),
     );
 
     const state = await useCase.execute(session.id, 5);
@@ -111,6 +115,7 @@ describe('GetSessionStateUseCase', () => {
       new InMemorySessionPlayerRepository(),
       new InMemoryTurnSubmissionRepository(),
       turnResolutionRepository,
+      new InMemoryPendingCharacterDeltaRepository(),
     );
 
     const state = await useCase.execute(session.id, 5);
@@ -125,8 +130,40 @@ describe('GetSessionStateUseCase', () => {
       new InMemorySessionPlayerRepository(),
       new InMemoryTurnSubmissionRepository(),
       new InMemoryTurnResolutionRepository(),
+      new InMemoryPendingCharacterDeltaRepository(),
     );
 
     await expect(useCase.execute('unknown')).rejects.toThrow();
+  });
+
+  it('includes the pending character deltas proposed for each recent turn', async () => {
+    const session = buildSession();
+    const turnResolutionRepository = new InMemoryTurnResolutionRepository([
+      TurnResolution.create({
+        sessionId: session.id,
+        turnNumber: 1,
+        narrationText: 'texte',
+      }),
+    ]);
+    const pendingDelta = PendingCharacterDelta.create({
+      sessionId: session.id,
+      turnNumber: 1,
+      characterId: 'character-1',
+      deltaPayload: { hitPoints: -12 },
+    });
+    const pendingCharacterDeltaRepository =
+      new InMemoryPendingCharacterDeltaRepository([pendingDelta]);
+    const useCase = new GetSessionStateUseCase(
+      new InMemoryGameSessionRepository([session]),
+      new InMemorySessionPlayerRepository(),
+      new InMemoryTurnSubmissionRepository(),
+      turnResolutionRepository,
+      pendingCharacterDeltaRepository,
+    );
+
+    const state = await useCase.execute(session.id);
+
+    expect(state.pendingDeltasByTurn[1]).toHaveLength(1);
+    expect(state.pendingDeltasByTurn[1][0].id).toBe(pendingDelta.id);
   });
 });

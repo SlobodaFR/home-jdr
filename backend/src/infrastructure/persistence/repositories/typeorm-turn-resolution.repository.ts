@@ -35,6 +35,7 @@ export class TypeOrmTurnResolutionRepository extends TurnResolutionRepository {
       sessionId: resolution.sessionId,
       turnNumber: resolution.turnNumber,
       narrationText: resolution.narrationText,
+      diceRolls: resolution.diceRolls,
       resolvedAt: resolution.resolvedAt,
     });
   }
@@ -46,6 +47,7 @@ function toDomain(row: TurnResolutionOrmEntity): TurnResolution {
     sessionId: row.sessionId,
     turnNumber: row.turnNumber,
     narrationText: row.narrationText,
+    diceRolls: row.diceRolls ?? [],
     resolvedAt: row.resolvedAt,
   });
 }

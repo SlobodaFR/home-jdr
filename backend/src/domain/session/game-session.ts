@@ -86,7 +86,7 @@ export class GameSession {
     return this.props.currentTurnNumber;
   }
 
-  /** Filled by `04-llm-orchestration` (periodic summary). Stub (empty) here. */
+  /** Condensed history of turns older than the recent window - see `MaintainRollingSummaryUseCase`. */
   get rollingSummary(): string {
     return this.props.rollingSummary;
   }
@@ -117,6 +117,16 @@ export class GameSession {
       );
     }
     return new GameSession({ ...this.props, status: 'narrating' });
+  }
+
+  /**
+   * Replaces the rolling summary with a freshly-condensed one (see
+   * `MaintainRollingSummaryUseCase`). Does not touch `status` or
+   * `currentTurnNumber` - can be called regardless of the session's current
+   * status.
+   */
+  updateRollingSummary(rollingSummary: string): GameSession {
+    return new GameSession({ ...this.props, rollingSummary });
   }
 
   /** `narrating` -> `waiting_for_players`, opening the next turn. */
