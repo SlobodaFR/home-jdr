@@ -231,12 +231,14 @@ export function SessionPage() {
                     <span className="font-caption-sm text-mute">Moi</span>
                   )}
                 </div>
-                <CharacterStatBar
-                  label="Points de vie"
-                  current={character.hitPointsCurrent}
-                  max={character.hitPointsMax}
-                  compact
-                />
+                {character.hitPointsMax > 0 && (
+                  <CharacterStatBar
+                    label="Points de vie"
+                    current={character.hitPointsCurrent}
+                    max={character.hitPointsMax}
+                    compact
+                  />
+                )}
               </div>
             ))}
           </div>

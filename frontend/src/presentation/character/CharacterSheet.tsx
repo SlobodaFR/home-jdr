@@ -22,12 +22,14 @@ export function CharacterSheet({ character, compact = false }: CharacterSheetPro
         <h2 className="font-sans-ui text-heading-lg text-ink">{character.name}</h2>
       )}
 
-      <CharacterStatBar
-        label="Points de vie"
-        current={character.hitPointsCurrent}
-        max={character.hitPointsMax}
-        compact={compact}
-      />
+      {character.hitPointsMax > 0 && (
+        <CharacterStatBar
+          label="Points de vie"
+          current={character.hitPointsCurrent}
+          max={character.hitPointsMax}
+          compact={compact}
+        />
+      )}
 
       {customAttributeEntries.length > 0 && (
         <dl className={`grid grid-cols-2 ${compact ? 'gap-xxs' : 'gap-sm'}`}>

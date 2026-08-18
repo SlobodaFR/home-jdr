@@ -13,9 +13,6 @@ import { ButtonSecondary } from '../components/ButtonSecondary';
 import { CharacterStatBar } from '../character/CharacterStatBar';
 import { InventoryList } from '../character/InventoryList';
 
-/** Fallback hit-point max for the live preview, before the AI has proposed one. */
-const DEFAULT_PREVIEW_HIT_POINTS = 20;
-
 function draftInventoryItems(inventory?: string[]): InventoryItem[] {
   return (inventory ?? []).map((name) => ({ name, quantity: 1 }));
 }
@@ -134,11 +131,13 @@ export function CharacterCreationChatPage() {
       <section className="border border-hairline rounded-md p-md flex flex-col gap-sm">
         <h2 className="font-sans-ui text-heading-md text-ink">Brouillon de fiche</h2>
         <p className="font-body-strong text-ink">{draft.name ?? 'Personnage sans nom pour le moment'}</p>
-        <CharacterStatBar
-          label="Points de vie"
-          current={draft.hitPointsMax ?? DEFAULT_PREVIEW_HIT_POINTS}
-          max={draft.hitPointsMax ?? DEFAULT_PREVIEW_HIT_POINTS}
-        />
+        {typeof draft.hitPointsMax === 'number' && draft.hitPointsMax > 0 && (
+          <CharacterStatBar
+            label="Points de vie"
+            current={draft.hitPointsMax}
+            max={draft.hitPointsMax}
+          />
+        )}
         <InventoryList items={draftInventoryItems(draft.inventory)} />
       </section>
 
