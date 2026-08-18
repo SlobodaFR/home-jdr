@@ -16,6 +16,7 @@ import {
   RESOLVE_SCENE_TOOL_SCHEMA,
   ResolveSceneToolInput,
   SUMMARIZE_USER_MESSAGE,
+  SystemPrompt,
   buildAssistCharacterCreationSystemPrompt,
   buildAssistCharacterCreationUserMessage,
   buildResolveSceneSystemPrompt,
@@ -134,7 +135,7 @@ export class ClaudeGameMasterAdapter extends LlmGameMasterPort {
   }
 
   private async call(options: {
-    system: string;
+    system: SystemPrompt;
     userMessage: string;
     maxTokens: number;
     tools?: {
@@ -162,7 +163,20 @@ export class ClaudeGameMasterAdapter extends LlmGameMasterPort {
       body: JSON.stringify({
         model,
         max_tokens: options.maxTokens,
-        system: options.system,
+        // The rules text + schema (cacheablePrefix) is identical across
+        // every call for the same GameSystem within a session - marking it
+        // as an explicit cache breakpoint means only the (much smaller)
+        // dynamic suffix is billed at full price after the first call
+        // within the ~5min TTL (see PRD.md cost concerns / CLAUDE.md
+        // guard-rails - this cuts real spend, not just latency).
+        system: [
+          {
+            type: 'text',
+            text: options.system.cacheablePrefix,
+            cache_control: { type: 'ephemeral' },
+          },
+          { type: 'text', text: options.system.dynamicSuffix },
+        ],
         messages: [{ role: 'user', content: options.userMessage }],
         ...(options.tools ? { tools: options.tools } : {}),
         ...(options.toolChoice ? { tool_choice: options.toolChoice } : {}),

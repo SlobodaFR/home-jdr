@@ -125,17 +125,32 @@ function formatRecentTurns(input: SceneResolutionInput): string {
     .join('\n');
 }
 
+export interface SystemPrompt {
+  /**
+   * Identical across every call for the same `GameSystem` (rules text +
+   * schema never change mid-campaign) - safe to cache. Claude gets an
+   * explicit `cache_control` breakpoint on this part (see
+   * `ClaudeGameMasterAdapter`); OpenAI's automatic prefix caching benefits
+   * from it for free as long as it stays the literal start of the prompt.
+   */
+  cacheablePrefix: string;
+  /** Changes on every call (character state, history, draft...) - never cached. */
+  dynamicSuffix: string;
+}
+
 /** System prompt for `resolveScene()` - full rules text, state, and non-negotiable dice facts. */
 export function buildResolveSceneSystemPrompt(
   input: SceneResolutionInput,
-): string {
-  return [
+): SystemPrompt {
+  const cacheablePrefix = [
     "Tu es le maître du jeu (MJ) d'un jeu de rôle. Voici les règles du jeu, dans leur intégralité - respecte-les strictement :",
     input.rulesText,
     '',
     'Schéma structuré de la fiche de personnage :',
     JSON.stringify(input.characterSheetSchema),
-    '',
+  ].join('\n');
+
+  const dynamicSuffix = [
     'Personnages impliqués dans cette scène :',
     input.characters.map(formatCharacter).join('\n'),
     '',
@@ -150,6 +165,8 @@ export function buildResolveSceneSystemPrompt(
     '',
     `Réponds en appelant l'outil "${RESOLVE_SCENE_TOOL_NAME}" avec la narration et les deltas d'état proposés. Ne mets jamais de delta chiffré dans le texte de narration lui-même - uniquement dans les champs structurés de l'outil.`,
   ].join('\n');
+
+  return { cacheablePrefix, dynamicSuffix };
 }
 
 /** User message for `resolveScene()` - just this turn's submitted actions. */
@@ -165,11 +182,15 @@ export function buildResolveSceneUserMessage(
 }
 
 /** System prompt for `summarize()`. */
-export function buildSummarizeSystemPrompt(input: SummarizeSceneInput): string {
-  return [
+export function buildSummarizeSystemPrompt(
+  input: SummarizeSceneInput,
+): SystemPrompt {
+  const cacheablePrefix = [
     "Tu es le maître du jeu (MJ) d'un jeu de rôle. Voici les règles du jeu :",
     input.rulesText,
-    '',
+  ].join('\n');
+
+  const dynamicSuffix = [
     'Résumé glissant actuel de la campagne :',
     input.previousRollingSummary || '(aucun résumé pour le moment)',
     '',
@@ -180,6 +201,8 @@ export function buildSummarizeSystemPrompt(input: SummarizeSceneInput): string {
     '',
     'Condense le résumé actuel et ces tours en un unique résumé à jour, concis, qui préserve les faits importants pour la cohérence narrative future. Réponds uniquement avec le texte du résumé, sans préambule.',
   ].join('\n');
+
+  return { cacheablePrefix, dynamicSuffix };
 }
 
 export const SUMMARIZE_USER_MESSAGE =
@@ -270,14 +293,16 @@ function formatCharacterCreationMessages(
 /** System prompt for `assistCharacterCreation()` - full rules text, target schema, and the draft built so far. */
 export function buildAssistCharacterCreationSystemPrompt(
   input: CharacterCreationAssistInput,
-): string {
-  return [
+): SystemPrompt {
+  const cacheablePrefix = [
     "Tu es le maître du jeu (MJ) d'un jeu de rôle. Tu aides un joueur à créer son personnage par une conversation guidée, pas par un formulaire. Voici les règles du jeu, dans leur intégralité :",
     input.rulesText,
     '',
     'Schéma structuré cible de la fiche de personnage (à quoi le personnage doit converger) :',
     JSON.stringify(input.characterSheetSchema),
-    '',
+  ].join('\n');
+
+  const dynamicSuffix = [
     'Brouillon actuel de la fiche, construit au fil de la conversation :',
     JSON.stringify(input.draftCharacter),
     '',
@@ -286,6 +311,8 @@ export function buildAssistCharacterCreationSystemPrompt(
     '',
     `Réponds en appelant l'outil "${ASSIST_CHARACTER_CREATION_TOOL_NAME}" avec ton prochain message (une question ou une proposition concrète), les mises à jour de brouillon que ce message justifie (ne jamais réinventer un champ déjà acté sans raison exprimée par le joueur), et si tu penses la fiche prête à être finalisée. Un nom de personnage clair suffit à considérer que la fiche peut être finalisée - n'exige jamais plus que ce que le schéma cible requiert.`,
   ].join('\n');
+
+  return { cacheablePrefix, dynamicSuffix };
 }
 
 /** User message for `assistCharacterCreation()` - the player's latest message in the conversation. */

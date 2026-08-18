@@ -16,6 +16,7 @@ import {
   RESOLVE_SCENE_TOOL_SCHEMA,
   ResolveSceneToolInput,
   SUMMARIZE_USER_MESSAGE,
+  SystemPrompt,
   buildAssistCharacterCreationSystemPrompt,
   buildAssistCharacterCreationUserMessage,
   buildResolveSceneSystemPrompt,
@@ -148,7 +149,7 @@ export class OpenAiGameMasterAdapter extends LlmGameMasterPort {
   }
 
   private async call(options: {
-    system: string;
+    system: SystemPrompt;
     userMessage: string;
     tools?: {
       type: 'function';
@@ -177,8 +178,16 @@ export class OpenAiGameMasterAdapter extends LlmGameMasterPort {
       },
       body: JSON.stringify({
         model,
+        // OpenAI's prompt caching is automatic (no API flag) for identical
+        // prefixes >1024 tokens - keeping the static rules+schema part
+        // first and byte-identical across calls for the same GameSystem is
+        // what makes it kick in, same boundary Claude marks explicitly
+        // with cache_control (see ClaudeGameMasterAdapter).
         messages: [
-          { role: 'system', content: options.system },
+          {
+            role: 'system',
+            content: `${options.system.cacheablePrefix}\n\n${options.system.dynamicSuffix}`,
+          },
           { role: 'user', content: options.userMessage },
         ],
         max_tokens: options.maxTokens,

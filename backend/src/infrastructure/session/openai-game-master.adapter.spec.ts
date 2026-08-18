@@ -248,4 +248,35 @@ describe('OpenAiGameMasterAdapter', () => {
       }),
     ).rejects.toThrow('finish_reason=length');
   });
+
+  it("puts the rules text + schema first, byte-stable, so OpenAI's automatic prefix caching applies", async () => {
+    const harness = buildHarness();
+    harness.mockResolveSceneReply({
+      narrationText: 'texte',
+      characterDeltas: [],
+    });
+
+    await harness.adapter.resolveScene({
+      rulesText: 'les regles completes du jdr',
+      characterSheetSchema: {
+        baseAttributes: { hitPoints: { max: 1 }, inventory: [] },
+        customAttributes: [],
+      },
+      characters: [],
+      recentTurns: [],
+      rollingSummary: 'un resume',
+      submittedActions: [],
+      diceFacts: [],
+    });
+
+    const body = harness.lastRequestBody() as {
+      messages?: { role: string; content: string }[];
+    };
+    const systemMessage = body.messages?.find((m) => m.role === 'system');
+    expect(systemMessage?.content).toContain('les regles completes du jdr');
+    expect(systemMessage?.content).toContain('un resume');
+    expect(
+      systemMessage!.content.indexOf('les regles completes du jdr'),
+    ).toBeLessThan(systemMessage!.content.indexOf('un resume'));
+  });
 });

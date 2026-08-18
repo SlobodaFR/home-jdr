@@ -164,4 +164,43 @@ describe('ClaudeGameMasterAdapter', () => {
       }),
     ).rejects.toThrow('ANTHROPIC_API_KEY is not configured');
   });
+
+  it('marks the rules text + schema as an ephemeral cache breakpoint, separate from the per-call dynamic state', async () => {
+    const harness = buildHarness();
+    harness.mockResolveSceneReply({
+      narrationText: 'texte',
+      characterDeltas: [],
+    });
+
+    await harness.adapter.resolveScene({
+      rulesText: 'les regles completes du jdr',
+      characterSheetSchema: {
+        baseAttributes: { hitPoints: { max: 1 }, inventory: [] },
+        customAttributes: [],
+      },
+      characters: [],
+      recentTurns: [],
+      rollingSummary: 'un resume',
+      submittedActions: [],
+      diceFacts: [],
+    });
+
+    const mockFetch = global.fetch as unknown as jest.Mock;
+    const [, init] = mockFetch.mock.calls[0] as [string, RequestInit];
+    const body = JSON.parse(init.body as string) as {
+      system?: {
+        type: string;
+        text: string;
+        cache_control?: { type: string };
+      }[];
+    };
+
+    expect(body.system).toHaveLength(2);
+    const [cacheable, dynamic] = body.system ?? [];
+    expect(cacheable.cache_control).toEqual({ type: 'ephemeral' });
+    expect(cacheable.text).toContain('les regles completes du jdr');
+    expect(dynamic.cache_control).toBeUndefined();
+    expect(dynamic.text).toContain('un resume');
+    expect(dynamic.text).not.toContain('les regles completes du jdr');
+  });
 });
