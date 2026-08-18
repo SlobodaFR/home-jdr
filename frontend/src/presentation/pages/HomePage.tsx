@@ -10,6 +10,7 @@ import { ButtonSecondary } from '../components/ButtonSecondary';
 import { GameCard } from '../components/GameCard';
 import { SessionStatusPill, SessionStatusVariant } from '../components/SessionStatusPill';
 import { NotificationOnboardingBanner } from '../notifications/NotificationOnboardingBanner';
+import { useUserProfile } from '../user-profile/useUserProfile';
 
 function statusVariant(status: SessionStatus): SessionStatusVariant {
   return status === 'resolving' ? 'resolving' : 'waiting';
@@ -27,6 +28,7 @@ function statusLabel(status: SessionStatus): string {
 
 export function HomePage() {
   const { user, logout } = useAuth();
+  const { profile } = useUserProfile();
   const navigate = useNavigate();
   const [sessions, setSessions] = useState<SessionSummary[]>([]);
   const [gameSystems, setGameSystems] = useState<GameSystem[]>([]);
@@ -52,6 +54,22 @@ export function HomePage() {
       <div className="flex items-center justify-between flex-wrap gap-sm">
         <h1 className="font-sans-ui text-heading-xl text-ink">Mes parties</h1>
         <div className="flex items-center gap-md">
+          {profile?.role === 'admin' && (
+            <>
+              <button
+                onClick={() => navigate('/admin/catalogue')}
+                className="border border-hairline text-ink px-lg py-sm rounded-lg font-button-sm"
+              >
+                Catalogue JdR
+              </button>
+              <button
+                onClick={() => navigate('/admin/usage')}
+                className="border border-hairline text-ink px-lg py-sm rounded-lg font-button-sm"
+              >
+                Usage &amp; quotas
+              </button>
+            </>
+          )}
           <button
             onClick={() => navigate('/settings/notifications')}
             className="border border-hairline text-ink px-lg py-sm rounded-lg font-button-sm"
