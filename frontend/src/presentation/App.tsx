@@ -2,10 +2,13 @@ import { Route, Routes } from 'react-router-dom';
 import { RequireAuth } from './auth/RequireAuth';
 import { CharacterSheetPage } from './pages/CharacterSheetPage';
 import { CreateCharacterPage } from './pages/CreateCharacterPage';
+import { CreateSessionPage } from './pages/CreateSessionPage';
 import { HomePage } from './pages/HomePage';
+import { JoinSessionPage } from './pages/JoinSessionPage';
 import { LoginPage } from './pages/LoginPage';
 import { AdminGameCatalogPage } from './pages/AdminGameCatalogPage';
 import { ChooseGamePage } from './pages/ChooseGamePage';
+import { SessionPage } from './pages/SessionPage';
 import { RequireAdmin } from './user-profile/RequireAdmin';
 
 export default function App() {
@@ -41,6 +44,30 @@ export default function App() {
         element={
           <RequireAuth>
             <ChooseGamePage />
+          </RequireAuth>
+        }
+      />
+      <Route
+        path="/sessions/new"
+        element={
+          <RequireAuth>
+            <CreateSessionPage />
+          </RequireAuth>
+        }
+      />
+      <Route
+        path="/sessions/join"
+        element={
+          <RequireAuth>
+            <JoinSessionPage />
+          </RequireAuth>
+        }
+      />
+      <Route
+        path="/sessions/:id"
+        element={
+          <RequireAuth>
+            <SessionPage />
           </RequireAuth>
         }
       />
