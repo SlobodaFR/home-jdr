@@ -4,6 +4,9 @@ import { CharacterSheetPage } from './pages/CharacterSheetPage';
 import { CreateCharacterPage } from './pages/CreateCharacterPage';
 import { HomePage } from './pages/HomePage';
 import { LoginPage } from './pages/LoginPage';
+import { AdminGameCatalogPage } from './pages/AdminGameCatalogPage';
+import { ChooseGamePage } from './pages/ChooseGamePage';
+import { RequireAdmin } from './user-profile/RequireAdmin';
 
 export default function App() {
   return (
@@ -30,6 +33,24 @@ export default function App() {
         element={
           <RequireAuth>
             <CharacterSheetPage />
+          </RequireAuth>
+        }
+      />
+      <Route
+        path="/jeux"
+        element={
+          <RequireAuth>
+            <ChooseGamePage />
+          </RequireAuth>
+        }
+      />
+      <Route
+        path="/admin/catalogue"
+        element={
+          <RequireAuth>
+            <RequireAdmin>
+              <AdminGameCatalogPage />
+            </RequireAdmin>
           </RequireAuth>
         }
       />

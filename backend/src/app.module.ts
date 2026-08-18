@@ -5,6 +5,8 @@ import { join } from 'path';
 import { DatabaseModule } from './infrastructure/persistence/database.module';
 import { AuthModule } from './interfaces/http/modules/auth.module';
 import { CharacterModule } from './interfaces/http/modules/character.module';
+import { GameSystemModule } from './interfaces/http/modules/game-system.module';
+import { UserProfileModule } from './interfaces/http/modules/user-profile.module';
 
 @Module({
   imports: [
@@ -16,6 +18,8 @@ import { CharacterModule } from './interfaces/http/modules/character.module';
     }),
     AuthModule,
     CharacterModule,
+    UserProfileModule,
+    GameSystemModule,
   ],
 })
 export class AppModule {}
