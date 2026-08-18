@@ -57,6 +57,10 @@ class SpyingLlmGameMasterPort extends LlmGameMasterPort {
   assistCharacterCreation(): Promise<CharacterCreationAssistOutput> {
     throw new Error('not used in this spec');
   }
+
+  narrateOpening(): Promise<{ narrationText: string }> {
+    throw new Error('not used in this spec');
+  }
 }
 
 const GAME_SYSTEM_ID = 'game-system-quota-test';

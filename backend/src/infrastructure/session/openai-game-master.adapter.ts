@@ -4,6 +4,8 @@ import {
   CharacterCreationAssistInput,
   CharacterCreationAssistOutput,
   LlmGameMasterPort,
+  OpeningNarrationInput,
+  OpeningNarrationOutput,
   SceneResolutionInput,
   SceneResolutionOutput,
   SummarizeSceneInput,
@@ -12,6 +14,10 @@ import {
   ASSIST_CHARACTER_CREATION_TOOL_NAME,
   ASSIST_CHARACTER_CREATION_TOOL_SCHEMA,
   AssistCharacterCreationToolInput,
+  NARRATE_OPENING_TOOL_NAME,
+  NARRATE_OPENING_TOOL_SCHEMA,
+  NARRATE_OPENING_USER_MESSAGE,
+  NarrateOpeningToolInput,
   RESOLVE_SCENE_TOOL_NAME,
   RESOLVE_SCENE_TOOL_SCHEMA,
   ResolveSceneToolInput,
@@ -19,10 +25,12 @@ import {
   SystemPrompt,
   buildAssistCharacterCreationSystemPrompt,
   buildAssistCharacterCreationUserMessage,
+  buildOpeningNarrationSystemPrompt,
   buildResolveSceneSystemPrompt,
   buildResolveSceneUserMessage,
   buildSummarizeSystemPrompt,
   toCharacterCreationAssistOutput,
+  toOpeningNarrationOutput,
   toSceneResolutionOutput,
 } from './llm-game-master-prompt';
 
@@ -148,6 +156,45 @@ export class OpenAiGameMasterAdapter extends LlmGameMasterPort {
     );
   }
 
+  async narrateOpening(
+    input: OpeningNarrationInput,
+  ): Promise<OpeningNarrationOutput> {
+    const body = await this.call({
+      system: buildOpeningNarrationSystemPrompt(input),
+      userMessage: NARRATE_OPENING_USER_MESSAGE,
+      tools: [
+        {
+          type: 'function',
+          function: {
+            name: NARRATE_OPENING_TOOL_NAME,
+            description:
+              "Retourne la narration d'ouverture proactive de la partie.",
+            parameters: NARRATE_OPENING_TOOL_SCHEMA,
+          },
+        },
+      ],
+      toolChoice: {
+        type: 'function',
+        function: { name: NARRATE_OPENING_TOOL_NAME },
+      },
+      maxTokens: 2048,
+    });
+
+    const toolCall = body.choices?.[0]?.message?.tool_calls?.find(
+      (call) => call.function?.name === NARRATE_OPENING_TOOL_NAME,
+    );
+    const rawArguments = toolCall?.function?.arguments;
+    if (!rawArguments) {
+      throw new Error(
+        `OpenAI did not return a "${NARRATE_OPENING_TOOL_NAME}" function call`,
+      );
+    }
+
+    return toOpeningNarrationOutput(
+      JSON.parse(rawArguments) as NarrateOpeningToolInput,
+    );
+  }
+
   private async call(options: {
     system: SystemPrompt;
     userMessage: string;
@@ -158,7 +205,8 @@ export class OpenAiGameMasterAdapter extends LlmGameMasterPort {
         description: string;
         parameters:
           | typeof RESOLVE_SCENE_TOOL_SCHEMA
-          | typeof ASSIST_CHARACTER_CREATION_TOOL_SCHEMA;
+          | typeof ASSIST_CHARACTER_CREATION_TOOL_SCHEMA
+          | typeof NARRATE_OPENING_TOOL_SCHEMA;
       };
     }[];
     toolChoice?: { type: 'function'; function: { name: string } };

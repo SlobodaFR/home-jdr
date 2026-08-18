@@ -83,6 +83,12 @@ class FakeLlmGameMasterPort extends LlmGameMasterPort {
       readyToFinalize: true,
     });
   }
+
+  narrateOpening(): Promise<{ narrationText: string }> {
+    return Promise.resolve({
+      narrationText: "L'aventure commence.",
+    });
+  }
 }
 
 interface TestUser {

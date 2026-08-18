@@ -25,6 +25,12 @@ describe('GameSession', () => {
       expect(session.charactersVisibleToOthers).toBe(false);
     });
 
+    it('defaults openingNarrationText to null', () => {
+      const session = createSession();
+
+      expect(session.openingNarrationText).toBeNull();
+    });
+
     it('honors an explicit charactersVisibleToOthers, immutable after creation', () => {
       const session = GameSession.create({
         gameSystemId: 'game-system-1',
@@ -108,6 +114,22 @@ describe('GameSession', () => {
 
       expect(updated.rollingSummary).toBe('Les héros ont fui le donjon.');
       expect(updated.status).toBe('resolving');
+      expect(updated.currentTurnNumber).toBe(1);
+    });
+  });
+
+  describe('withOpeningNarration', () => {
+    it('sets the opening narration text without touching status or turn number', () => {
+      const session = createSession();
+
+      const updated = session.withOpeningNarration(
+        'Le vent souffle sur les ruines de Karak-Dun...',
+      );
+
+      expect(updated.openingNarrationText).toBe(
+        'Le vent souffle sur les ruines de Karak-Dun...',
+      );
+      expect(updated.status).toBe('waiting_for_players');
       expect(updated.currentTurnNumber).toBe(1);
     });
   });

@@ -21,6 +21,15 @@ export interface GameSessionProps {
    */
   charactersVisibleToOthers: boolean;
   createdAt: Date;
+  /**
+   * Proactive scene-setting narration generated once every player of the
+   * session has finalized their character (see `NarrateSessionOpeningUseCase`
+   * / `FinalizeCharacterCreationUseCase`) - `null` until then. Also guards
+   * against re-triggering that narration when a later joiner finalizes after
+   * the game has already started (see `FinalizeCharacterCreationUseCase`
+   * doc comment).
+   */
+  openingNarrationText: string | null;
 }
 
 export type NewGameSessionProps = Omit<
@@ -31,6 +40,7 @@ export type NewGameSessionProps = Omit<
   | 'rollingSummary'
   | 'createdAt'
   | 'charactersVisibleToOthers'
+  | 'openingNarrationText'
 > & {
   id?: string;
   status?: SessionStatus;
@@ -38,6 +48,7 @@ export type NewGameSessionProps = Omit<
   rollingSummary?: string;
   createdAt?: Date;
   charactersVisibleToOthers?: boolean;
+  openingNarrationText?: string | null;
 };
 
 /**
@@ -75,6 +86,7 @@ export class GameSession {
       rollingSummary: props.rollingSummary ?? '',
       charactersVisibleToOthers: props.charactersVisibleToOthers ?? false,
       createdAt: props.createdAt ?? new Date(),
+      openingNarrationText: props.openingNarrationText ?? null,
     });
   }
 
@@ -119,6 +131,10 @@ export class GameSession {
     return this.props.createdAt;
   }
 
+  get openingNarrationText(): string | null {
+    return this.props.openingNarrationText;
+  }
+
   /** `waiting_for_players` -> `resolving`, once every active player has submitted. */
   beginResolving(): GameSession {
     if (this.props.status !== 'waiting_for_players') {
@@ -161,5 +177,16 @@ export class GameSession {
       status: 'waiting_for_players',
       currentTurnNumber: this.props.currentTurnNumber + 1,
     });
+  }
+
+  /**
+   * Sets the proactive opening narration (see `NarrateSessionOpeningUseCase`)
+   * - a one-shot write, does not touch `status` or `currentTurnNumber`. Can
+   * be called regardless of the session's current status, but in practice
+   * only ever called once per session (the `openingNarrationText === null`
+   * guard in `FinalizeCharacterCreationUseCase` prevents a second call).
+   */
+  withOpeningNarration(text: string): GameSession {
+    return new GameSession({ ...this.props, openingNarrationText: text });
   }
 }

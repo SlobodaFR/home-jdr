@@ -66,6 +66,11 @@ interface SessionSummaryResponse {
   createdByUserId: string;
   charactersVisibleToOthers: boolean;
   createdAt: Date;
+  /**
+   * Proactive scene-setting narration, set once every player has finalized
+   * their character (see `NarrateSessionOpeningUseCase`) - `null` until then.
+   */
+  openingNarrationText: string | null;
 }
 
 interface LeaveSessionResponse {
@@ -116,6 +121,7 @@ function toSummaryResponse(session: GameSession): SessionSummaryResponse {
     createdByUserId: session.createdByUserId,
     charactersVisibleToOthers: session.charactersVisibleToOthers,
     createdAt: session.createdAt,
+    openingNarrationText: session.openingNarrationText,
   };
 }
 

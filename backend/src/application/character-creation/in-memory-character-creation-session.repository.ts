@@ -36,4 +36,14 @@ export class InMemoryCharacterCreationSessionRepository extends CharacterCreatio
     );
     return Promise.resolve();
   }
+
+  findInProgressByGameSessionId(
+    gameSessionId: string,
+  ): Promise<CharacterCreationSession[]> {
+    return Promise.resolve(
+      this.sessions.filter(
+        (s) => s.gameSessionId === gameSessionId && s.status === 'in_progress',
+      ),
+    );
+  }
 }

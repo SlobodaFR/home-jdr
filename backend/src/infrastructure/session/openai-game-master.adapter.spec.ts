@@ -93,6 +93,31 @@ function buildHarness(): LlmGameMasterContractHarness {
           }),
       });
     },
+    mockNarrateOpeningReply(reply) {
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        json: () =>
+          Promise.resolve({
+            choices: [
+              {
+                message: {
+                  tool_calls: [
+                    {
+                      function: {
+                        name: 'narrate_opening',
+                        arguments: JSON.stringify({
+                          narration_text: reply.narrationText,
+                        }),
+                      },
+                    },
+                  ],
+                },
+              },
+            ],
+          }),
+      });
+    },
     lastRequestBody() {
       const [, init] = mockFetch.mock.calls[
         mockFetch.mock.calls.length - 1

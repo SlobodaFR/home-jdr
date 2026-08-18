@@ -10,6 +10,8 @@ export interface SessionSummary {
   createdByUserId: string;
   charactersVisibleToOthers: boolean;
   createdAt: string;
+  /** Proactive scene-setting narration, set once every player has finalized their character - `null` until then. */
+  openingNarrationText: string | null;
 }
 
 /**

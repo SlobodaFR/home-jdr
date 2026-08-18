@@ -36,6 +36,10 @@ class RecordingLlmGameMasterPort extends LlmGameMasterPort {
     this.lastAssistInput = input;
     return Promise.resolve(this.nextOutput);
   }
+
+  narrateOpening(): Promise<{ narrationText: string }> {
+    throw new Error('not used in this spec');
+  }
 }
 
 function fakeConfig(values: Record<string, string> = {}): ConfigService {

@@ -14,11 +14,15 @@ import { UsageQuotaModule } from './usage-quota.module';
  *
  * Imports `SessionModule` rather than redeclaring
  * `CharacterCreationSessionRepository`/`GameSystemRepository`/
- * `CharacterRepository`/`SessionPlayerRepository`/`LlmGameMasterPort` -
+ * `CharacterRepository`/`SessionPlayerRepository`/`GameSessionRepository`/
+ * `LlmGameMasterPort`/`NarrateSessionOpeningUseCase` -
  * `CreateSessionUseCase`/`JoinSessionUseCase` already depend on the first of
  * those, and `SessionModule` already owns the `LLM_PROVIDER`
  * adapter-selection factory (see its doc comment) - no reason to duplicate
- * either here.
+ * either here. `FinalizeCharacterCreationUseCase` injects both
+ * `GameSessionRepository` and `NarrateSessionOpeningUseCase` from
+ * `SessionModule`'s exports to fire the opening-narration best-effort
+ * trigger (see that use-case's doc comment).
  */
 @Module({
   imports: [SessionModule, UsageQuotaModule],

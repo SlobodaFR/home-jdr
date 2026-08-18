@@ -4,6 +4,8 @@ import {
   CharacterCreationAssistInput,
   CharacterCreationAssistOutput,
   LlmGameMasterPort,
+  OpeningNarrationInput,
+  OpeningNarrationOutput,
   SceneResolutionInput,
   SceneResolutionOutput,
   SummarizeSceneInput,
@@ -12,6 +14,10 @@ import {
   ASSIST_CHARACTER_CREATION_TOOL_NAME,
   ASSIST_CHARACTER_CREATION_TOOL_SCHEMA,
   AssistCharacterCreationToolInput,
+  NARRATE_OPENING_TOOL_NAME,
+  NARRATE_OPENING_TOOL_SCHEMA,
+  NARRATE_OPENING_USER_MESSAGE,
+  NarrateOpeningToolInput,
   RESOLVE_SCENE_TOOL_NAME,
   RESOLVE_SCENE_TOOL_SCHEMA,
   ResolveSceneToolInput,
@@ -19,10 +25,12 @@ import {
   SystemPrompt,
   buildAssistCharacterCreationSystemPrompt,
   buildAssistCharacterCreationUserMessage,
+  buildOpeningNarrationSystemPrompt,
   buildResolveSceneSystemPrompt,
   buildResolveSceneUserMessage,
   buildSummarizeSystemPrompt,
   toCharacterCreationAssistOutput,
+  toOpeningNarrationOutput,
   toSceneResolutionOutput,
 } from './llm-game-master-prompt';
 
@@ -134,6 +142,38 @@ export class ClaudeGameMasterAdapter extends LlmGameMasterPort {
     );
   }
 
+  async narrateOpening(
+    input: OpeningNarrationInput,
+  ): Promise<OpeningNarrationOutput> {
+    const body = await this.call({
+      system: buildOpeningNarrationSystemPrompt(input),
+      userMessage: NARRATE_OPENING_USER_MESSAGE,
+      tools: [
+        {
+          name: NARRATE_OPENING_TOOL_NAME,
+          description:
+            "Retourne la narration d'ouverture proactive de la partie.",
+          input_schema: NARRATE_OPENING_TOOL_SCHEMA,
+        },
+      ],
+      toolChoice: { type: 'tool', name: NARRATE_OPENING_TOOL_NAME },
+      maxTokens: 2048,
+    });
+
+    const toolUse = body.content?.find((block) => block.type === 'tool_use');
+    if (
+      !toolUse ||
+      typeof toolUse.input !== 'object' ||
+      toolUse.input === null
+    ) {
+      throw new Error(
+        `Claude did not return a "${NARRATE_OPENING_TOOL_NAME}" tool call`,
+      );
+    }
+
+    return toOpeningNarrationOutput(toolUse.input as NarrateOpeningToolInput);
+  }
+
   private async call(options: {
     system: SystemPrompt;
     userMessage: string;
@@ -143,7 +183,8 @@ export class ClaudeGameMasterAdapter extends LlmGameMasterPort {
       description: string;
       input_schema:
         | typeof RESOLVE_SCENE_TOOL_SCHEMA
-        | typeof ASSIST_CHARACTER_CREATION_TOOL_SCHEMA;
+        | typeof ASSIST_CHARACTER_CREATION_TOOL_SCHEMA
+        | typeof NARRATE_OPENING_TOOL_SCHEMA;
     }[];
     toolChoice?: { type: 'tool'; name: string };
   }): Promise<AnthropicMessageResponse> {

@@ -56,6 +56,10 @@ class RecordingLlmGameMasterPort extends LlmGameMasterPort {
   assistCharacterCreation(): Promise<CharacterCreationAssistOutput> {
     throw new Error('not used in this spec');
   }
+
+  narrateOpening(): Promise<{ narrationText: string }> {
+    throw new Error('not used in this spec');
+  }
 }
 
 function fakeConfig(values: Record<string, number> = {}): ConfigService {

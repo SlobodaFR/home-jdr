@@ -46,6 +46,15 @@ export class TypeOrmCharacterCreationSessionRepository extends CharacterCreation
   async deleteByGameSessionId(gameSessionId: string): Promise<void> {
     await this.repository.delete({ gameSessionId });
   }
+
+  async findInProgressByGameSessionId(
+    gameSessionId: string,
+  ): Promise<CharacterCreationSession[]> {
+    const rows = await this.repository.find({
+      where: { gameSessionId, status: 'in_progress' },
+    });
+    return rows.map(toDomain);
+  }
 }
 
 function toDomain(

@@ -52,6 +52,7 @@ const baseSession = {
   createdByUserId: 'gm-1',
   charactersVisibleToOthers: false,
   createdAt: '2026-01-01T00:00:00.000Z',
+  openingNarrationText: null,
 };
 
 const gameSystem = {
@@ -375,5 +376,45 @@ describe('SessionPage', () => {
     await waitFor(() => {
       expect(mockedNavigate).toHaveBeenCalledWith('/');
     });
+  });
+
+  it('shows the opening narration prominently when the session has one', async () => {
+    vi.mocked(sessionApiClient.getState).mockResolvedValue({
+      session: {
+        ...baseSession,
+        openingNarrationText:
+          'Le vent souffle sur les ruines de Karak-Dun tandis que Grognak franchit le porche effondre.',
+      },
+      players: [],
+      recentTurns: [],
+    });
+    vi.mocked(apiClient.fetchGameSystems).mockResolvedValue([gameSystem]);
+
+    renderPage();
+
+    await waitFor(() => {
+      expect(
+        screen.getByText(
+          'Le vent souffle sur les ruines de Karak-Dun tandis que Grognak franchit le porche effondre.',
+        ),
+      ).toBeInTheDocument();
+    });
+    expect(screen.getByText('Ouverture de la scène')).toBeInTheDocument();
+  });
+
+  it('shows nothing extra when the opening narration has not been generated yet', async () => {
+    vi.mocked(sessionApiClient.getState).mockResolvedValue({
+      session: baseSession,
+      players: [],
+      recentTurns: [],
+    });
+    vi.mocked(apiClient.fetchGameSystems).mockResolvedValue([gameSystem]);
+
+    renderPage();
+
+    await waitFor(() => {
+      expect(screen.getByText('Aucun tour résolu pour le moment.')).toBeInTheDocument();
+    });
+    expect(screen.queryByText('Ouverture de la scène')).not.toBeInTheDocument();
   });
 });

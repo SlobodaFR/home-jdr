@@ -12,6 +12,7 @@ import { JoinSessionUseCase } from '../../../application/session/join-session.us
 import { LeaveSessionUseCase } from '../../../application/session/leave-session.use-case';
 import { ListSessionsForUserUseCase } from '../../../application/session/list-sessions-for-user.use-case';
 import { MaintainRollingSummaryUseCase } from '../../../application/session/maintain-rolling-summary.use-case';
+import { NarrateSessionOpeningUseCase } from '../../../application/session/narrate-session-opening.use-case';
 import { ResolveSceneUseCase } from '../../../application/session/resolve-scene.use-case';
 import { SubmitTurnActionUseCase } from '../../../application/session/submit-turn-action.use-case';
 import { CharacterCreationSessionRepository } from '../../../domain/character-creation/character-creation-session.repository';
@@ -148,6 +149,10 @@ function llmGameMasterProviderFactory(
     ApplyCharacterDeltaUseCase,
     ValidateCharacterDeltaUseCase,
     RejectCharacterDeltaUseCase,
+    // Consumed by `FinalizeCharacterCreationUseCase` (in `CharacterCreationModule`,
+    // which imports this module) as a best-effort trigger - see that
+    // use-case's doc comment.
+    NarrateSessionOpeningUseCase,
   ],
   // Reused by `CharacterCreationModule` (imports this module) so its own
   // use-cases (send message / finalize / get) don't need to redeclare the
@@ -159,6 +164,8 @@ function llmGameMasterProviderFactory(
     CharacterRepository,
     SessionPlayerRepository,
     LlmGameMasterPort,
+    GameSessionRepository,
+    NarrateSessionOpeningUseCase,
   ],
 })
 export class SessionModule {}

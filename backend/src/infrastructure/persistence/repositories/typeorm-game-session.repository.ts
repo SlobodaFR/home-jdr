@@ -79,6 +79,7 @@ export class TypeOrmGameSessionRepository extends GameSessionRepository {
       createdByUserId: session.createdByUserId,
       charactersVisibleToOthers: session.charactersVisibleToOthers,
       createdAt: session.createdAt,
+      openingNarrationText: session.openingNarrationText,
     });
   }
 }
@@ -95,5 +96,6 @@ function toDomain(row: GameSessionOrmEntity): GameSession {
     createdByUserId: row.createdByUserId,
     charactersVisibleToOthers: row.charactersVisibleToOthers,
     createdAt: row.createdAt,
+    openingNarrationText: row.openingNarrationText,
   });
 }

@@ -43,4 +43,11 @@ export class GameSessionOrmEntity {
 
   @CreateDateColumn({ type: 'datetime', name: 'created_at' })
   createdAt!: Date;
+
+  @Column({
+    type: 'text',
+    name: 'opening_narration_text',
+    nullable: true,
+  })
+  openingNarrationText!: string | null;
 }
