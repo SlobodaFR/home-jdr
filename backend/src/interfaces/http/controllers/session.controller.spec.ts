@@ -14,9 +14,11 @@ import {
 } from '../../../domain/session/llm-game-master.port';
 import { UserProfile } from '../../../domain/user/user-profile';
 import { UserProfileRepository } from '../../../domain/user/user-profile.repository';
+import { AppSettingOrmEntity } from '../../../infrastructure/persistence/entities/app-setting.orm-entity';
 import { CharacterOrmEntity } from '../../../infrastructure/persistence/entities/character.orm-entity';
 import { GameSessionOrmEntity } from '../../../infrastructure/persistence/entities/game-session.orm-entity';
 import { GameSystemOrmEntity } from '../../../infrastructure/persistence/entities/game-system.orm-entity';
+import { LlmUsageRecordOrmEntity } from '../../../infrastructure/persistence/entities/llm-usage-record.orm-entity';
 import { PendingCharacterDeltaOrmEntity } from '../../../infrastructure/persistence/entities/pending-character-delta.orm-entity';
 import { SessionPlayerOrmEntity } from '../../../infrastructure/persistence/entities/session-player.orm-entity';
 import { TurnResolutionOrmEntity } from '../../../infrastructure/persistence/entities/turn-resolution.orm-entity';
@@ -117,6 +119,8 @@ describe('SessionController (integration)', () => {
             TurnResolutionOrmEntity,
             CharacterOrmEntity,
             PendingCharacterDeltaOrmEntity,
+            LlmUsageRecordOrmEntity,
+            AppSettingOrmEntity,
           ],
         }),
         SessionModule,

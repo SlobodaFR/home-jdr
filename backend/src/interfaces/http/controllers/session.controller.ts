@@ -1,4 +1,12 @@
-import { Body, Controller, Get, Param, Post, Query } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  Post,
+  Query,
+  UseFilters,
+} from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { RejectCharacterDeltaUseCase } from '../../../application/character/reject-character-delta.use-case';
 import { ValidateCharacterDeltaUseCase } from '../../../application/character/validate-character-delta.use-case';
@@ -28,6 +36,7 @@ import {
 import { CreateSessionDto } from '../dto/create-session.dto';
 import { JoinSessionDto } from '../dto/join-session.dto';
 import { SubmitTurnActionDto } from '../dto/submit-turn-action.dto';
+import { QuotaExceededFilter } from '../filters/quota-exceeded.filter';
 import { resolveDefaultRole } from '../user-role-policy';
 
 interface SessionResponse extends SessionSummaryResponse {
@@ -151,6 +160,11 @@ export class SessionController {
     return { ...toSummaryResponse(session), characterId: character.id };
   }
 
+  // `QuotaExceededError` can bubble up from `ResolveSceneUseCase` (via
+  // `SubmitTurnActionUseCase`) when the daily LLM quota is exhausted -
+  // without this filter it would surface as an opaque 500 (see CLAUDE.md -
+  // "Jamais d'appel LLM sans vérification de quota au préalable").
+  @UseFilters(QuotaExceededFilter)
   @Post(':id/turns')
   async submitTurn(
     @Param('id') id: string,

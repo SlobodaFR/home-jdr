@@ -7,6 +7,7 @@ import { HomePage } from './pages/HomePage';
 import { JoinSessionPage } from './pages/JoinSessionPage';
 import { LoginPage } from './pages/LoginPage';
 import { AdminGameCatalogPage } from './pages/AdminGameCatalogPage';
+import { AdminUsagePage } from './pages/AdminUsagePage';
 import { ChooseGamePage } from './pages/ChooseGamePage';
 import { NotificationSettingsPage } from './pages/NotificationSettingsPage';
 import { SessionPage } from './pages/SessionPage';
@@ -87,6 +88,16 @@ export default function App() {
           <RequireAuth>
             <RequireAdmin>
               <AdminGameCatalogPage />
+            </RequireAdmin>
+          </RequireAuth>
+        }
+      />
+      <Route
+        path="/admin/usage"
+        element={
+          <RequireAuth>
+            <RequireAdmin>
+              <AdminUsagePage />
             </RequireAdmin>
           </RequireAuth>
         }

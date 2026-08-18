@@ -5,6 +5,7 @@ import {
   SummarizeSceneInput,
 } from '../../domain/session/llm-game-master.port';
 import { TurnResolution } from '../../domain/session/turn-resolution';
+import { InMemoryUsageQuotaPort } from '../usage-quota/in-memory-usage-quota.port';
 import { InMemoryGameSessionRepository } from './in-memory-game-session.repository';
 import { InMemoryTurnResolutionRepository } from './in-memory-turn-resolution.repository';
 import { MaintainRollingSummaryUseCase } from './maintain-rolling-summary.use-case';
@@ -55,6 +56,7 @@ describe('MaintainRollingSummaryUseCase', () => {
       gameSessionRepository,
       turnResolutionRepository,
       llmGameMasterPort,
+      new InMemoryUsageQuotaPort(),
     );
 
     const updated = await useCase.execute({
@@ -87,6 +89,7 @@ describe('MaintainRollingSummaryUseCase', () => {
       gameSessionRepository,
       turnResolutionRepository,
       llmGameMasterPort,
+      new InMemoryUsageQuotaPort(),
     );
 
     await useCase.execute({ sessionId: session.id, rulesText: 'regles' });
@@ -102,6 +105,7 @@ describe('MaintainRollingSummaryUseCase', () => {
       new InMemoryGameSessionRepository(),
       new InMemoryTurnResolutionRepository(),
       new RecordingLlmGameMasterPort(),
+      new InMemoryUsageQuotaPort(),
     );
 
     const result = await useCase.execute({
@@ -110,5 +114,40 @@ describe('MaintainRollingSummaryUseCase', () => {
     });
 
     expect(result).toBeNull();
+  });
+
+  it('records a "summary" usage call after a successful summarize()', async () => {
+    const session = buildSession();
+    const gameSessionRepository = new InMemoryGameSessionRepository([session]);
+    const turnResolutionRepository = new InMemoryTurnResolutionRepository([
+      TurnResolution.create({
+        sessionId: session.id,
+        turnNumber: 1,
+        narrationText: 'Tour 1.',
+      }),
+    ]);
+    const llmGameMasterPort = new RecordingLlmGameMasterPort();
+    const usageQuotaPort = new InMemoryUsageQuotaPort();
+    const useCase = new MaintainRollingSummaryUseCase(
+      gameSessionRepository,
+      turnResolutionRepository,
+      llmGameMasterPort,
+      usageQuotaPort,
+    );
+
+    await useCase.execute({
+      sessionId: session.id,
+      rulesText: 'regles',
+      provider: 'openai',
+    });
+
+    expect(usageQuotaPort.recorded).toEqual([
+      {
+        sessionId: session.id,
+        turnNumber: session.currentTurnNumber,
+        provider: 'openai',
+        callType: 'summary',
+      },
+    ]);
   });
 });

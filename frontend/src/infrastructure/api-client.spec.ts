@@ -106,3 +106,55 @@ describe('apiClient.createGameSystem', () => {
     );
   });
 });
+
+describe('apiClient.fetchUsageStats', () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  it('returns the usage stats', async () => {
+    const stats = {
+      dailyQuota: 50,
+      usedToday: 5,
+      usedPercent: 10,
+      totalCallsToday: 6,
+      trend: [],
+    };
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: true, json: async () => stats }));
+
+    await expect(apiClient.fetchUsageStats()).resolves.toEqual(stats);
+  });
+});
+
+describe('apiClient.updateDailyLlmQuota', () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  it('sends a PATCH request with the new quota value', async () => {
+    const updated = { key: 'daily-llm-quota', value: '80' };
+    const fetchMock = vi.fn().mockResolvedValue({ ok: true, json: async () => updated });
+    vi.stubGlobal('fetch', fetchMock);
+
+    await expect(apiClient.updateDailyLlmQuota(80)).resolves.toEqual(updated);
+    expect(fetchMock).toHaveBeenCalledWith(
+      '/api/admin/settings/daily-llm-quota',
+      expect.objectContaining({ method: 'PATCH', body: JSON.stringify({ value: 80 }) }),
+    );
+  });
+
+  it('throws with the server message on failure', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue({
+        ok: false,
+        status: 400,
+        json: async () => ({ message: 'value must be a positive integer' }),
+      }),
+    );
+
+    await expect(apiClient.updateDailyLlmQuota(0)).rejects.toThrow(
+      'value must be a positive integer',
+    );
+  });
+});

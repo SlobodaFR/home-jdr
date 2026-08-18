@@ -3,17 +3,23 @@ import userEvent from '@testing-library/user-event';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { apiClient } from '../../infrastructure/api-client';
-import { sessionApiClient } from '../../infrastructure/session-api-client';
+import { QuotaExceededClientError, sessionApiClient } from '../../infrastructure/session-api-client';
 import { SessionPage } from './SessionPage';
 
-vi.mock('../../infrastructure/session-api-client', () => ({
-  sessionApiClient: {
-    getState: vi.fn(),
-    submitTurnAction: vi.fn(),
-    validateDelta: vi.fn(),
-    rejectDelta: vi.fn(),
-  },
-}));
+vi.mock('../../infrastructure/session-api-client', async () => {
+  const actual = await vi.importActual<
+    typeof import('../../infrastructure/session-api-client')
+  >('../../infrastructure/session-api-client');
+  return {
+    QuotaExceededClientError: actual.QuotaExceededClientError,
+    sessionApiClient: {
+      getState: vi.fn(),
+      submitTurnAction: vi.fn(),
+      validateDelta: vi.fn(),
+      rejectDelta: vi.fn(),
+    },
+  };
+});
 
 vi.mock('../../infrastructure/api-client', () => ({
   apiClient: { fetchGameSystems: vi.fn() },
@@ -225,6 +231,32 @@ describe('SessionPage', () => {
         'Je frappe le gobelin',
         'melee-attack',
       );
+    });
+  });
+
+  it('shows a clear non-technical message when the daily LLM quota is exhausted (429)', async () => {
+    vi.mocked(sessionApiClient.getState).mockResolvedValue({
+      session: { ...baseSession, status: 'waiting_for_players' },
+      players: [],
+      recentTurns: [],
+    });
+    vi.mocked(apiClient.fetchGameSystems).mockResolvedValue([gameSystem]);
+    vi.mocked(sessionApiClient.submitTurnAction).mockRejectedValue(
+      new QuotaExceededClientError(),
+    );
+
+    const user = userEvent.setup();
+    renderPage();
+
+    fireEvent.change(await screen.findByPlaceholderText('Que faites-vous ?'), {
+      target: { value: "J'ouvre la porte" },
+    });
+    await user.click(screen.getByRole('button', { name: 'Soumettre mon action' }));
+
+    await waitFor(() => {
+      expect(
+        screen.getByText('Le MJ numérique a atteint sa limite du jour, réessaie plus tard'),
+      ).toBeInTheDocument();
     });
   });
 });

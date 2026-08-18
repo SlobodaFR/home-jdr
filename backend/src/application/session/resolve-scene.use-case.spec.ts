@@ -15,9 +15,11 @@ import {
 import { SessionPlayer } from '../../domain/session/session-player';
 import { TurnResolution } from '../../domain/session/turn-resolution';
 import { TurnSubmission } from '../../domain/session/turn-submission';
+import { QuotaExceededError } from '../../domain/usage-quota/quota-exceeded.error';
 import { InMemoryCharacterRepository } from '../character/in-memory-character.repository';
 import { InMemoryPendingCharacterDeltaRepository } from '../character/in-memory-pending-character-delta.repository';
 import { InMemoryGameSystemRepository } from '../game-system/in-memory-game-system.repository';
+import { InMemoryUsageQuotaPort } from '../usage-quota/in-memory-usage-quota.port';
 import { InMemoryGameSessionRepository } from './in-memory-game-session.repository';
 import { InMemorySessionPlayerRepository } from './in-memory-session-player.repository';
 import { InMemoryTurnResolutionRepository } from './in-memory-turn-resolution.repository';
@@ -107,6 +109,7 @@ describe('ResolveSceneUseCase', () => {
       gameSessionRepository?: InMemoryGameSessionRepository;
       sessionPlayerRepository?: InMemorySessionPlayerRepository;
       characterRepository?: InMemoryCharacterRepository;
+      usageQuotaPort?: InMemoryUsageQuotaPort;
     } = {},
   ) {
     const gameSystem = overrides.gameSystem ?? buildGameSystem();
@@ -150,11 +153,14 @@ describe('ResolveSceneUseCase', () => {
       overrides.gameSessionRepository ??
       new InMemoryGameSessionRepository([session]);
     const config = overrides.config ?? fakeConfig();
+    const usageQuotaPort =
+      overrides.usageQuotaPort ?? new InMemoryUsageQuotaPort();
 
     const maintainRollingSummary = new MaintainRollingSummaryUseCase(
       gameSessionRepository,
       turnResolutionRepository,
       llm,
+      usageQuotaPort,
     );
 
     const useCase = new ResolveSceneUseCase(
@@ -167,6 +173,7 @@ describe('ResolveSceneUseCase', () => {
       turnResolutionRepository,
       maintainRollingSummary,
       config,
+      usageQuotaPort,
     );
 
     return {
@@ -177,6 +184,7 @@ describe('ResolveSceneUseCase', () => {
       llm,
       pendingRepo,
       gameSessionRepository,
+      usageQuotaPort,
     };
   }
 
@@ -394,10 +402,64 @@ describe('ResolveSceneUseCase', () => {
         gameSessionRepository,
         turnResolutionRepository,
         llm,
+        new InMemoryUsageQuotaPort(),
       ),
       fakeConfig(),
+      new InMemoryUsageQuotaPort(),
     );
 
     await expect(useCase.resolve(session, [])).rejects.toThrow();
+  });
+
+  it(
+    'throws QuotaExceededError and calls neither the LLM nor the dice roller ' +
+      'when the daily quota is exhausted',
+    async () => {
+      const usageQuotaPort = new InMemoryUsageQuotaPort();
+      usageQuotaPort.available = false;
+      const { useCase, session, diceRoller, llm } = buildUseCase({
+        usageQuotaPort,
+      });
+      const resolveSceneSpy = jest.spyOn(llm, 'resolveScene');
+      const submissions = [
+        TurnSubmission.create({
+          sessionId: session.id,
+          turnNumber: session.currentTurnNumber,
+          playerId: 'user-1',
+          actionText: 'Je frappe le gobelin',
+          mechanicalActionKey: 'melee-attack',
+        }),
+      ];
+
+      await expect(useCase.resolve(session, submissions)).rejects.toThrow(
+        QuotaExceededError,
+      );
+
+      expect(resolveSceneSpy).not.toHaveBeenCalled();
+      expect(diceRoller.calls).toEqual([]);
+    },
+  );
+
+  it('records a "scene_resolution" usage call after a successful resolution', async () => {
+    const { useCase, session, usageQuotaPort } = buildUseCase();
+    const submissions = [
+      TurnSubmission.create({
+        sessionId: session.id,
+        turnNumber: session.currentTurnNumber,
+        playerId: 'user-1',
+        actionText: 'Action',
+      }),
+    ];
+
+    await useCase.resolve(session, submissions);
+
+    expect(usageQuotaPort.recorded).toEqual([
+      {
+        sessionId: session.id,
+        turnNumber: session.currentTurnNumber,
+        provider: 'claude',
+        callType: 'scene_resolution',
+      },
+    ]);
   });
 });

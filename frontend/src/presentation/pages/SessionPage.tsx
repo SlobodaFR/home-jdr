@@ -3,7 +3,7 @@ import { Link, useParams } from 'react-router-dom';
 import { GameSystem, MechanicalAction } from '../../domain/game-system';
 import { DiceRoll, PendingCharacterDeltaView, SessionState } from '../../domain/session';
 import { apiClient } from '../../infrastructure/api-client';
-import { sessionApiClient } from '../../infrastructure/session-api-client';
+import { QuotaExceededClientError, sessionApiClient } from '../../infrastructure/session-api-client';
 import { ActionInput } from '../components/ActionInput';
 import { ButtonPrimary } from '../components/ButtonPrimary';
 import { DeltaProposalCard, DeltaProposalItem } from '../components/DeltaProposalCard';
@@ -120,7 +120,13 @@ export function SessionPage() {
       setMechanicalActionKey(FREE_ACTION_VALUE);
       refresh();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "L'envoi de l'action a échoué.");
+      // Never surface a raw technical error to the player on quota
+      // exhaustion (see CLAUDE.md / tasks/08-admin-quotas-cost-guardrails.md).
+      if (err instanceof QuotaExceededClientError) {
+        setError('Le MJ numérique a atteint sa limite du jour, réessaie plus tard');
+      } else {
+        setError(err instanceof Error ? err.message : "L'envoi de l'action a échoué.");
+      }
     } finally {
       setSubmitting(false);
     }

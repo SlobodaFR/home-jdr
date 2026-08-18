@@ -3,6 +3,8 @@ import { GameSession } from '../../domain/session/game-session';
 import { GameSessionRepository } from '../../domain/session/game-session.repository';
 import { LlmGameMasterPort } from '../../domain/session/llm-game-master.port';
 import { TurnResolutionRepository } from '../../domain/session/turn-resolution.repository';
+import { LlmProvider } from '../../domain/usage-quota/llm-usage-record';
+import { UsageQuotaPort } from '../../domain/usage-quota/usage-quota.port';
 
 /** How many of the most recent resolved turns are folded into a summary refresh. */
 export const ROLLING_SUMMARY_WINDOW = 20;
@@ -10,6 +12,8 @@ export const ROLLING_SUMMARY_WINDOW = 20;
 export interface MaintainRollingSummaryInput {
   sessionId: string;
   rulesText: string;
+  /** Which `LlmGameMasterPort` adapter is active - recorded on the usage audit trail. Defaults to "claude". */
+  provider?: LlmProvider;
 }
 
 /**
@@ -31,6 +35,7 @@ export class MaintainRollingSummaryUseCase {
     private readonly gameSessionRepository: GameSessionRepository,
     private readonly turnResolutionRepository: TurnResolutionRepository,
     private readonly llmGameMasterPort: LlmGameMasterPort,
+    private readonly usageQuotaPort: UsageQuotaPort,
   ) {}
 
   async execute(
@@ -57,6 +62,17 @@ export class MaintainRollingSummaryUseCase {
         turnNumber: resolution.turnNumber,
         narrationText: resolution.narrationText,
       })),
+    });
+
+    // Audit-only (see tasks/08-admin-quotas-cost-guardrails.md) - the
+    // billed call already happened above; recorded for the admin usage
+    // dashboard, not gated by checkQuotaAvailable() (ResolveSceneUseCase
+    // already gates the resolution this refresh piggybacks on).
+    await this.usageQuotaPort.recordUsage({
+      sessionId: session.id,
+      turnNumber: session.currentTurnNumber,
+      provider: input.provider ?? 'claude',
+      callType: 'summary',
     });
 
     const updated = session.updateRollingSummary(updatedSummary);
