@@ -65,6 +65,15 @@ export const apiClient = {
     }
     return (await response.json()) as UsageStats;
   },
+  async deleteGameSystem(id: string): Promise<void> {
+    const response = await fetch(`${BASE_URL}/game-systems/${id}`, {
+      method: 'DELETE',
+      credentials: 'include',
+    });
+    if (!response.ok) {
+      throw new Error(await extractErrorMessage(response));
+    }
+  },
   async updateDailyLlmQuota(value: number): Promise<{ key: string; value: string }> {
     const response = await fetch(`${BASE_URL}/admin/settings/daily-llm-quota`, {
       method: 'PATCH',

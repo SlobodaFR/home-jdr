@@ -2,7 +2,10 @@ import {
   BadRequestException,
   Body,
   Controller,
+  Delete,
   Get,
+  HttpCode,
+  HttpStatus,
   NotFoundException,
   Param,
   Patch,
@@ -15,6 +18,7 @@ import {
 import { FileInterceptor } from '@nestjs/platform-express';
 import { ConfigService } from '@nestjs/config';
 import { CreateGameSystemUseCase } from '../../../application/game-system/create-game-system.use-case';
+import { DeleteGameSystemUseCase } from '../../../application/game-system/delete-game-system.use-case';
 import { GetGameSystemUseCase } from '../../../application/game-system/get-game-system.use-case';
 import { ListGameSystemsUseCase } from '../../../application/game-system/list-game-systems.use-case';
 import { UpdateGameSystemUseCase } from '../../../application/game-system/update-game-system.use-case';
@@ -62,6 +66,7 @@ export class GameSystemController {
   constructor(
     private readonly createGameSystem: CreateGameSystemUseCase,
     private readonly updateGameSystem: UpdateGameSystemUseCase,
+    private readonly deleteGameSystem: DeleteGameSystemUseCase,
     private readonly listGameSystems: ListGameSystemsUseCase,
     private readonly getGameSystem: GetGameSystemUseCase,
     private readonly getOrCreateUserProfile: GetOrCreateUserProfileUseCase,
@@ -156,5 +161,12 @@ export class GameSystemController {
         error instanceof Error ? error.message : 'Invalid game system',
       );
     }
+  }
+
+  @UseGuards(AdminRoleGuard)
+  @Delete(':id')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async remove(@Param('id') id: string): Promise<void> {
+    await this.deleteGameSystem.execute({ gameSystemId: id });
   }
 }

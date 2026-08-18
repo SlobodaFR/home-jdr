@@ -43,6 +43,10 @@ export class TypeOrmGameSystemRepository extends GameSystemRepository {
       createdAt: gameSystem.createdAt,
     });
   }
+
+  async deleteById(id: string): Promise<void> {
+    await this.repository.delete({ id });
+  }
 }
 
 function toDomain(row: GameSystemOrmEntity): GameSystem {

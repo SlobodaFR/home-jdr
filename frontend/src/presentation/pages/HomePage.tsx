@@ -68,6 +68,12 @@ export function HomePage() {
               >
                 Usage &amp; quotas
               </button>
+              <button
+                onClick={() => navigate('/admin/sessions')}
+                className="border border-hairline text-ink px-lg py-sm rounded-lg font-button-sm whitespace-nowrap"
+              >
+                Parties
+              </button>
             </>
           )}
           <button

@@ -51,6 +51,18 @@ export class TypeOrmGameSessionRepository extends GameSessionRepository {
       .map(toDomain);
   }
 
+  async findAll(): Promise<GameSession[]> {
+    const rows = await this.repository.find({
+      order: { createdAt: 'DESC' },
+    });
+    return rows.map(toDomain);
+  }
+
+  async existsByGameSystemId(gameSystemId: string): Promise<boolean> {
+    const count = await this.repository.count({ where: { gameSystemId } });
+    return count > 0;
+  }
+
   async save(session: GameSession): Promise<void> {
     await this.repository.save({
       id: session.id,

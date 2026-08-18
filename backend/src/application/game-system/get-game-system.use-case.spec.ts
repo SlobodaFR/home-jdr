@@ -28,6 +28,10 @@ class InMemoryGameSystemRepository extends GameSystemRepository {
       gameSystem,
     ];
   }
+
+  async deleteById(id: string): Promise<void> {
+    this.gameSystems = this.gameSystems.filter((g) => g.id !== id);
+  }
 }
 
 describe('GetGameSystemUseCase', () => {
