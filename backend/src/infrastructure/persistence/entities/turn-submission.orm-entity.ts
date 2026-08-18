@@ -24,6 +24,9 @@ export class TurnSubmissionOrmEntity {
   @Column({ type: 'text', name: 'action_text' })
   actionText!: string;
 
+  @Column({ type: 'text', name: 'mechanical_action_key', nullable: true })
+  mechanicalActionKey!: string | null;
+
   @CreateDateColumn({ type: 'datetime', name: 'submitted_at' })
   submittedAt!: Date;
 }

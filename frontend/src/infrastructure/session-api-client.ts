@@ -1,4 +1,5 @@
 import {
+  PendingCharacterDeltaView,
   SessionState,
   SessionSummary,
   SessionWithCharacter,
@@ -67,12 +68,13 @@ export const sessionApiClient = {
   async submitTurnAction(
     sessionId: string,
     actionText: string,
+    mechanicalActionKey?: string,
   ): Promise<SubmitTurnActionResult> {
     const response = await fetch(`${BASE_URL}/sessions/${sessionId}/turns`, {
       method: 'POST',
       credentials: 'include',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ actionText }),
+      body: JSON.stringify({ actionText, mechanicalActionKey }),
     });
     return parseJsonOrThrow<SubmitTurnActionResult>(response);
   },
@@ -82,5 +84,29 @@ export const sessionApiClient = {
       credentials: 'include',
     });
     return parseJsonOrThrow<SessionState>(response);
+  },
+
+  async validateDelta(
+    sessionId: string,
+    turnNumber: number,
+    deltaId: string,
+  ): Promise<PendingCharacterDeltaView> {
+    const response = await fetch(
+      `${BASE_URL}/sessions/${sessionId}/turns/${turnNumber}/deltas/${deltaId}/validate`,
+      { method: 'POST', credentials: 'include' },
+    );
+    return parseJsonOrThrow<PendingCharacterDeltaView>(response);
+  },
+
+  async rejectDelta(
+    sessionId: string,
+    turnNumber: number,
+    deltaId: string,
+  ): Promise<PendingCharacterDeltaView> {
+    const response = await fetch(
+      `${BASE_URL}/sessions/${sessionId}/turns/${turnNumber}/deltas/${deltaId}/reject`,
+      { method: 'POST', credentials: 'include' },
+    );
+    return parseJsonOrThrow<PendingCharacterDeltaView>(response);
   },
 };

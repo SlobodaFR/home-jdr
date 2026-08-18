@@ -76,4 +76,18 @@ describe('GameSession', () => {
       expect(() => session.startNextTurn()).toThrow();
     });
   });
+
+  describe('updateRollingSummary', () => {
+    it('replaces the rolling summary without touching status or turn number', () => {
+      const session = createSession().beginResolving();
+
+      const updated = session.updateRollingSummary(
+        'Les héros ont fui le donjon.',
+      );
+
+      expect(updated.rollingSummary).toBe('Les héros ont fui le donjon.');
+      expect(updated.status).toBe('resolving');
+      expect(updated.currentTurnNumber).toBe(1);
+    });
+  });
 });

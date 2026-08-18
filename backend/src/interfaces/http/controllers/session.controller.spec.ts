@@ -4,19 +4,60 @@ import { EventEmitterModule } from '@nestjs/event-emitter';
 import { Test } from '@nestjs/testing';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import request from 'supertest';
+import { CharacterStateDelta } from '../../../domain/character/character-state-delta';
 import { GameSystem } from '../../../domain/game-system/game-system';
 import { GameSystemRepository } from '../../../domain/game-system/game-system.repository';
+import {
+  LlmGameMasterPort,
+  SceneResolutionInput,
+  SceneResolutionOutput,
+} from '../../../domain/session/llm-game-master.port';
 import { UserProfile } from '../../../domain/user/user-profile';
 import { UserProfileRepository } from '../../../domain/user/user-profile.repository';
 import { CharacterOrmEntity } from '../../../infrastructure/persistence/entities/character.orm-entity';
 import { GameSessionOrmEntity } from '../../../infrastructure/persistence/entities/game-session.orm-entity';
 import { GameSystemOrmEntity } from '../../../infrastructure/persistence/entities/game-system.orm-entity';
+import { PendingCharacterDeltaOrmEntity } from '../../../infrastructure/persistence/entities/pending-character-delta.orm-entity';
 import { SessionPlayerOrmEntity } from '../../../infrastructure/persistence/entities/session-player.orm-entity';
 import { TurnResolutionOrmEntity } from '../../../infrastructure/persistence/entities/turn-resolution.orm-entity';
 import { TurnSubmissionOrmEntity } from '../../../infrastructure/persistence/entities/turn-submission.orm-entity';
 import { UserProfileOrmEntity } from '../../../infrastructure/persistence/entities/user-profile.orm-entity';
 import { SessionModule } from '../modules/session.module';
 import { CurrentUserPayload } from '../decorators/current-user.decorator';
+
+/**
+ * `04-llm-orchestration` wires `SceneResolverPort` to the real
+ * `ResolveSceneUseCase`, which calls out to `LlmGameMasterPort`. This
+ * controller suite tests HTTP/session-lifecycle plumbing, not the LLM
+ * adapters themselves (see `claude-game-master.adapter.spec.ts` /
+ * `openai-game-master.adapter.spec.ts` for that) - so it overrides
+ * `LlmGameMasterPort` with a deterministic fake, exactly like it already
+ * fakes authentication via the `x-test-user-*` headers below.
+ */
+class FakeLlmGameMasterPort extends LlmGameMasterPort {
+  resolveScene(input: SceneResolutionInput): Promise<SceneResolutionOutput> {
+    return Promise.resolve({
+      narrationText: input.submittedActions
+        .map((action) => `${action.playerId} : ${action.actionText}`)
+        .join('\n'),
+      // Always propose one delta on the first submitter's character, so the
+      // validate/reject HTTP endpoints have something to exercise.
+      characterDeltas:
+        input.submittedActions.length > 0
+          ? [
+              {
+                characterId: input.submittedActions[0].characterId,
+                delta: CharacterStateDelta.create({ hitPoints: -1 }),
+              },
+            ]
+          : [],
+    });
+  }
+
+  summarize(): Promise<string> {
+    return Promise.resolve('');
+  }
+}
 
 interface TestUser {
   id: string;
@@ -25,8 +66,17 @@ interface TestUser {
 
 const CHILD_ADAPTED_GAME_SYSTEM_ID = 'game-system-kids';
 const ADULT_ONLY_GAME_SYSTEM_ID = 'game-system-adults';
+const MECHANICAL_GAME_SYSTEM_ID = 'game-system-mechanical';
 
-function buildGameSystem(id: string, adaptedForChildren: boolean): GameSystem {
+function buildGameSystem(
+  id: string,
+  adaptedForChildren: boolean,
+  mechanicalActions: {
+    actionKey: string;
+    label: string;
+    diceFormula: string;
+  }[] = [],
+): GameSystem {
   return GameSystem.create({
     id,
     name: adaptedForChildren ? 'JdR pour enfants' : 'JdR pour adultes',
@@ -39,7 +89,7 @@ function buildGameSystem(id: string, adaptedForChildren: boolean): GameSystem {
       inventory: { defaultItems: ['torche'] },
       customAttributes: [],
     },
-    mechanicalActions: [],
+    mechanicalActions,
   });
 }
 
@@ -66,11 +116,15 @@ describe('SessionController (integration)', () => {
             TurnSubmissionOrmEntity,
             TurnResolutionOrmEntity,
             CharacterOrmEntity,
+            PendingCharacterDeltaOrmEntity,
           ],
         }),
         SessionModule,
       ],
-    }).compile();
+    })
+      .overrideProvider(LlmGameMasterPort)
+      .useClass(FakeLlmGameMasterPort)
+      .compile();
 
     app = moduleRef.createNestApplication();
     app.useGlobalPipes(
@@ -104,6 +158,15 @@ describe('SessionController (integration)', () => {
     );
     await gameSystemRepository.save(
       buildGameSystem(CHILD_ADAPTED_GAME_SYSTEM_ID, true),
+    );
+    await gameSystemRepository.save(
+      buildGameSystem(MECHANICAL_GAME_SYSTEM_ID, false, [
+        {
+          actionKey: 'melee-attack',
+          label: 'Attaque au corps a corps',
+          diceFormula: '1d20+3',
+        },
+      ]),
     );
 
     const userProfileRepository = moduleRef.get(UserProfileRepository);
@@ -271,5 +334,104 @@ describe('SessionController (integration)', () => {
     expect(listResponse.status).toBe(200);
     const names = (listResponse.body as { name: string }[]).map((s) => s.name);
     expect(names).toContain('Ma partie a moi');
+  });
+
+  it('rolls dice for a mechanical action and exposes the roll + a pending delta through polling', async () => {
+    const createResponse = await asUser(creator).post('/sessions').send({
+      gameSystemId: MECHANICAL_GAME_SYSTEM_ID,
+      name: 'Partie avec des des',
+      characterName: 'Grognak',
+    });
+    const sessionId = (createResponse.body as { id: string }).id;
+
+    const turnResponse = await asUser(creator)
+      .post(`/sessions/${sessionId}/turns`)
+      .send({
+        actionText: 'Je frappe le gobelin',
+        mechanicalActionKey: 'melee-attack',
+      });
+    expect(turnResponse.status).toBe(201);
+
+    const stateResponse = await asUser(creator).get(
+      `/sessions/${sessionId}/state`,
+    );
+    const state = stateResponse.body as {
+      recentTurns: {
+        diceRolls: { actionKey: string; formula: string; total: number }[];
+        pendingDeltas: { id: string; status: string; hitPoints?: number }[];
+      }[];
+    };
+
+    expect(state.recentTurns).toHaveLength(1);
+    expect(state.recentTurns[0].diceRolls).toHaveLength(1);
+    expect(state.recentTurns[0].diceRolls[0].actionKey).toBe('melee-attack');
+    expect(state.recentTurns[0].diceRolls[0].formula).toBe('1d20+3');
+    expect(state.recentTurns[0].pendingDeltas).toHaveLength(1);
+    expect(state.recentTurns[0].pendingDeltas[0].status).toBe('pending');
+    expect(state.recentTurns[0].pendingDeltas[0].hitPoints).toBe(-1);
+  });
+
+  it('validates a pending delta via POST .../deltas/:id/validate, and rejects a double-validate', async () => {
+    const createResponse = await asUser(creator).post('/sessions').send({
+      gameSystemId: ADULT_ONLY_GAME_SYSTEM_ID,
+      name: 'Partie avec deltas',
+      characterName: 'Grognak',
+    });
+    const sessionId = (createResponse.body as { id: string }).id;
+
+    await asUser(creator)
+      .post(`/sessions/${sessionId}/turns`)
+      .send({ actionText: 'Action' });
+
+    const stateResponse = await asUser(creator).get(
+      `/sessions/${sessionId}/state`,
+    );
+    const state = stateResponse.body as {
+      recentTurns: { turnNumber: number; pendingDeltas: { id: string }[] }[];
+    };
+    const turnNumber = state.recentTurns[0].turnNumber;
+    const deltaId = state.recentTurns[0].pendingDeltas[0].id;
+
+    const validateResponse = await asUser(creator).post(
+      `/sessions/${sessionId}/turns/${turnNumber}/deltas/${deltaId}/validate`,
+    );
+    expect(validateResponse.status).toBe(201);
+    expect((validateResponse.body as { status: string }).status).toBe(
+      'validated',
+    );
+
+    // A retry (network double-submit) must not double-apply the delta.
+    const retryResponse = await asUser(creator).post(
+      `/sessions/${sessionId}/turns/${turnNumber}/deltas/${deltaId}/validate`,
+    );
+    expect(retryResponse.status).toBe(409);
+  });
+
+  it('rejects a pending delta via POST .../deltas/:id/reject without touching the character sheet', async () => {
+    const createResponse = await asUser(creator).post('/sessions').send({
+      gameSystemId: ADULT_ONLY_GAME_SYSTEM_ID,
+      name: 'Partie avec deltas rejetes',
+      characterName: 'Grognak',
+    });
+    const sessionId = (createResponse.body as { id: string }).id;
+
+    await asUser(creator)
+      .post(`/sessions/${sessionId}/turns`)
+      .send({ actionText: 'Action' });
+
+    const stateResponse = await asUser(creator).get(
+      `/sessions/${sessionId}/state`,
+    );
+    const state = stateResponse.body as {
+      recentTurns: { turnNumber: number; pendingDeltas: { id: string }[] }[];
+    };
+    const turnNumber = state.recentTurns[0].turnNumber;
+    const deltaId = state.recentTurns[0].pendingDeltas[0].id;
+
+    const rejectResponse = await asUser(creator).post(
+      `/sessions/${sessionId}/turns/${turnNumber}/deltas/${deltaId}/reject`,
+    );
+    expect(rejectResponse.status).toBe(201);
+    expect((rejectResponse.body as { status: string }).status).toBe('rejected');
   });
 });
