@@ -53,18 +53,18 @@ export function HomePage() {
     <main className="min-h-screen bg-canvas px-lg py-section flex flex-col gap-xl">
       <div className="flex items-center justify-between flex-wrap gap-sm">
         <h1 className="font-sans-ui text-heading-xl text-ink">Mes parties</h1>
-        <div className="flex items-center gap-md">
+        <div className="flex items-center flex-wrap gap-sm">
           {profile?.role === 'admin' && (
             <>
               <button
                 onClick={() => navigate('/admin/catalogue')}
-                className="border border-hairline text-ink px-lg py-sm rounded-lg font-button-sm"
+                className="border border-hairline text-ink px-lg py-sm rounded-lg font-button-sm whitespace-nowrap"
               >
                 Catalogue JdR
               </button>
               <button
                 onClick={() => navigate('/admin/usage')}
-                className="border border-hairline text-ink px-lg py-sm rounded-lg font-button-sm"
+                className="border border-hairline text-ink px-lg py-sm rounded-lg font-button-sm whitespace-nowrap"
               >
                 Usage &amp; quotas
               </button>
@@ -72,13 +72,13 @@ export function HomePage() {
           )}
           <button
             onClick={() => navigate('/settings/notifications')}
-            className="border border-hairline text-ink px-lg py-sm rounded-lg font-button-sm"
+            className="border border-hairline text-ink px-lg py-sm rounded-lg font-button-sm whitespace-nowrap"
           >
             Notifications
           </button>
           <button
             onClick={() => void logout()}
-            className="border border-hairline text-ink px-lg py-sm rounded-lg font-button-sm"
+            className="border border-hairline text-ink px-lg py-sm rounded-lg font-button-sm whitespace-nowrap"
           >
             Se déconnecter
           </button>
