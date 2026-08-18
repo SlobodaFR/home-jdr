@@ -1,7 +1,7 @@
 import { BadRequestException } from '@nestjs/common';
 import { MulterOptions } from '@nestjs/platform-express/multer/interfaces/multer-options.interface';
 
-export const MAX_RULES_PDF_BYTES = 10 * 1024 * 1024; // 10 MB - rules PDFs are short (see PRD.md).
+export const MAX_RULES_PDF_BYTES = 100 * 1024 * 1024; // 100 MB
 
 export const rulesPdfUploadOptions: MulterOptions = {
   limits: { fileSize: MAX_RULES_PDF_BYTES },

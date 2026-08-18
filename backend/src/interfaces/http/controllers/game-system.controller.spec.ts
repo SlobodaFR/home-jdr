@@ -139,7 +139,7 @@ describe('GameSystemController (integration)', () => {
   });
 
   it('rejects a PDF file that exceeds the size limit', async () => {
-    const oversized = Buffer.alloc(11 * 1024 * 1024, 'a');
+    const oversized = Buffer.alloc(101 * 1024 * 1024, 'a');
 
     const response = await request(app.getHttpServer())
       .post('/game-systems')
