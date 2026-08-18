@@ -40,7 +40,17 @@ self.addEventListener('fetch', (event) => {
     return;
   }
   event.respondWith(
-    fetch(event.request).catch(() => caches.match(event.request)),
+    fetch(event.request).catch(async () => {
+      const cached = await caches.match(event.request);
+      if (cached) {
+        return cached;
+      }
+      const shell = await caches.match('/');
+      if (shell) {
+        return shell;
+      }
+      return new Response('Offline', { status: 503, statusText: 'Offline' });
+    }),
   );
 });
 
