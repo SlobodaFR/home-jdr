@@ -1,7 +1,7 @@
 import { cleanup, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router-dom';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { GameSystem } from '../../domain/game-system';
 import { apiClient } from '../../infrastructure/api-client';
 import { AdminGameCatalogPage } from './AdminGameCatalogPage';
@@ -10,7 +10,12 @@ vi.mock('../../infrastructure/api-client', () => ({
   apiClient: {
     fetchGameSystems: vi.fn(),
     deleteGameSystem: vi.fn(),
+    fetchMyProfile: vi.fn(),
   },
+}));
+
+vi.mock('../auth/AuthProvider', () => ({
+  useAuth: () => ({ user: { id: 'admin-1', email: 'admin@test.dev', name: 'Admin' }, logout: vi.fn() }),
 }));
 
 function buildGameSystem(overrides: Partial<GameSystem> = {}): GameSystem {
@@ -33,6 +38,10 @@ function buildGameSystem(overrides: Partial<GameSystem> = {}): GameSystem {
 }
 
 describe('AdminGameCatalogPage - deletion', () => {
+  beforeEach(() => {
+    vi.mocked(apiClient.fetchMyProfile).mockResolvedValue({ userId: 'admin-1', role: 'admin' });
+  });
+
   afterEach(() => {
     vi.restoreAllMocks();
     cleanup();

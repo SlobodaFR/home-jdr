@@ -17,7 +17,7 @@ export function CharacterSheet({ character, compact = false }: CharacterSheetPro
   return (
     <section className={`flex flex-col ${compact ? 'gap-sm' : 'gap-lg'}`}>
       {compact ? (
-        <p className="font-body-strong text-ink">{character.name}</p>
+        <p className="font-sans-body text-body-strong text-ink">{character.name}</p>
       ) : (
         <h2 className="font-sans-ui text-heading-lg text-ink">{character.name}</h2>
       )}
@@ -35,8 +35,8 @@ export function CharacterSheet({ character, compact = false }: CharacterSheetPro
         <dl className={`grid grid-cols-2 ${compact ? 'gap-xxs' : 'gap-sm'}`}>
           {customAttributeEntries.map(([key, value]) => (
             <div key={key} className="flex items-center justify-between">
-              <dt className="font-caption-md text-mute">{key}</dt>
-              <dd className="font-body-strong text-ink">{value}</dd>
+              <dt className="font-sans-body text-caption-md text-mute">{key}</dt>
+              <dd className="font-sans-body text-body-strong text-ink">{value}</dd>
             </div>
           ))}
         </dl>

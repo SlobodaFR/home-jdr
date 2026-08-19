@@ -4,6 +4,10 @@ import { sessionApiClient } from '../../infrastructure/session-api-client';
 import { BackButton } from '../components/BackButton';
 import { ButtonPrimary } from '../components/ButtonPrimary';
 import { ButtonSecondary } from '../components/ButtonSecondary';
+import { AppHeader } from '../layout/AppHeader';
+import { AppShell } from '../layout/AppShell';
+import { ErrorBanner } from '../layout/ErrorBanner';
+import { useAppNavItems } from '../layout/useAppNavItems';
 
 /**
  * "Rejoindre une partie": enter an invite code shared out-of-app (Discord,
@@ -14,6 +18,7 @@ import { ButtonSecondary } from '../components/ButtonSecondary';
  */
 export function JoinSessionPage() {
   const navigate = useNavigate();
+  const navItems = useAppNavItems();
   const [inviteCode, setInviteCode] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -42,7 +47,7 @@ export function JoinSessionPage() {
   }
 
   return (
-    <main className="min-h-screen bg-canvas px-lg py-section">
+    <AppShell navItems={navItems} header={<AppHeader />}>
       <div className="flex items-center gap-md mb-xl">
         <BackButton to="/" />
         <h1 className="font-sans-ui text-heading-xl text-ink">Rejoindre une partie</h1>
@@ -50,24 +55,30 @@ export function JoinSessionPage() {
 
       <form onSubmit={(event) => void handleSubmit(event)} className="flex flex-col gap-lg max-w-sm">
         <label className="flex flex-col gap-xs">
-          <span className="font-body-strong text-ink">Code d&apos;invitation</span>
+          <span className="font-sans-body text-body-strong text-ink">Code d&apos;invitation</span>
           <input
-            className="border border-hairline rounded-sm px-md py-sm font-mono-ui text-label-dice text-ink bg-canvas focus:border-2 focus:border-ink outline-none uppercase"
+            className="border border-hairline rounded-sm px-md py-md font-mono-ui text-label-dice text-ink bg-canvas focus:border-2 focus:border-ink outline-none uppercase tracking-widest text-center"
             value={inviteCode}
             onChange={(event) => setInviteCode(event.target.value.toUpperCase())}
             placeholder="XK4R2P"
+            maxLength={12}
+            autoComplete="off"
+            autoCapitalize="characters"
           />
+          <span className="font-sans-body text-caption-md text-mute">
+            Code partagé par l&apos;hôte de la partie (hors application).
+          </span>
         </label>
 
-        {error && <p className="font-body-md text-danger">{error}</p>}
+        {error && <ErrorBanner message={error} />}
 
         <div className="flex gap-md">
           <ButtonPrimary type="submit" disabled={submitting}>
-            Rejoindre
+            {submitting ? 'Connexion...' : 'Rejoindre'}
           </ButtonPrimary>
           <ButtonSecondary onClick={() => navigate('/')}>Annuler</ButtonSecondary>
         </div>
       </form>
-    </main>
+    </AppShell>
   );
 }

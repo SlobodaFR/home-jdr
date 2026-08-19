@@ -1,7 +1,8 @@
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { apiClient } from '../../infrastructure/api-client';
 import { characterCreationApiClient } from '../../infrastructure/character-creation-api-client';
 import { QuotaExceededClientError } from '../../infrastructure/session-api-client';
 import { CharacterCreationChatPage } from './CharacterCreationChatPage';
@@ -12,6 +13,16 @@ vi.mock('../../infrastructure/character-creation-api-client', () => ({
     sendMessage: vi.fn(),
     finalize: vi.fn(),
   },
+}));
+
+vi.mock('../../infrastructure/api-client', () => ({
+  apiClient: {
+    fetchMyProfile: vi.fn(),
+  },
+}));
+
+vi.mock('../auth/AuthProvider', () => ({
+  useAuth: () => ({ user: { id: 'user-1', email: 'user@test.dev', name: 'Test User' }, logout: vi.fn() }),
 }));
 
 const mockedNavigate = vi.fn();
@@ -43,6 +54,10 @@ function renderPage() {
 }
 
 describe('CharacterCreationChatPage', () => {
+  beforeEach(() => {
+    vi.mocked(apiClient.fetchMyProfile).mockResolvedValue({ userId: 'user-1', role: 'adult' });
+  });
+
   afterEach(() => {
     vi.restoreAllMocks();
     mockedNavigate.mockReset();

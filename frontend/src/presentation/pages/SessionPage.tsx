@@ -18,7 +18,11 @@ import { InviteCodeBadge } from '../components/InviteCodeBadge';
 import { MarkdownText } from '../components/MarkdownText';
 import { SessionStatusPill, SessionStatusVariant } from '../components/SessionStatusPill';
 import { TurnLogEntry } from '../components/TurnLogEntry';
-import { CharacterStatBar } from '../character/CharacterStatBar';
+import { CharacterSheet } from '../character/CharacterSheet';
+import { AppHeader } from '../layout/AppHeader';
+import { AppShell } from '../layout/AppShell';
+import { ErrorBanner } from '../layout/ErrorBanner';
+import { useAppNavItems } from '../layout/useAppNavItems';
 
 // PRD.md - "Synchro par polling (pas de WebSocket)": the front interrogates
 // session state every few seconds while the screen is open (per
@@ -73,6 +77,7 @@ export function SessionPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { user } = useAuth();
+  const navItems = useAppNavItems();
   const [state, setState] = useState<SessionState | null>(null);
   const [gameSystem, setGameSystem] = useState<GameSystem | null>(null);
   const [characters, setCharacters] = useState<Character[]>([]);
@@ -225,31 +230,32 @@ export function SessionPage() {
 
   if (error && !state) {
     return (
-      <main className="min-h-screen bg-canvas px-lg py-section">
-        <p className="font-body-md text-danger">{error}</p>
-      </main>
+      <AppShell navItems={navItems} header={<AppHeader />}>
+        <ErrorBanner message={error} />
+      </AppShell>
     );
   }
 
   if (!state) {
     return (
-      <main className="min-h-screen bg-canvas px-lg py-section">
-        <p className="font-body-md text-mute">Chargement...</p>
-      </main>
+      <AppShell navItems={navItems} header={<AppHeader />}>
+        <p className="font-sans-body text-body-md text-mute">Chargement...</p>
+      </AppShell>
     );
   }
 
   const mechanicalActions: MechanicalAction[] = gameSystem?.mechanicalActions ?? [];
 
   return (
-    <main className="min-h-screen bg-canvas px-lg py-section flex flex-col gap-xl">
+    <AppShell navItems={navItems} header={<AppHeader />}>
+      <div className="flex flex-col gap-xl">
       <div className="flex items-center justify-between flex-wrap gap-sm">
         <div className="flex items-center gap-md">
           <BackButton to="/" />
-          <h1 className="font-sans-ui text-heading-xl text-ink">{state.session.name}</h1>
+          <h1 className="font-sans-ui text-heading-xl text-ink truncate">{state.session.name}</h1>
         </div>
-        <div className="flex items-center gap-md">
-          <Link to={`/sessions/${state.session.id}/map`} className="font-sans-body text-link-md text-ink">
+        <div className="flex items-center gap-md flex-wrap">
+          <Link to={`/sessions/${state.session.id}/map`} className="font-sans-body text-link-md text-ink underline">
             Carte du monde
           </Link>
           <InviteCodeBadge code={state.session.inviteCode} />
@@ -275,22 +281,16 @@ export function SessionPage() {
           </h2>
           <div className="flex flex-col gap-md">
             {characters.map((character) => (
-              <div key={character.id} className="border-b border-hairline pb-sm flex flex-col gap-xs">
-                <div className="flex items-center justify-between">
-                  <span className="font-body-strong text-ink">{character.name}</span>
-                  {character.ownerUserId === user?.id && (
-                    <span className="font-caption-sm text-mute">Moi</span>
-                  )}
-                </div>
-                {character.hitPointsMax > 0 && (
-                  <CharacterStatBar
-                    label="Points de vie"
-                    current={character.hitPointsCurrent}
-                    max={character.hitPointsMax}
-                    compact
-                  />
+              <Link
+                key={character.id}
+                to={`/characters/${character.id}`}
+                className="block border border-hairline rounded-md p-md hover:border-ink"
+              >
+                {character.ownerUserId === user?.id && (
+                  <span className="font-sans-body text-caption-sm text-mute float-right">Moi</span>
                 )}
-              </div>
+                <CharacterSheet character={character} compact />
+              </Link>
             ))}
           </div>
         </section>
@@ -307,7 +307,7 @@ export function SessionPage() {
 
       <section className="flex flex-col gap-md">
         {state.recentTurns.length === 0 && (
-          <p className="font-body-md text-mute">Aucun tour résolu pour le moment.</p>
+          <p className="font-sans-body text-body-md text-mute">Aucun tour résolu pour le moment.</p>
         )}
         {[...state.recentTurns].reverse().map((turn) => {
           const pendingDeltas = turn.pendingDeltas.filter((delta) => delta.status === 'pending');
@@ -319,9 +319,12 @@ export function SessionPage() {
                 narration={turn.narrationText}
                 diceChip={
                   turn.diceRolls.length > 0 ? (
-                    <div className="flex flex-wrap gap-xs">
+                    <div className="flex flex-col gap-xs">
                       {turn.diceRolls.map((roll) => (
-                        <DiceRollChip key={`${roll.playerId}-${roll.actionKey}`} label={diceRollLabel(roll)} />
+                        <div key={`${roll.playerId}-${roll.actionKey}`} className="flex items-center gap-sm">
+                          <span className="font-sans-body text-caption-sm text-mute">{roll.actionLabel}</span>
+                          <DiceRollChip label={diceRollLabel(roll)} />
+                        </div>
                       ))}
                     </div>
                   ) : undefined
@@ -366,7 +369,7 @@ export function SessionPage() {
           placeholder="Que faites-vous ?"
           disabled={submitting || state.session.status === 'resolving'}
         />
-        {error && <p className="font-body-md text-danger">{error}</p>}
+        {error && <ErrorBanner message={error} />}
         <ButtonPrimary
           type="submit"
           disabled={submitting || state.session.status === 'resolving' || !actionText.trim()}
@@ -374,6 +377,7 @@ export function SessionPage() {
           Soumettre mon action
         </ButtonPrimary>
       </form>
-    </main>
+      </div>
+    </AppShell>
   );
 }

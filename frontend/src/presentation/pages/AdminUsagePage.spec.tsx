@@ -1,7 +1,7 @@
 import { cleanup, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router-dom';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { apiClient } from '../../infrastructure/api-client';
 import { AdminUsagePage } from './AdminUsagePage';
 
@@ -9,7 +9,12 @@ vi.mock('../../infrastructure/api-client', () => ({
   apiClient: {
     fetchUsageStats: vi.fn(),
     updateDailyLlmQuota: vi.fn(),
+    fetchMyProfile: vi.fn(),
   },
+}));
+
+vi.mock('../auth/AuthProvider', () => ({
+  useAuth: () => ({ user: { id: 'admin-1', email: 'admin@test.dev', name: 'Admin' }, logout: vi.fn() }),
 }));
 
 const stats = {
@@ -29,6 +34,10 @@ const stats = {
 };
 
 describe('AdminUsagePage', () => {
+  beforeEach(() => {
+    vi.mocked(apiClient.fetchMyProfile).mockResolvedValue({ userId: 'admin-1', role: 'admin' });
+  });
+
   afterEach(() => {
     vi.restoreAllMocks();
     cleanup();

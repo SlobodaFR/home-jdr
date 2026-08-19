@@ -13,6 +13,10 @@ import { ButtonSecondary } from '../components/ButtonSecondary';
 import { MarkdownText } from '../components/MarkdownText';
 import { CharacterStatBar } from '../character/CharacterStatBar';
 import { InventoryList } from '../character/InventoryList';
+import { AppHeader } from '../layout/AppHeader';
+import { AppShell } from '../layout/AppShell';
+import { ErrorBanner } from '../layout/ErrorBanner';
+import { useAppNavItems } from '../layout/useAppNavItems';
 
 function draftInventoryItems(inventory?: string[]): InventoryItem[] {
   return (inventory ?? []).map((name) => ({ name, quantity: 1 }));
@@ -27,6 +31,7 @@ function draftInventoryItems(inventory?: string[]): InventoryItem[] {
 export function CharacterCreationChatPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const navItems = useAppNavItems();
   const [session, setSession] = useState<CharacterCreationSession | null>(null);
   const [messageText, setMessageText] = useState('');
   const [sending, setSending] = useState(false);
@@ -89,17 +94,17 @@ export function CharacterCreationChatPage() {
 
   if (loadError) {
     return (
-      <main className="min-h-screen bg-canvas px-lg py-section">
-        <p className="font-body-md text-danger">{loadError}</p>
-      </main>
+      <AppShell navItems={navItems} header={<AppHeader />}>
+        <ErrorBanner message={loadError} />
+      </AppShell>
     );
   }
 
   if (!session) {
     return (
-      <main className="min-h-screen bg-canvas px-lg py-section">
-        <p className="font-body-md text-mute">Chargement...</p>
-      </main>
+      <AppShell navItems={navItems} header={<AppHeader />}>
+        <p className="font-sans-body text-body-md text-mute">Chargement...</p>
+      </AppShell>
     );
   }
 
@@ -108,73 +113,77 @@ export function CharacterCreationChatPage() {
   const canFinalize = Boolean(draft.name && draft.name.trim());
 
   return (
-    <main className="min-h-screen bg-canvas px-lg py-section flex flex-col gap-xl">
-      <div className="flex items-center gap-md">
-        <BackButton to="/" />
-        <h1 className="font-sans-ui text-heading-xl text-ink">Créer mon personnage</h1>
-      </div>
+    <AppShell navItems={navItems} header={<AppHeader />}>
+      <div className="flex flex-col gap-xl">
+        <div className="flex items-center gap-md">
+          <BackButton to="/" />
+          <h1 className="font-sans-ui text-heading-xl text-ink">Créer mon personnage</h1>
+        </div>
 
-      <section className="flex flex-col gap-md">
-        {session.messages.map((message, index) => (
-          <div
-            key={index}
-            className={`max-w-sm rounded-md px-md py-sm font-body-md ${
-              message.role === 'assistant'
-                ? 'bg-hairline-soft text-ink self-start'
-                : 'bg-ink text-on-primary self-end ml-auto'
-            }`}
-          >
-            {message.role === 'assistant' ? (
-              <MarkdownText>{message.content}</MarkdownText>
-            ) : (
-              message.content
-            )}
-          </div>
-        ))}
-      </section>
-
-      <section className="border border-hairline rounded-md p-md flex flex-col gap-sm">
-        <h2 className="font-sans-ui text-heading-md text-ink">Brouillon de fiche</h2>
-        <p className="font-body-strong text-ink">{draft.name ?? 'Personnage sans nom pour le moment'}</p>
-        {typeof draft.hitPointsMax === 'number' && draft.hitPointsMax > 0 && (
-          <CharacterStatBar
-            label="Points de vie"
-            current={draft.hitPointsMax}
-            max={draft.hitPointsMax}
-          />
-        )}
-        <InventoryList items={draftInventoryItems(draft.inventory)} />
-      </section>
-
-      {!isCompleted && (
-        <form onSubmit={(event) => void handleSend(event)} className="flex flex-col gap-sm">
-          <ActionInput
-            value={messageText}
-            onChange={(event) => setMessageText(event.target.value)}
-            placeholder="Décris ton personnage..."
-            disabled={sending}
-          />
-          {error && <p className="font-body-md text-danger">{error}</p>}
-          <div className="flex gap-md flex-wrap">
-            <ButtonSecondary type="submit" disabled={sending || !messageText.trim()}>
-              Envoyer
-            </ButtonSecondary>
-            <ButtonPrimary
-              type="button"
-              disabled={finalizing || !canFinalize}
-              onClick={() => void handleFinalize()}
+        <section className="flex flex-col gap-md">
+          {session.messages.map((message, index) => (
+            <div
+              key={index}
+              className={`max-w-sm rounded-md px-md py-sm font-sans-body text-body-md ${
+                message.role === 'assistant'
+                  ? 'bg-hairline-soft text-ink self-start'
+                  : 'bg-ink text-on-primary self-end ml-auto'
+              }`}
             >
-              Valider ma fiche
-            </ButtonPrimary>
-          </div>
-        </form>
-      )}
+              {message.role === 'assistant' ? (
+                <MarkdownText>{message.content}</MarkdownText>
+              ) : (
+                message.content
+              )}
+            </div>
+          ))}
+        </section>
 
-      {isCompleted && (
-        <p className="font-body-md text-mute">
-          Cette fiche a déjà été validée - la conversation est terminée.
-        </p>
-      )}
-    </main>
+        <section className="border border-hairline rounded-md p-md flex flex-col gap-sm">
+          <h2 className="font-sans-ui text-heading-md text-ink">Brouillon de fiche</h2>
+          <p className="font-sans-body text-body-strong text-ink">
+            {draft.name ?? 'Personnage sans nom pour le moment'}
+          </p>
+          {typeof draft.hitPointsMax === 'number' && draft.hitPointsMax > 0 && (
+            <CharacterStatBar
+              label="Points de vie"
+              current={draft.hitPointsMax}
+              max={draft.hitPointsMax}
+            />
+          )}
+          <InventoryList items={draftInventoryItems(draft.inventory)} />
+        </section>
+
+        {!isCompleted && (
+          <form onSubmit={(event) => void handleSend(event)} className="flex flex-col gap-sm">
+            <ActionInput
+              value={messageText}
+              onChange={(event) => setMessageText(event.target.value)}
+              placeholder="Décris ton personnage..."
+              disabled={sending}
+            />
+            {error && <ErrorBanner message={error} />}
+            <div className="flex gap-md flex-wrap">
+              <ButtonSecondary type="submit" disabled={sending || !messageText.trim()}>
+                Envoyer
+              </ButtonSecondary>
+              <ButtonPrimary
+                type="button"
+                disabled={finalizing || !canFinalize}
+                onClick={() => void handleFinalize()}
+              >
+                Valider ma fiche
+              </ButtonPrimary>
+            </div>
+          </form>
+        )}
+
+        {isCompleted && (
+          <p className="font-sans-body text-body-md text-mute">
+            Cette fiche a déjà été validée - la conversation est terminée.
+          </p>
+        )}
+      </div>
+    </AppShell>
   );
 }

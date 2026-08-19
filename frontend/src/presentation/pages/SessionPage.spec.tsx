@@ -31,7 +31,10 @@ vi.mock('react-router-dom', async () => {
 });
 
 vi.mock('../../infrastructure/api-client', () => ({
-  apiClient: { fetchGameSystems: vi.fn() },
+  apiClient: {
+    fetchGameSystems: vi.fn(),
+    fetchMyProfile: vi.fn(),
+  },
 }));
 
 vi.mock('../../infrastructure/character-api-client', () => ({
@@ -82,6 +85,7 @@ function renderPage() {
 describe('SessionPage', () => {
   beforeEach(() => {
     vi.mocked(characterApiClient.listBySession).mockResolvedValue([]);
+    vi.mocked(apiClient.fetchMyProfile).mockResolvedValue({ userId: 'user-1', role: 'adult' });
   });
 
   afterEach(() => {
