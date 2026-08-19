@@ -15,6 +15,7 @@ import { ButtonSecondary } from '../components/ButtonSecondary';
 import { DeltaProposalCard, DeltaProposalItem } from '../components/DeltaProposalCard';
 import { DiceRollChip } from '../components/DiceRollChip';
 import { InviteCodeBadge } from '../components/InviteCodeBadge';
+import { MarkdownText } from '../components/MarkdownText';
 import { SessionStatusPill, SessionStatusVariant } from '../components/SessionStatusPill';
 import { TurnLogEntry } from '../components/TurnLogEntry';
 import { CharacterStatBar } from '../character/CharacterStatBar';
@@ -298,7 +299,9 @@ export function SessionPage() {
       {state.session.openingNarrationText && (
         <section className="flex flex-col gap-sm border border-hairline bg-parchment rounded-md px-lg py-md">
           <span className="font-sans-ui text-caption-md text-mute uppercase">Ouverture de la scène</span>
-          <p className="font-sans-body text-body-md text-ink">{state.session.openingNarrationText}</p>
+          <MarkdownText className="font-sans-body text-body-md text-ink">
+            {state.session.openingNarrationText}
+          </MarkdownText>
         </section>
       )}
 

@@ -14,3 +14,4 @@ export * from './TurnLogEntry';
 export * from './MapPin';
 export * from './AdminBadgeChildren';
 export * from './QuotaMeter';
+export * from './MarkdownText';

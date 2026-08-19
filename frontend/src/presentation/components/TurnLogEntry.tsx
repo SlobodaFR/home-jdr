@@ -1,4 +1,5 @@
 import { ReactNode } from 'react';
+import { MarkdownText } from './MarkdownText';
 import { cx } from './utils/cx';
 
 // DESIGN.md > Components > turn-log-entry
@@ -19,7 +20,9 @@ export function TurnLogEntry({ author, actionText, narration, diceChip, classNam
       <p className="font-sans-body text-body-strong text-ink">{author}</p>
       <p className="font-sans-body text-body-md text-mute mt-xxs">{actionText}</p>
       {diceChip ? <div className="mt-sm">{diceChip}</div> : null}
-      <p className="font-sans-body text-body-md text-ink mt-sm">{narration}</p>
+      <MarkdownText className="font-sans-body text-body-md text-ink mt-sm">
+        {narration}
+      </MarkdownText>
     </div>
   );
 }

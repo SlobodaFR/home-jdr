@@ -10,6 +10,7 @@ import { ActionInput } from '../components/ActionInput';
 import { BackButton } from '../components/BackButton';
 import { ButtonPrimary } from '../components/ButtonPrimary';
 import { ButtonSecondary } from '../components/ButtonSecondary';
+import { MarkdownText } from '../components/MarkdownText';
 import { CharacterStatBar } from '../character/CharacterStatBar';
 import { InventoryList } from '../character/InventoryList';
 
@@ -123,7 +124,11 @@ export function CharacterCreationChatPage() {
                 : 'bg-ink text-on-primary self-end ml-auto'
             }`}
           >
-            {message.content}
+            {message.role === 'assistant' ? (
+              <MarkdownText>{message.content}</MarkdownText>
+            ) : (
+              message.content
+            )}
           </div>
         ))}
       </section>
