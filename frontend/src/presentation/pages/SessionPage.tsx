@@ -259,7 +259,8 @@ export function SessionPage() {
             Carte du monde
           </Link>
           <InviteCodeBadge code={state.session.inviteCode} />
-          {state.players.length === 1 && (
+          {(state.players.length === 1 ||
+            (state.players.length === 0 && state.session.createdByUserId === user?.id)) && (
             <ButtonDanger onClick={() => void handleDeleteSession()} disabled={leavingOrDeleting}>
               Supprimer la partie
             </ButtonDanger>

@@ -13,8 +13,19 @@ export interface DeleteSoloSessionInput {
 }
 
 /**
- * Permanently deletes a session, but only when it is genuinely solo:
- * exactly one active `SessionPlayer`, and the requester IS that player.
+ * Permanently deletes a session, but only when there is no other active
+ * player to consult:
+ *
+ * - Exactly one active `SessionPlayer`, and the requester IS that player
+ *   (the classic solo-session case), OR
+ * - Zero active `SessionPlayer`s (nobody has finished character creation
+ *   yet - including the creator, who only becomes a `SessionPlayer` once
+ *   `FinalizeCharacterCreationUseCase` runs), and the requester is the
+ *   session's creator. This covers a creator abandoning the guided
+ *   character-creation chat before finishing it: the session would
+ *   otherwise be stuck forever, undeletable and unleavable, since
+ *   `LeaveSessionUseCase` requires an active `SessionPlayer` too.
+ *
  * A session with 2+ active players must never be deleted this way - each
  * player leaves individually via `LeaveSessionUseCase`, which cascades the
  * same way once the last one is gone (see product decision in the task
@@ -39,9 +50,11 @@ export class DeleteSoloSessionUseCase {
     );
     const isSoloOwnedByRequester =
       players.length === 1 && players[0].userId === input.userId;
-    if (!isSoloOwnedByRequester) {
+    const isUnclaimedByCreator =
+      players.length === 0 && session.createdByUserId === input.userId;
+    if (!isSoloOwnedByRequester && !isUnclaimedByCreator) {
       throw new ForbiddenException(
-        'Seule une partie solo (un unique joueur actif, vous-meme) peut etre supprimee directement - quittez la partie sinon.',
+        'Seule une partie solo (un unique joueur actif, vous-meme) ou sans personnage finalise (vous en tant que createur) peut etre supprimee directement - quittez la partie sinon.',
       );
     }
 

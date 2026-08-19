@@ -313,6 +313,31 @@ describe('SessionPage', () => {
     });
   });
 
+  it('shows "Supprimer la partie" for a session with no active player yet, when requested by its creator', async () => {
+    vi.mocked(sessionApiClient.getState).mockResolvedValue({
+      session: { ...baseSession, createdByUserId: 'user-1' },
+      players: [],
+      recentTurns: [],
+    });
+    vi.mocked(apiClient.fetchGameSystems).mockResolvedValue([gameSystem]);
+    vi.mocked(sessionApiClient.deleteSession).mockResolvedValue(undefined);
+    vi.spyOn(window, 'confirm').mockReturnValue(true);
+
+    const user = userEvent.setup();
+    renderPage();
+
+    const deleteButton = await screen.findByRole('button', { name: 'Supprimer la partie' });
+    expect(screen.queryByRole('button', { name: 'Quitter la partie' })).not.toBeInTheDocument();
+    await user.click(deleteButton);
+
+    await waitFor(() => {
+      expect(sessionApiClient.deleteSession).toHaveBeenCalledWith('session-1');
+    });
+    await waitFor(() => {
+      expect(mockedNavigate).toHaveBeenCalledWith('/');
+    });
+  });
+
   it('does not delete a solo session when the confirm dialog is dismissed', async () => {
     vi.mocked(sessionApiClient.getState).mockResolvedValue({
       session: baseSession,

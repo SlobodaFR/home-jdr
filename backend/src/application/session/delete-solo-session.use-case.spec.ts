@@ -92,6 +92,33 @@ describe('DeleteSoloSessionUseCase', () => {
     ).resolves.toBeNull();
   });
 
+  it('deletes an unclaimed session (zero active players) when requested by its creator', async () => {
+    const session = buildSession();
+    const gameSessionRepository = new InMemoryGameSessionRepository([session]);
+    const sessionPlayerRepository = new InMemorySessionPlayerRepository([]);
+    const useCase = buildUseCase(gameSessionRepository, sessionPlayerRepository);
+
+    await useCase.execute({ sessionId: session.id, userId: 'user-1' });
+
+    await expect(
+      gameSessionRepository.findById(session.id),
+    ).resolves.toBeNull();
+  });
+
+  it('rejects deletion of an unclaimed session (zero active players) by a non-creator', async () => {
+    const session = buildSession();
+    const gameSessionRepository = new InMemoryGameSessionRepository([session]);
+    const sessionPlayerRepository = new InMemorySessionPlayerRepository([]);
+    const useCase = buildUseCase(gameSessionRepository, sessionPlayerRepository);
+
+    await expect(
+      useCase.execute({ sessionId: session.id, userId: 'intruder' }),
+    ).rejects.toThrow();
+    await expect(
+      gameSessionRepository.findById(session.id),
+    ).resolves.not.toBeNull();
+  });
+
   it('rejects deletion of a session with 2+ active players, even by one of them', async () => {
     const session = buildSession();
     const playerOne = SessionPlayer.create({
