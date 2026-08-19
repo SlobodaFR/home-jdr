@@ -4,6 +4,7 @@ import { apiClient } from '../../infrastructure/api-client';
 import { BackButton } from '../components/BackButton';
 import { ButtonPrimary } from '../components/ButtonPrimary';
 import { QuotaMeter } from '../components/QuotaMeter';
+import { cx } from '../components/utils/cx';
 import { AppHeader } from '../layout/AppHeader';
 import { AppShell } from '../layout/AppShell';
 import { ErrorBanner } from '../layout/ErrorBanner';
@@ -71,16 +72,16 @@ export function AdminUsagePage() {
         {stats && (
           <section className="flex flex-col gap-md">
             <h2 className="font-sans-ui text-heading-lg text-ink">Quota du jour</h2>
-            <div className="grid grid-cols-3 gap-sm">
-              <div className="border border-hairline rounded-md p-md flex flex-col gap-xxs">
+            <div className="grid grid-cols-1 tablet:grid-cols-3 gap-sm">
+              <div className="bg-parchment rounded-md p-lg flex flex-col gap-xxs">
                 <span className="font-sans-ui text-heading-lg text-ink">{stats.usedToday}</span>
                 <span className="font-sans-body text-caption-sm text-mute">Utilisées / {stats.dailyQuota}</span>
               </div>
-              <div className="border border-hairline rounded-md p-md flex flex-col gap-xxs">
+              <div className="bg-parchment rounded-md p-lg flex flex-col gap-xxs">
                 <span className="font-sans-ui text-heading-lg text-ink">{remaining}</span>
                 <span className="font-sans-body text-caption-sm text-mute">Restantes aujourd&apos;hui</span>
               </div>
-              <div className="border border-hairline rounded-md p-md flex flex-col gap-xxs">
+              <div className="bg-parchment rounded-md p-lg flex flex-col gap-xxs">
                 <span className="font-sans-ui text-heading-lg text-ink">{stats.totalCallsToday}</span>
                 <span className="font-sans-body text-caption-sm text-mute">Appels LLM au total</span>
               </div>
@@ -98,16 +99,27 @@ export function AdminUsagePage() {
         {stats && (
           <section className="flex flex-col gap-md">
             <h2 className="font-sans-ui text-heading-lg text-ink">Tendance (7 derniers jours)</h2>
-            <ul className="flex flex-col gap-xxs">
-              {stats.trend.map((day) => (
-                <li
-                  key={day.date}
-                  className="flex items-center justify-between font-sans-body text-body-md text-ink border-b border-hairline pb-xs"
-                >
-                  <span className="text-mute">{day.date}</span>
-                  <span>{day.totalCalls} appel{day.totalCalls > 1 ? 's' : ''}</span>
-                </li>
-              ))}
+            <ul className="flex flex-col gap-sm">
+              {(() => {
+                const maxCalls = Math.max(1, ...stats.trend.map((day) => day.totalCalls));
+                const lastDate = stats.trend[stats.trend.length - 1]?.date;
+                return stats.trend.map((day) => (
+                  <li key={day.date} className="flex flex-col gap-xxs">
+                    <div className="flex items-center justify-between font-sans-body text-caption-md">
+                      <span className={day.date === lastDate ? 'text-ink' : 'text-mute'}>{day.date}</span>
+                      <span className="font-sans-body text-body-strong text-ink">
+                        {day.totalCalls} appel{day.totalCalls > 1 ? 's' : ''}
+                      </span>
+                    </div>
+                    <div className="h-2 w-full rounded-sm bg-hairline-soft overflow-hidden">
+                      <div
+                        className={cx('h-full rounded-sm', day.date === lastDate ? 'bg-ink' : 'bg-info')}
+                        style={{ width: `${Math.max((day.totalCalls / maxCalls) * 100, day.totalCalls > 0 ? 4 : 0)}%` }}
+                      />
+                    </div>
+                  </li>
+                ));
+              })()}
             </ul>
           </section>
         )}

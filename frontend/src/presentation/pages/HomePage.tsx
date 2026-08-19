@@ -83,7 +83,7 @@ export function HomePage() {
             <h2 className="font-sans-ui text-heading-md text-ink">
               Parties en cours ({sessions.length})
             </h2>
-            <div className="flex flex-col gap-md">
+            <div className="grid grid-cols-1 desktop:grid-cols-2 gap-md">
               {sessions.map((session) => (
                 <GameCard
                   key={session.id}

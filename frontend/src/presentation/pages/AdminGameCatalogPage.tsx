@@ -61,17 +61,17 @@ export function AdminGameCatalogPage() {
           {!loading && gameSystems.length === 0 && (
             <p className="font-sans-body text-body-md text-mute">Aucun JdR au catalogue pour le moment.</p>
           )}
-          <ul className="flex flex-col gap-md">
+          <ul className="grid grid-cols-1 desktop:grid-cols-2 gap-md">
             {gameSystems.map((gameSystem) => (
               <li
                 key={gameSystem.id}
-                className="bg-canvas border border-hairline rounded-md shadow-card p-lg flex flex-col gap-xs"
+                className="bg-canvas border border-hairline rounded-md shadow-card p-lg flex flex-col gap-sm transition-colors hover:border-ink"
               >
-                <div className="flex items-center justify-between gap-sm flex-wrap">
-                  <div className="flex items-center gap-sm">
-                    <span className="font-sans-ui text-heading-md text-ink">{gameSystem.name}</span>
+                <div className="flex items-start justify-between gap-sm flex-wrap">
+                  <span className="font-sans-ui text-heading-md text-ink flex items-center gap-sm flex-wrap">
+                    {gameSystem.name}
                     {gameSystem.adaptedForChildren && <AdminBadgeChildren />}
-                  </div>
+                  </span>
                   <ButtonDanger
                     onClick={() => void handleDelete(gameSystem)}
                     disabled={deletingId === gameSystem.id}
@@ -79,8 +79,12 @@ export function AdminGameCatalogPage() {
                     {deletingId === gameSystem.id ? 'Suppression...' : 'Supprimer'}
                   </ButtonDanger>
                 </div>
-                <p className="font-sans-body text-body-md text-ash">{gameSystem.description}</p>
-                <p className="font-sans-body text-caption-sm text-mute">
+                <p className="font-sans-body text-body-md text-ash line-clamp-2">{gameSystem.description}</p>
+                <p className="font-sans-body text-caption-sm text-mute flex items-center gap-xs mt-auto pt-xs border-t border-hairline">
+                  <svg width="14" height="14" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true">
+                    <path d="M5 2.5h7l3 3V17a.5.5 0 0 1-.5.5h-9A.5.5 0 0 1 5 17V3a.5.5 0 0 1 .5-.5Z" strokeLinejoin="round" />
+                    <path d="M12 2.5V6h3" strokeLinejoin="round" />
+                  </svg>
                   Règles : {gameSystem.rulesSourceFileName}
                 </p>
               </li>

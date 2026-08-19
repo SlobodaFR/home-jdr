@@ -21,7 +21,12 @@ export function GameCard({ gameName, sessionName, lastActivityLabel, statusSlot,
   return (
     <div
       {...interactiveProps}
-      className={cx('block w-full text-left bg-canvas rounded-md shadow-card p-lg', className)}
+      className={cx(
+        'block w-full h-full text-left bg-canvas rounded-md shadow-card p-lg',
+        'transition-colors',
+        onClick ? 'cursor-pointer hover:bg-parchment' : undefined,
+        className,
+      )}
     >
       <p className="font-sans-ui text-heading-md text-ink">{gameName}</p>
       <p className="font-sans-body text-body-strong text-ink mt-xxs">{sessionName}</p>
