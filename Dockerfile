@@ -1,7 +1,7 @@
 # syntax=docker/dockerfile:1
 
 # ---------- Frontend build ----------
-FROM node:22-bookworm-slim AS frontend-build
+FROM node:26-bookworm-slim AS frontend-build
 RUN apt-get update \
     && apt-get install -y --no-install-recommends python3 make g++ \
     && rm -rf /var/lib/apt/lists/*
@@ -14,7 +14,7 @@ COPY frontend frontend
 RUN npm run build --workspace=frontend
 
 # ---------- Backend build ----------
-FROM node:22-bookworm-slim AS backend-build
+FROM node:26-bookworm-slim AS backend-build
 RUN apt-get update \
     && apt-get install -y --no-install-recommends python3 make g++ \
     && rm -rf /var/lib/apt/lists/*
@@ -22,14 +22,16 @@ WORKDIR /app
 COPY package.json package-lock.json* ./
 COPY frontend/package.json frontend/package.json
 COPY backend/package.json backend/package.json
-RUN npm install
+RUN npm install \
+    # Module natif : echouer ici plutot qu'au demarrage si son script d'installation n'a pas tourne.
+    && node -e "new (require('better-sqlite3'))(':memory:')"
 COPY backend backend
 COPY --from=frontend-build /app/frontend/dist frontend/dist
 RUN npm run build --workspace=backend
 RUN npm prune --omit=dev
 
 # ---------- Runtime ----------
-FROM node:22-bookworm-slim AS runtime
+FROM node:26-bookworm-slim AS runtime
 ARG TARGETARCH
 ARG LITESTREAM_VERSION=0.3.13
 ENV NODE_ENV=production
@@ -43,7 +45,6 @@ RUN apt-get update \
     && apt-get autoremove -y \
     && rm -rf /var/lib/apt/lists/*
 COPY --from=backend-build /app/node_modules node_modules
-COPY --from=backend-build /app/backend/node_modules backend/node_modules
 COPY --from=backend-build /app/backend/dist backend/dist
 COPY --from=backend-build /app/backend/package.json backend/package.json
 COPY backend/litestream.yml backend/litestream.yml
