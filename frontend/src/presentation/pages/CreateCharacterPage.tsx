@@ -61,7 +61,9 @@ export function CreateCharacterPage() {
     <main className="min-h-screen bg-canvas px-lg py-section">
       <div className="flex items-center gap-md mb-xl">
         <BackButton to="/" />
-        <h1 className="font-sans-ui text-heading-xl text-ink">Créer mon personnage</h1>
+        <h1 className="font-sans-ui text-heading-xl text-ink">
+          Créer mon personnage
+        </h1>
       </div>
 
       <form
@@ -78,7 +80,9 @@ export function CreateCharacterPage() {
         </label>
 
         <div className="border border-hairline rounded-md p-md flex flex-col gap-sm">
-          <p className="font-heading-md text-ink">Ce personnage débutera avec :</p>
+          <p className="font-heading-md text-ink">
+            Ce personnage débutera avec :
+          </p>
           <p className="font-body-md text-ash">
             {schema.baseAttributes.hitPoints.max} points de vie
           </p>

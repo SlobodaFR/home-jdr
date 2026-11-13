@@ -34,7 +34,10 @@ describe('sessionApiClient', () => {
     it('posts the session payload and returns the created session with a characterCreationSessionId', async () => {
       const fetchMock = vi.fn().mockResolvedValue({
         ok: true,
-        json: async () => ({ ...session, characterCreationSessionId: 'creation-1' }),
+        json: async () => ({
+          ...session,
+          characterCreationSessionId: 'creation-1',
+        }),
       });
       vi.stubGlobal('fetch', fetchMock);
 
@@ -57,7 +60,9 @@ describe('sessionApiClient', () => {
         vi.fn().mockResolvedValue({
           ok: false,
           status: 403,
-          json: async () => ({ message: "Ce JdR n'est pas adapté aux comptes enfant." }),
+          json: async () => ({
+            message: "Ce JdR n'est pas adapté aux comptes enfant.",
+          }),
         }),
       );
 
@@ -75,7 +80,10 @@ describe('sessionApiClient', () => {
     it('posts the invite code and returns the session with a characterCreationSessionId', async () => {
       const fetchMock = vi.fn().mockResolvedValue({
         ok: true,
-        json: async () => ({ ...session, characterCreationSessionId: 'creation-2' }),
+        json: async () => ({
+          ...session,
+          characterCreationSessionId: 'creation-2',
+        }),
       });
       vi.stubGlobal('fetch', fetchMock);
 
@@ -141,7 +149,11 @@ describe('sessionApiClient', () => {
       });
       vi.stubGlobal('fetch', fetchMock);
 
-      const result = await sessionApiClient.validateDelta('session-1', 1, 'delta-1');
+      const result = await sessionApiClient.validateDelta(
+        'session-1',
+        1,
+        'delta-1',
+      );
 
       expect(result.status).toBe('validated');
       expect(fetchMock).toHaveBeenCalledWith(
@@ -159,7 +171,11 @@ describe('sessionApiClient', () => {
       });
       vi.stubGlobal('fetch', fetchMock);
 
-      const result = await sessionApiClient.rejectDelta('session-1', 1, 'delta-1');
+      const result = await sessionApiClient.rejectDelta(
+        'session-1',
+        1,
+        'delta-1',
+      );
 
       expect(result.status).toBe('rejected');
       expect(fetchMock).toHaveBeenCalledWith(

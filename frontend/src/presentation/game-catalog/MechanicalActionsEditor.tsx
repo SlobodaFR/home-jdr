@@ -1,4 +1,7 @@
-import { emptyMechanicalActionDraft, MechanicalActionDraft } from './mechanical-action-draft';
+import {
+  emptyMechanicalActionDraft,
+  MechanicalActionDraft,
+} from './mechanical-action-draft';
 
 interface Props {
   value: MechanicalActionDraft[];
@@ -14,7 +17,10 @@ const inputClass =
  * validates it against the `1d20`/`1d20+3` pattern.
  */
 export function MechanicalActionsEditor({ value, onChange }: Props) {
-  function updateAction(index: number, changes: Partial<MechanicalActionDraft>) {
+  function updateAction(
+    index: number,
+    changes: Partial<MechanicalActionDraft>,
+  ) {
     const actions = [...value];
     actions[index] = { ...actions[index], ...changes };
     onChange(actions);
@@ -26,16 +32,23 @@ export function MechanicalActionsEditor({ value, onChange }: Props) {
 
   return (
     <fieldset className="flex flex-col gap-sm">
-      <legend className="font-heading-md text-ink mb-sm">Actions mécaniques (jets de dés)</legend>
+      <legend className="font-heading-md text-ink mb-sm">
+        Actions mécaniques (jets de dés)
+      </legend>
 
       {value.map((action, index) => (
-        <div key={index} className="flex flex-col gap-xs border border-hairline rounded-sm p-sm">
+        <div
+          key={index}
+          className="flex flex-col gap-xs border border-hairline rounded-sm p-sm"
+        >
           <div className="flex gap-sm">
             <input
               className={inputClass}
               placeholder="clé (ex: melee-attack)"
               value={action.actionKey}
-              onChange={(e) => updateAction(index, { actionKey: e.target.value })}
+              onChange={(e) =>
+                updateAction(index, { actionKey: e.target.value })
+              }
             />
             <input
               className={inputClass}
@@ -49,13 +62,17 @@ export function MechanicalActionsEditor({ value, onChange }: Props) {
               className={inputClass}
               placeholder="Formule de dé (ex: 1d20)"
               value={action.diceFormula}
-              onChange={(e) => updateAction(index, { diceFormula: e.target.value })}
+              onChange={(e) =>
+                updateAction(index, { diceFormula: e.target.value })
+              }
             />
             <input
               className={inputClass}
               placeholder="Stat liée (optionnel)"
               value={action.relatedStat}
-              onChange={(e) => updateAction(index, { relatedStat: e.target.value })}
+              onChange={(e) =>
+                updateAction(index, { relatedStat: e.target.value })
+              }
             />
             <button
               type="button"

@@ -14,7 +14,10 @@ vi.mock('../../infrastructure/api-client', () => ({
 }));
 
 vi.mock('../auth/AuthProvider', () => ({
-  useAuth: () => ({ user: { id: 'admin-1', email: 'admin@test.dev', name: 'Admin' }, logout: vi.fn() }),
+  useAuth: () => ({
+    user: { id: 'admin-1', email: 'admin@test.dev', name: 'Admin' },
+    logout: vi.fn(),
+  }),
 }));
 
 const stats = {
@@ -35,7 +38,10 @@ const stats = {
 
 describe('AdminUsagePage', () => {
   beforeEach(() => {
-    vi.mocked(apiClient.fetchMyProfile).mockResolvedValue({ userId: 'admin-1', role: 'admin' });
+    vi.mocked(apiClient.fetchMyProfile).mockResolvedValue({
+      userId: 'admin-1',
+      role: 'admin',
+    });
   });
 
   afterEach(() => {
@@ -55,7 +61,9 @@ describe('AdminUsagePage', () => {
     await waitFor(() => {
       expect(screen.getByRole('progressbar')).toBeInTheDocument();
     });
-    expect(screen.getByRole('progressbar').getAttribute('aria-valuenow')).toBe('80');
+    expect(screen.getByRole('progressbar').getAttribute('aria-valuenow')).toBe(
+      '80',
+    );
     expect(screen.getByText(/42 appels LLM au total/)).toBeInTheDocument();
   });
 

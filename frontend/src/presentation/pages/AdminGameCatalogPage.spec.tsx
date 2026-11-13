@@ -15,7 +15,10 @@ vi.mock('../../infrastructure/api-client', () => ({
 }));
 
 vi.mock('../auth/AuthProvider', () => ({
-  useAuth: () => ({ user: { id: 'admin-1', email: 'admin@test.dev', name: 'Admin' }, logout: vi.fn() }),
+  useAuth: () => ({
+    user: { id: 'admin-1', email: 'admin@test.dev', name: 'Admin' },
+    logout: vi.fn(),
+  }),
 }));
 
 function buildGameSystem(overrides: Partial<GameSystem> = {}): GameSystem {
@@ -39,7 +42,10 @@ function buildGameSystem(overrides: Partial<GameSystem> = {}): GameSystem {
 
 describe('AdminGameCatalogPage - deletion', () => {
   beforeEach(() => {
-    vi.mocked(apiClient.fetchMyProfile).mockResolvedValue({ userId: 'admin-1', role: 'admin' });
+    vi.mocked(apiClient.fetchMyProfile).mockResolvedValue({
+      userId: 'admin-1',
+      role: 'admin',
+    });
   });
 
   afterEach(() => {
@@ -48,7 +54,9 @@ describe('AdminGameCatalogPage - deletion', () => {
   });
 
   it('deletes the game system after confirmation and removes it from the list', async () => {
-    vi.mocked(apiClient.fetchGameSystems).mockResolvedValue([buildGameSystem()]);
+    vi.mocked(apiClient.fetchGameSystems).mockResolvedValue([
+      buildGameSystem(),
+    ]);
     vi.mocked(apiClient.deleteGameSystem).mockResolvedValue(undefined);
     vi.spyOn(window, 'confirm').mockReturnValue(true);
 
@@ -59,7 +67,9 @@ describe('AdminGameCatalogPage - deletion', () => {
       </MemoryRouter>,
     );
 
-    const deleteButton = await screen.findByRole('button', { name: 'Supprimer' });
+    const deleteButton = await screen.findByRole('button', {
+      name: 'Supprimer',
+    });
     await user.click(deleteButton);
 
     await waitFor(() => {
@@ -71,7 +81,9 @@ describe('AdminGameCatalogPage - deletion', () => {
   });
 
   it('does not call the API when the confirmation is declined', async () => {
-    vi.mocked(apiClient.fetchGameSystems).mockResolvedValue([buildGameSystem()]);
+    vi.mocked(apiClient.fetchGameSystems).mockResolvedValue([
+      buildGameSystem(),
+    ]);
     vi.spyOn(window, 'confirm').mockReturnValue(false);
 
     const user = userEvent.setup();
@@ -81,7 +93,9 @@ describe('AdminGameCatalogPage - deletion', () => {
       </MemoryRouter>,
     );
 
-    const deleteButton = await screen.findByRole('button', { name: 'Supprimer' });
+    const deleteButton = await screen.findByRole('button', {
+      name: 'Supprimer',
+    });
     await user.click(deleteButton);
 
     expect(apiClient.deleteGameSystem).not.toHaveBeenCalled();
@@ -89,9 +103,13 @@ describe('AdminGameCatalogPage - deletion', () => {
   });
 
   it('surfaces the backend error message verbatim when deletion is blocked', async () => {
-    vi.mocked(apiClient.fetchGameSystems).mockResolvedValue([buildGameSystem()]);
+    vi.mocked(apiClient.fetchGameSystems).mockResolvedValue([
+      buildGameSystem(),
+    ]);
     vi.mocked(apiClient.deleteGameSystem).mockRejectedValue(
-      new Error('Ce JdR est utilisé par au moins une partie et ne peut pas être supprimé.'),
+      new Error(
+        'Ce JdR est utilisé par au moins une partie et ne peut pas être supprimé.',
+      ),
     );
     vi.spyOn(window, 'confirm').mockReturnValue(true);
 
@@ -102,12 +120,16 @@ describe('AdminGameCatalogPage - deletion', () => {
       </MemoryRouter>,
     );
 
-    const deleteButton = await screen.findByRole('button', { name: 'Supprimer' });
+    const deleteButton = await screen.findByRole('button', {
+      name: 'Supprimer',
+    });
     await user.click(deleteButton);
 
     await waitFor(() => {
       expect(
-        screen.getByText('Ce JdR est utilisé par au moins une partie et ne peut pas être supprimé.'),
+        screen.getByText(
+          'Ce JdR est utilisé par au moins une partie et ne peut pas être supprimé.',
+        ),
       ).toBeInTheDocument();
     });
     expect(screen.getByText('Donjons & Dragons')).toBeInTheDocument();

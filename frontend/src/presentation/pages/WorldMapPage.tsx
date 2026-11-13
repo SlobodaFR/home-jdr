@@ -49,11 +49,17 @@ export function WorldMapPage() {
   const [generating, setGenerating] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const [pendingPosition, setPendingPosition] = useState<{ x: number; y: number } | null>(null);
+  const [pendingPosition, setPendingPosition] = useState<{
+    x: number;
+    y: number;
+  } | null>(null);
   const [pinLabel, setPinLabel] = useState('');
   const [selectedPinId, setSelectedPinId] = useState<string | null>(null);
   const [draggingPinId, setDraggingPinId] = useState<string | null>(null);
-  const [dragPosition, setDragPosition] = useState<{ x: number; y: number } | null>(null);
+  const [dragPosition, setDragPosition] = useState<{
+    x: number;
+    y: number;
+  } | null>(null);
 
   const imageContainerRef = useRef<HTMLDivElement>(null);
 
@@ -95,7 +101,11 @@ export function WorldMapPage() {
       await worldMapApiClient.generate(id);
       refresh();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'La génération de la carte a échoué.');
+      setError(
+        err instanceof Error
+          ? err.message
+          : 'La génération de la carte a échoué.',
+      );
     } finally {
       setGenerating(false);
     }
@@ -105,7 +115,10 @@ export function WorldMapPage() {
     if (!view?.worldMap || !imageContainerRef.current || draggingPinId) {
       return;
     }
-    const position = relativePositionFromEvent(event, imageContainerRef.current);
+    const position = relativePositionFromEvent(
+      event,
+      imageContainerRef.current,
+    );
     setPendingPosition(position);
     setSelectedPinId(null);
     setPinLabel('');
@@ -126,7 +139,9 @@ export function WorldMapPage() {
       setPinLabel('');
       refresh();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "L'ajout du lieu a échoué.");
+      setError(
+        err instanceof Error ? err.message : "L'ajout du lieu a échoué.",
+      );
     }
   }
 
@@ -139,7 +154,9 @@ export function WorldMapPage() {
       setSelectedPinId(null);
       refresh();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'La suppression du lieu a échoué.');
+      setError(
+        err instanceof Error ? err.message : 'La suppression du lieu a échoué.',
+      );
     }
   }
 
@@ -153,7 +170,9 @@ export function WorldMapPage() {
     if (!draggingPinId || !imageContainerRef.current) {
       return;
     }
-    setDragPosition(relativePositionFromEvent(event, imageContainerRef.current));
+    setDragPosition(
+      relativePositionFromEvent(event, imageContainerRef.current),
+    );
   }
 
   async function handleContainerMouseUp() {
@@ -173,7 +192,9 @@ export function WorldMapPage() {
       });
       refresh();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Le déplacement du lieu a échoué.");
+      setError(
+        err instanceof Error ? err.message : 'Le déplacement du lieu a échoué.',
+      );
     }
   }
 
@@ -185,21 +206,30 @@ export function WorldMapPage() {
     );
   }
 
-  const selectedPin = view?.pins.find((pin) => pin.id === selectedPinId) ?? null;
+  const selectedPin =
+    view?.pins.find((pin) => pin.id === selectedPinId) ?? null;
 
   return (
     <main className="min-h-screen bg-canvas flex flex-col gap-lg">
       <div className="px-lg pt-section flex items-center justify-between flex-wrap gap-sm">
         <div className="flex items-center gap-md">
           <BackButton to={`/sessions/${id}`} />
-          <h1 className="font-sans-ui text-heading-xl text-ink">Carte - {sessionName}</h1>
+          <h1 className="font-sans-ui text-heading-xl text-ink">
+            Carte - {sessionName}
+          </h1>
         </div>
         <div className="flex items-center gap-sm">
           {generating && (
-            <SessionStatusPill variant="resolving" label="Génération de la carte en cours..." />
+            <SessionStatusPill
+              variant="resolving"
+              label="Génération de la carte en cours..."
+            />
           )}
           {isGm && (
-            <ButtonSecondary onClick={() => void handleGenerate()} disabled={generating}>
+            <ButtonSecondary
+              onClick={() => void handleGenerate()}
+              disabled={generating}
+            >
               {view?.worldMap ? 'Régénérer la carte' : 'Générer la carte'}
             </ButtonSecondary>
           )}
@@ -235,7 +265,12 @@ export function WorldMapPage() {
             return (
               <div
                 key={pin.id}
-                style={{ position: 'absolute', left: `${x * 100}%`, top: `${y * 100}%`, transform: 'translate(-50%, -50%)' }}
+                style={{
+                  position: 'absolute',
+                  left: `${x * 100}%`,
+                  top: `${y * 100}%`,
+                  transform: 'translate(-50%, -50%)',
+                }}
               >
                 <MapPin
                   label={pin.label}
@@ -263,7 +298,9 @@ export function WorldMapPage() {
       {selectedPin && (
         <div className="px-lg flex flex-col gap-xs">
           <p className="font-body-strong text-ink">{selectedPin.label}</p>
-          {selectedPin.notes && <p className="font-body-md text-ash">{selectedPin.notes}</p>}
+          {selectedPin.notes && (
+            <p className="font-body-md text-ash">{selectedPin.notes}</p>
+          )}
           <ButtonSecondary onClick={() => void handleRemovePin(selectedPin.id)}>
             Supprimer ce lieu
           </ButtonSecondary>
@@ -288,7 +325,10 @@ export function WorldMapPage() {
             <ButtonPrimary type="submit" disabled={!pinLabel.trim()}>
               Ajouter le lieu
             </ButtonPrimary>
-            <ButtonSecondary type="button" onClick={() => setPendingPosition(null)}>
+            <ButtonSecondary
+              type="button"
+              onClick={() => setPendingPosition(null)}
+            >
               Annuler
             </ButtonSecondary>
           </div>

@@ -3,7 +3,9 @@ import { PushSubscriptionKeys } from '../domain/push-notification';
 export type Platform = 'ios' | 'android' | 'other';
 
 /** Simple platform sniffing, only used to pick the right "add to home screen" copy. */
-export function detectPlatform(userAgent: string = navigator.userAgent): Platform {
+export function detectPlatform(
+  userAgent: string = navigator.userAgent,
+): Platform {
   const ua = userAgent.toLowerCase();
   if (/iphone|ipad|ipod/.test(ua)) {
     return 'ios';
@@ -86,7 +88,9 @@ export const pushNotificationManager = {
       // the DOM lib's `BufferSource`/`ArrayBufferView<ArrayBuffer>` typing
       // don't line up as of TS 5.7+, even though this is exactly the shape
       // `PushManager.subscribe` expects at runtime.
-      applicationServerKey: urlBase64ToUint8Array(vapidPublicKey) as BufferSource,
+      applicationServerKey: urlBase64ToUint8Array(
+        vapidPublicKey,
+      ) as BufferSource,
     });
     return { endpoint: subscription.endpoint, keys: toKeys(subscription) };
   },

@@ -51,7 +51,10 @@ describe('worldMapApiClient', () => {
         .mockResolvedValue({ ok: true, json: async () => worldMap });
       vi.stubGlobal('fetch', fetchMock);
 
-      const result = await worldMapApiClient.generate('session-1', 'Avec une foret hantee');
+      const result = await worldMapApiClient.generate(
+        'session-1',
+        'Avec une foret hantee',
+      );
 
       expect(result).toEqual(worldMap);
       expect(fetchMock).toHaveBeenCalledWith(
@@ -67,10 +70,16 @@ describe('worldMapApiClient', () => {
     it('throws when the request fails', async () => {
       vi.stubGlobal(
         'fetch',
-        vi.fn().mockResolvedValue({ ok: false, status: 403, json: async () => ({ message: 'Forbidden' }) }),
+        vi.fn().mockResolvedValue({
+          ok: false,
+          status: 403,
+          json: async () => ({ message: 'Forbidden' }),
+        }),
       );
 
-      await expect(worldMapApiClient.generate('session-1')).rejects.toThrow('Forbidden');
+      await expect(worldMapApiClient.generate('session-1')).rejects.toThrow(
+        'Forbidden',
+      );
     });
   });
 

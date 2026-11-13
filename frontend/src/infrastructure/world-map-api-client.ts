@@ -17,9 +17,9 @@ export interface UpdateMapPinInput {
 }
 
 async function extractErrorMessage(response: Response): Promise<string> {
-  const body = (await response.json().catch(() => null)) as
-    | { message?: string | string[] }
-    | null;
+  const body = (await response.json().catch(() => null)) as {
+    message?: string | string[];
+  } | null;
   const message = body?.message;
   if (Array.isArray(message)) {
     return message.join(', ');
@@ -36,29 +36,38 @@ async function parseJsonOrThrow<T>(response: Response): Promise<T> {
 
 export const worldMapApiClient = {
   async get(sessionId: string): Promise<WorldMapView> {
-    const response = await fetch(`${BASE_URL}/sessions/${sessionId}/world-map`, {
-      credentials: 'include',
-    });
+    const response = await fetch(
+      `${BASE_URL}/sessions/${sessionId}/world-map`,
+      {
+        credentials: 'include',
+      },
+    );
     return parseJsonOrThrow<WorldMapView>(response);
   },
 
   async generate(sessionId: string, description?: string): Promise<WorldMap> {
-    const response = await fetch(`${BASE_URL}/sessions/${sessionId}/world-map`, {
-      method: 'POST',
-      credentials: 'include',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ description }),
-    });
+    const response = await fetch(
+      `${BASE_URL}/sessions/${sessionId}/world-map`,
+      {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ description }),
+      },
+    );
     return parseJsonOrThrow<WorldMap>(response);
   },
 
   async addPin(sessionId: string, input: AddMapPinInput): Promise<MapPin> {
-    const response = await fetch(`${BASE_URL}/sessions/${sessionId}/world-map/pins`, {
-      method: 'POST',
-      credentials: 'include',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(input),
-    });
+    const response = await fetch(
+      `${BASE_URL}/sessions/${sessionId}/world-map/pins`,
+      {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(input),
+      },
+    );
     return parseJsonOrThrow<MapPin>(response);
   },
 

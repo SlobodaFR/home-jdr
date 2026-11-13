@@ -4,12 +4,18 @@ import { cx } from './utils/cx';
 // DESIGN.md > Components > Formulaires > action-input / action-input-focused
 // Default: bg canvas, border 1px hairline, rounded.sm, typography.body-md.
 // Focus: border 2px ink, no decorative glow.
-export interface ActionInputProps
-  extends Omit<TextareaHTMLAttributes<HTMLTextAreaElement>, 'className'> {
+export interface ActionInputProps extends Omit<
+  TextareaHTMLAttributes<HTMLTextAreaElement>,
+  'className'
+> {
   className?: string;
 }
 
-export function ActionInput({ className, rows = 3, ...rest }: ActionInputProps) {
+export function ActionInput({
+  className,
+  rows = 3,
+  ...rest
+}: ActionInputProps) {
   return (
     <textarea
       rows={rows}

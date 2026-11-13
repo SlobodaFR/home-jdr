@@ -15,13 +15,15 @@ interface CommonProps {
 }
 
 interface AsButtonProps
-  extends CommonProps,
+  extends
+    CommonProps,
     Omit<ButtonHTMLAttributes<HTMLButtonElement>, 'className' | 'children'> {
   href?: undefined;
 }
 
 interface AsLinkProps
-  extends CommonProps,
+  extends
+    CommonProps,
     Omit<AnchorHTMLAttributes<HTMLAnchorElement>, 'className' | 'children'> {
   href: string;
 }
@@ -41,7 +43,10 @@ export function ButtonPrimary(props: ButtonPrimaryProps) {
     );
   }
 
-  const buttonRest = rest as Omit<AsButtonProps, 'children' | 'className' | 'href'>;
+  const buttonRest = rest as Omit<
+    AsButtonProps,
+    'children' | 'className' | 'href'
+  >;
   return (
     <button type="button" className={classes} {...buttonRest}>
       {children}

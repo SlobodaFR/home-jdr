@@ -31,12 +31,18 @@ describe('CharacterSheet', () => {
   it('renders a compact heading in compact mode', () => {
     render(<CharacterSheet character={character} compact />);
 
-    expect(screen.queryByRole('heading', { name: 'Aragorn' })).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole('heading', { name: 'Aragorn' }),
+    ).not.toBeInTheDocument();
     expect(screen.getByText('Aragorn')).toBeInTheDocument();
   });
 
   it('hides the hit-points bar for a GameSystem that does not track HP (hitPointsMax = 0)', () => {
-    render(<CharacterSheet character={{ ...character, hitPointsMax: 0, hitPointsCurrent: 0 }} />);
+    render(
+      <CharacterSheet
+        character={{ ...character, hitPointsMax: 0, hitPointsCurrent: 0 }}
+      />,
+    );
 
     expect(screen.queryByText('Points de vie')).not.toBeInTheDocument();
     expect(screen.getByText('Torche')).toBeInTheDocument();

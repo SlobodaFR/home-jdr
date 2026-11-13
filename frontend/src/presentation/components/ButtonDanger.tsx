@@ -3,12 +3,19 @@ import { cx } from './utils/cx';
 
 // DESIGN.md > Components > Boutons > button-danger
 // bg canvas / text danger / border 1px danger / typography.button-md / rounded.lg
-export interface ButtonDangerProps extends Omit<ButtonHTMLAttributes<HTMLButtonElement>, 'className'> {
+export interface ButtonDangerProps extends Omit<
+  ButtonHTMLAttributes<HTMLButtonElement>,
+  'className'
+> {
   children: ReactNode;
   className?: string;
 }
 
-export function ButtonDanger({ children, className, ...rest }: ButtonDangerProps) {
+export function ButtonDanger({
+  children,
+  className,
+  ...rest
+}: ButtonDangerProps) {
   return (
     <button
       type="button"

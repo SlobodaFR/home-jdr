@@ -22,12 +22,18 @@ vi.mock('../../infrastructure/api-client', () => ({
 }));
 
 vi.mock('../auth/AuthProvider', () => ({
-  useAuth: () => ({ user: { id: 'user-1', email: 'user@test.dev', name: 'Test User' }, logout: vi.fn() }),
+  useAuth: () => ({
+    user: { id: 'user-1', email: 'user@test.dev', name: 'Test User' },
+    logout: vi.fn(),
+  }),
 }));
 
 const mockedNavigate = vi.fn();
 vi.mock('react-router-dom', async () => {
-  const actual = await vi.importActual<typeof import('react-router-dom')>('react-router-dom');
+  const actual =
+    await vi.importActual<typeof import('react-router-dom')>(
+      'react-router-dom',
+    );
   return { ...actual, useNavigate: () => mockedNavigate };
 });
 
@@ -37,7 +43,12 @@ const baseSession = {
   gameSystemId: 'gs-1',
   userId: 'user-1',
   status: 'in_progress' as const,
-  messages: [{ role: 'assistant' as const, content: 'Bienvenue ! Parle-moi de ton personnage.' }],
+  messages: [
+    {
+      role: 'assistant' as const,
+      content: 'Bienvenue ! Parle-moi de ton personnage.',
+    },
+  ],
   draftCharacter: {},
   createdAt: '2026-01-01T00:00:00.000Z',
   updatedAt: '2026-01-01T00:00:00.000Z',
@@ -47,7 +58,10 @@ function renderPage() {
   return render(
     <MemoryRouter initialEntries={['/character-creation/creation-1']}>
       <Routes>
-        <Route path="/character-creation/:id" element={<CharacterCreationChatPage />} />
+        <Route
+          path="/character-creation/:id"
+          element={<CharacterCreationChatPage />}
+        />
       </Routes>
     </MemoryRouter>,
   );
@@ -55,7 +69,10 @@ function renderPage() {
 
 describe('CharacterCreationChatPage', () => {
   beforeEach(() => {
-    vi.mocked(apiClient.fetchMyProfile).mockResolvedValue({ userId: 'user-1', role: 'adult' });
+    vi.mocked(apiClient.fetchMyProfile).mockResolvedValue({
+      userId: 'user-1',
+      role: 'adult',
+    });
   });
 
   afterEach(() => {
@@ -64,7 +81,9 @@ describe('CharacterCreationChatPage', () => {
   });
 
   it('shows the opening assistant message and sends a player message', async () => {
-    vi.mocked(characterCreationApiClient.getById).mockResolvedValue(baseSession);
+    vi.mocked(characterCreationApiClient.getById).mockResolvedValue(
+      baseSession,
+    );
     vi.mocked(characterCreationApiClient.sendMessage).mockResolvedValue({
       ...baseSession,
       messages: [
@@ -96,7 +115,9 @@ describe('CharacterCreationChatPage', () => {
   });
 
   it('shows a clear non-technical message when the daily LLM quota is exhausted (429)', async () => {
-    vi.mocked(characterCreationApiClient.getById).mockResolvedValue(baseSession);
+    vi.mocked(characterCreationApiClient.getById).mockResolvedValue(
+      baseSession,
+    );
     vi.mocked(characterCreationApiClient.sendMessage).mockRejectedValue(
       new QuotaExceededClientError(),
     );
@@ -105,12 +126,17 @@ describe('CharacterCreationChatPage', () => {
     renderPage();
 
     await screen.findByText('Bienvenue ! Parle-moi de ton personnage.');
-    await user.type(screen.getByPlaceholderText('Décris ton personnage...'), 'Un nain.');
+    await user.type(
+      screen.getByPlaceholderText('Décris ton personnage...'),
+      'Un nain.',
+    );
     await user.click(screen.getByRole('button', { name: 'Envoyer' }));
 
     await waitFor(() => {
       expect(
-        screen.getByText('Le MJ numérique a atteint sa limite du jour, réessaie plus tard'),
+        screen.getByText(
+          'Le MJ numérique a atteint sa limite du jour, réessaie plus tard',
+        ),
       ).toBeInTheDocument();
     });
   });
@@ -154,11 +180,15 @@ describe('CharacterCreationChatPage', () => {
   });
 
   it('disables finalizing while the draft has no name yet', async () => {
-    vi.mocked(characterCreationApiClient.getById).mockResolvedValue(baseSession);
+    vi.mocked(characterCreationApiClient.getById).mockResolvedValue(
+      baseSession,
+    );
 
     renderPage();
 
     await screen.findByText('Bienvenue ! Parle-moi de ton personnage.');
-    expect(screen.getByRole('button', { name: 'Valider ma fiche' })).toBeDisabled();
+    expect(
+      screen.getByRole('button', { name: 'Valider ma fiche' }),
+    ).toBeDisabled();
   });
 });

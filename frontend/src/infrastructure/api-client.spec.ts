@@ -9,7 +9,9 @@ describe('apiClient.fetchCurrentUser', () => {
   it('returns null when the session is not authenticated', async () => {
     vi.stubGlobal(
       'fetch',
-      vi.fn().mockResolvedValue({ ok: false, status: 401, json: async () => ({}) }),
+      vi
+        .fn()
+        .mockResolvedValue({ ok: false, status: 401, json: async () => ({}) }),
     );
 
     await expect(apiClient.fetchCurrentUser()).resolves.toBeNull();
@@ -78,16 +80,24 @@ describe('apiClient.createGameSystem', () => {
 
   it('posts the given FormData and returns the created game system', async () => {
     const created = { id: 'gs-1', name: 'Donjons & Dragons' };
-    const fetchMock = vi.fn().mockResolvedValue({ ok: true, json: async () => created });
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValue({ ok: true, json: async () => created });
     vi.stubGlobal('fetch', fetchMock);
 
     const formData = new FormData();
     formData.append('name', 'Donjons & Dragons');
 
-    await expect(apiClient.createGameSystem(formData)).resolves.toEqual(created);
+    await expect(apiClient.createGameSystem(formData)).resolves.toEqual(
+      created,
+    );
     expect(fetchMock).toHaveBeenCalledWith(
       '/api/game-systems',
-      expect.objectContaining({ method: 'POST', body: formData, credentials: 'include' }),
+      expect.objectContaining({
+        method: 'POST',
+        body: formData,
+        credentials: 'include',
+      }),
     );
   });
 
@@ -120,7 +130,10 @@ describe('apiClient.fetchUsageStats', () => {
       totalCallsToday: 6,
       trend: [],
     };
-    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: true, json: async () => stats }));
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue({ ok: true, json: async () => stats }),
+    );
 
     await expect(apiClient.fetchUsageStats()).resolves.toEqual(stats);
   });
@@ -133,13 +146,18 @@ describe('apiClient.updateDailyLlmQuota', () => {
 
   it('sends a PATCH request with the new quota value', async () => {
     const updated = { key: 'daily-llm-quota', value: '80' };
-    const fetchMock = vi.fn().mockResolvedValue({ ok: true, json: async () => updated });
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValue({ ok: true, json: async () => updated });
     vi.stubGlobal('fetch', fetchMock);
 
     await expect(apiClient.updateDailyLlmQuota(80)).resolves.toEqual(updated);
     expect(fetchMock).toHaveBeenCalledWith(
       '/api/admin/settings/daily-llm-quota',
-      expect.objectContaining({ method: 'PATCH', body: JSON.stringify({ value: 80 }) }),
+      expect.objectContaining({
+        method: 'PATCH',
+        body: JSON.stringify({ value: 80 }),
+      }),
     );
   });
 

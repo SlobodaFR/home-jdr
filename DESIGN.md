@@ -132,21 +132,21 @@ d'action — reste sur `{colors.canvas}`/`{colors.parchment}` avec de l'encre
 
 ### Hiérarchie
 
-| Token                        | Taille | Poids | Usage                                                              |
-| ----------------------------- | ------ | ----- | -------------------------------------------------------------------- |
-| `{typography.display-title}` | 40px   | 600   | Titre d'accueil, nom de la partie en en-tête de session              |
-| `{typography.heading-xl}`    | 26px   | 600   | Titre d'écran ("Mes parties", "Créer un personnage")                 |
-| `{typography.heading-lg}`    | 20px   | 600   | Titre de carte/section (nom du JdR, titre de scène)                  |
-| `{typography.heading-md}`    | 16px   | 600   | Sous-titre, en-tête de groupe de stats                               |
-| `{typography.body-md}`       | 16px   | 400   | Narration, texte de scène, descriptions                              |
-| `{typography.body-strong}`   | 16px   | 600   | Nom de personnage, label d'action                                    |
-| `{typography.button-md}`     | 16px   | 600   | CTA standard                                                          |
-| `{typography.button-sm}`     | 14px   | 600   | CTA compact (actions de fiche, filtres)                              |
-| `{typography.link-md}`       | 16px   | 600   | Lien souligné inline                                                 |
-| `{typography.caption-md}`    | 14px   | 500   | Métadonnées (nom de JdR sous le titre de partie, timestamp de tour)  |
-| `{typography.caption-sm}`    | 12px   | 500   | Labels de badge, compteur                                            |
-| `{typography.label-dice}`    | 14px   | 700   | Résultat de jet de dé (mono), ex. `d20+3 = 17`                       |
-| `{typography.utility-xs}`    | 11px   | 500   | Mentions techniques (quota restant, version de règles)               |
+| Token                        | Taille | Poids | Usage                                                               |
+| ---------------------------- | ------ | ----- | ------------------------------------------------------------------- |
+| `{typography.display-title}` | 40px   | 600   | Titre d'accueil, nom de la partie en en-tête de session             |
+| `{typography.heading-xl}`    | 26px   | 600   | Titre d'écran ("Mes parties", "Créer un personnage")                |
+| `{typography.heading-lg}`    | 20px   | 600   | Titre de carte/section (nom du JdR, titre de scène)                 |
+| `{typography.heading-md}`    | 16px   | 600   | Sous-titre, en-tête de groupe de stats                              |
+| `{typography.body-md}`       | 16px   | 400   | Narration, texte de scène, descriptions                             |
+| `{typography.body-strong}`   | 16px   | 600   | Nom de personnage, label d'action                                   |
+| `{typography.button-md}`     | 16px   | 600   | CTA standard                                                        |
+| `{typography.button-sm}`     | 14px   | 600   | CTA compact (actions de fiche, filtres)                             |
+| `{typography.link-md}`       | 16px   | 600   | Lien souligné inline                                                |
+| `{typography.caption-md}`    | 14px   | 500   | Métadonnées (nom de JdR sous le titre de partie, timestamp de tour) |
+| `{typography.caption-sm}`    | 12px   | 500   | Labels de badge, compteur                                           |
+| `{typography.label-dice}`    | 14px   | 700   | Résultat de jet de dé (mono), ex. `d20+3 = 17`                      |
+| `{typography.utility-xs}`    | 11px   | 500   | Mentions techniques (quota restant, version de règles)              |
 
 ### Principes
 
@@ -173,11 +173,11 @@ reste rare — un écran ne doit jamais en contenir plus d'une occurrence.
 
 ## Elevation & Depth
 
-| Niveau                | Traitement                                          | Usage                                                          |
-| ---------------------- | ----------------------------------------------------- | ---------------------------------------------------------------- |
-| 0 — Plat               | Aucune ombre                                         | Traitement par défaut, comme la référence                        |
-| 1 — Trait fin          | 1px solid `{colors.hairline}`                        | Séparateurs de liste de parties, lignes de fiche perso            |
-| 2 — Carte surélevée    | `box-shadow: 0 1px 3px rgba(20,17,15,0.08)`          | `{component.game-card}` et `{component.delta-proposal-card}` uniquement — la seule ombre du système, réservée aux éléments qui demandent une action de l'utilisateur (rejoindre une partie, valider un delta) |
+| Niveau              | Traitement                                  | Usage                                                                                                                                                                                                         |
+| ------------------- | ------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 0 — Plat            | Aucune ombre                                | Traitement par défaut, comme la référence                                                                                                                                                                     |
+| 1 — Trait fin       | 1px solid `{colors.hairline}`               | Séparateurs de liste de parties, lignes de fiche perso                                                                                                                                                        |
+| 2 — Carte surélevée | `box-shadow: 0 1px 3px rgba(20,17,15,0.08)` | `{component.game-card}` et `{component.delta-proposal-card}` uniquement — la seule ombre du système, réservée aux éléments qui demandent une action de l'utilisateur (rejoindre une partie, valider un delta) |
 
 Contrairement à la référence Nike (zéro ombre du tout), on s'autorise **une**
 ombre légère, mais volontairement limitée aux deux composants qui appellent
@@ -186,12 +186,12 @@ purement informatif.
 
 ## Shapes
 
-| Token            | Valeur | Usage                                                                 |
-| ---------------- | ------ | ------------------------------------------------------------------------ |
-| `{rounded.none}` | 0px    | Image de carte du monde, bandeau de statut de session                   |
-| `{rounded.sm}`   | 6px    | Champs de saisie, badges                                                 |
-| `{rounded.md}`   | 10px   | Cards (partie, personnage, proposition de delta)                         |
-| `{rounded.lg}`   | 16px   | Boutons primaires/secondaires                                            |
+| Token            | Valeur | Usage                                                                      |
+| ---------------- | ------ | -------------------------------------------------------------------------- |
+| `{rounded.none}` | 0px    | Image de carte du monde, bandeau de statut de session                      |
+| `{rounded.sm}`   | 6px    | Champs de saisie, badges                                                   |
+| `{rounded.md}`   | 10px   | Cards (partie, personnage, proposition de delta)                           |
+| `{rounded.lg}`   | 16px   | Boutons primaires/secondaires                                              |
 | `{rounded.full}` | 9999px | Icônes rondes, pin de carte, badge de code d'invitation, chip de jet de dé |
 
 ## Components
@@ -200,27 +200,32 @@ purement informatif.
 
 **`button-primary`** — action principale (Soumettre une action, Créer une
 partie, Valider les deltas)
+
 - `backgroundColor: {colors.ink}`, `textColor: {colors.on-primary}`,
   `{typography.button-md}`, `padding: 14px 24px`, `rounded: {rounded.lg}`.
 - Une seule occurrence par écran, comme la règle Nike sur `button-primary`.
 
 **`button-secondary`** — alternative basse emphase
+
 - `backgroundColor: {colors.canvas}`, bordure 1px `{colors.hairline}`,
   `textColor: {colors.ink}`, `{typography.button-md}`, `rounded: {rounded.lg}`.
 
 **`button-danger`** — action destructive (quitter une partie, refuser un
 delta)
+
 - `backgroundColor: {colors.canvas}`, `textColor: {colors.danger}`, bordure
   1px `{colors.danger}`, `{typography.button-md}`, `rounded: {rounded.lg}`.
 
 **`button-icon-circular`** — contrôles d'icône (retour, paramètres de
 partie, zoom carte)
+
 - `backgroundColor: {colors.parchment}`, icône `{colors.ink}`,
   `rounded: {rounded.full}`, taille 40px.
 
 ### Jeu — composants spécifiques
 
 **`character-stat-bar`** + **`character-stat-bar-critical`**
+
 - Barre horizontale (PV, mana, etc.), fond `{colors.hairline-soft}`, remplissage
   `{colors.success}` par défaut.
 - Variante `critical` (sous un seuil défini par le JdR) : remplissage
@@ -228,6 +233,7 @@ partie, zoom carte)
   `{colors.accent-blood}`. Seule utilisation autorisée de `accent-blood`.
 
 **`dice-roll-chip`**
+
 - `backgroundColor: {colors.ink}`, `textColor: {colors.accent-gold}`,
   `{typography.label-dice}` (mono), `rounded: {rounded.full}`,
   `padding: 4px 12px`.
@@ -235,6 +241,7 @@ partie, zoom carte)
   correspondante dans le journal de tour.
 
 **`delta-proposal-card`**
+
 - `backgroundColor: {colors.canvas}`, bordure 1px `{colors.accent-gold}`,
   élévation niveau 2, `rounded: {rounded.md}`.
 - Liste les deltas proposés par le LLM (ex: "PV -12", "+ Épée rouillée") avec
@@ -242,6 +249,7 @@ partie, zoom carte)
   carte. Ne disparaît qu'après action explicite de l'utilisateur.
 
 **`session-status-pill`** (+ variantes `-waiting`, `-resolving`)
+
 - `rounded: {rounded.full}`, `{typography.caption-sm}`, `padding: 4px 12px`.
 - `waiting` : fond `{colors.hairline-soft}`, texte `{colors.ink}` — "2/4
   joueurs ont soumis".
@@ -249,6 +257,7 @@ partie, zoom carte)
   "Le MJ résout la scène..." (état transitoire pendant l'appel LLM).
 
 **`game-card`** — carte de partie dans la liste "Mes parties"
+
 - `backgroundColor: {colors.canvas}`, `rounded: {rounded.md}`, élévation
   niveau 2, `padding: 16px`.
 - Contenu : nom du JdR (`{typography.heading-md}`), nom de partie
@@ -256,6 +265,7 @@ partie, zoom carte)
   activité (`{typography.caption-sm}` `{colors.mute}`).
 
 **`map-pin`** + **`map-pin-active`**
+
 - Marqueur rond 20px, `rounded: {rounded.full}`, fond `{colors.ink}`,
   contour 2px `{colors.on-primary}`.
 - `active` (lieu sélectionné) : fond `{colors.accent-gold}`, léger
@@ -263,11 +273,13 @@ partie, zoom carte)
   taille/couleur net.
 
 **`invite-code-badge`**
+
 - `backgroundColor: {colors.accent-gold-soft}`, `textColor: {colors.ink}`,
   `{typography.label-dice}` (mono, pour la lisibilité d'un code type
   `XK4R2P`), `rounded: {rounded.full}`, `padding: 6px 14px`.
 
 **`turn-log-entry`**
+
 - Pas de card/bordure — entrée de journal en flux continu.
 - Structure : auteur (`{typography.body-strong}`) → action soumise
   (`{typography.body-md}` `{colors.mute}`) → `{component.dice-roll-chip}` si
@@ -275,12 +287,14 @@ partie, zoom carte)
 - Séparateur 1px `{colors.hairline}` entre chaque tour.
 
 **`admin-badge-children`**
+
 - Petit badge `{typography.caption-sm}`, fond `{colors.success}`,
   `textColor: {colors.on-primary}`, `rounded: {rounded.sm}` — marque un JdR
   "adapté enfants" dans le catalogue admin. Jamais visible côté joueur (pas
   besoin de l'exposer, c'est un filtre d'accès, pas une info de jeu).
 
 **`quota-meter`**
+
 - Barre fine (4px), fond `{colors.hairline-soft}`, remplissage
   `{colors.info}` sous 80% d'usage, `{colors.danger}` au-delà — visible côté
   admin uniquement pour surveiller le quota d'appels LLM/jour.
@@ -288,6 +302,7 @@ partie, zoom carte)
 ### Formulaires
 
 **`action-input`** + **`action-input-focused`**
+
 - Zone de texte pour soumettre une action de tour. Défaut : fond
   `{colors.canvas}`, bordure 1px `{colors.hairline}`, `rounded: {rounded.sm}`,
   `{typography.body-md}`.
@@ -329,11 +344,11 @@ partie, zoom carte)
 
 ## Responsive Behavior
 
-| Nom              | Largeur     | Changements clés                                                        |
-| ----------------- | ----------- | --------------------------------------------------------------------------- |
-| mobile            | 320–599px   | Colonne unique, `{typography.display-title}` réduit à 28px, carte du monde en plein écran (modale dédiée plutôt qu'inline) |
-| tablet            | 600–1023px  | 2 colonnes possibles (liste de parties + détail), carte du monde inline avec la fiche perso repliable |
-| desktop           | 1024px+     | 3 zones simultanées : liste de parties / journal de tour + saisie d'action / fiche perso + carte |
+| Nom     | Largeur    | Changements clés                                                                                                           |
+| ------- | ---------- | -------------------------------------------------------------------------------------------------------------------------- |
+| mobile  | 320–599px  | Colonne unique, `{typography.display-title}` réduit à 28px, carte du monde en plein écran (modale dédiée plutôt qu'inline) |
+| tablet  | 600–1023px | 2 colonnes possibles (liste de parties + détail), carte du monde inline avec la fiche perso repliable                      |
+| desktop | 1024px+    | 3 zones simultanées : liste de parties / journal de tour + saisie d'action / fiche perso + carte                           |
 
 ### Cibles tactiles
 

@@ -24,13 +24,22 @@ export function MarkdownText({ children, className }: MarkdownTextProps) {
             <strong className="font-body-strong">{strongChildren}</strong>
           ),
           ul: ({ children: listChildren }) => (
-            <ul className="list-disc pl-lg flex flex-col gap-xxs">{listChildren}</ul>
+            <ul className="list-disc pl-lg flex flex-col gap-xxs">
+              {listChildren}
+            </ul>
           ),
           ol: ({ children: listChildren }) => (
-            <ol className="list-decimal pl-lg flex flex-col gap-xxs">{listChildren}</ol>
+            <ol className="list-decimal pl-lg flex flex-col gap-xxs">
+              {listChildren}
+            </ol>
           ),
           a: ({ children: linkChildren, href }) => (
-            <a href={href} className="underline" target="_blank" rel="noreferrer">
+            <a
+              href={href}
+              className="underline"
+              target="_blank"
+              rel="noreferrer"
+            >
               {linkChildren}
             </a>
           ),

@@ -2,9 +2,7 @@ import { FormEvent, useCallback, useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { CharacterCreationSession } from '../../domain/character-creation';
 import { InventoryItem } from '../../domain/character';
-import {
-  characterCreationApiClient,
-} from '../../infrastructure/character-creation-api-client';
+import { characterCreationApiClient } from '../../infrastructure/character-creation-api-client';
 import { QuotaExceededClientError } from '../../infrastructure/session-api-client';
 import { ActionInput } from '../components/ActionInput';
 import { BackButton } from '../components/BackButton';
@@ -46,7 +44,9 @@ export function CharacterCreationChatPage() {
     characterCreationApiClient
       .getById(id)
       .then(setSession)
-      .catch(() => setLoadError('Impossible de charger la création de personnage.'));
+      .catch(() =>
+        setLoadError('Impossible de charger la création de personnage.'),
+      );
   }, [id]);
 
   useEffect(() => {
@@ -55,21 +55,33 @@ export function CharacterCreationChatPage() {
 
   async function handleSend(event: FormEvent) {
     event.preventDefault();
-    if (!id || !messageText.trim() || !session || session.status === 'completed') {
+    if (
+      !id ||
+      !messageText.trim() ||
+      !session ||
+      session.status === 'completed'
+    ) {
       return;
     }
 
     setSending(true);
     setError(null);
     try {
-      const updated = await characterCreationApiClient.sendMessage(id, messageText);
+      const updated = await characterCreationApiClient.sendMessage(
+        id,
+        messageText,
+      );
       setSession(updated);
       setMessageText('');
     } catch (err) {
       if (err instanceof QuotaExceededClientError) {
-        setError('Le MJ numérique a atteint sa limite du jour, réessaie plus tard');
+        setError(
+          'Le MJ numérique a atteint sa limite du jour, réessaie plus tard',
+        );
       } else {
-        setError(err instanceof Error ? err.message : "L'envoi du message a échoué.");
+        setError(
+          err instanceof Error ? err.message : "L'envoi du message a échoué.",
+        );
       }
     } finally {
       setSending(false);
@@ -86,7 +98,11 @@ export function CharacterCreationChatPage() {
       const result = await characterCreationApiClient.finalize(id);
       navigate(`/sessions/${result.sessionPlayer.sessionId}`);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'La validation de la fiche a échoué.');
+      setError(
+        err instanceof Error
+          ? err.message
+          : 'La validation de la fiche a échoué.',
+      );
     } finally {
       setFinalizing(false);
     }
@@ -117,7 +133,9 @@ export function CharacterCreationChatPage() {
       <div className="flex flex-col gap-xl">
         <div className="flex items-center gap-md">
           <BackButton to="/" />
-          <h1 className="font-sans-ui text-heading-xl text-ink">Créer mon personnage</h1>
+          <h1 className="font-sans-ui text-heading-xl text-ink">
+            Créer mon personnage
+          </h1>
         </div>
 
         <section className="flex flex-col gap-md">
@@ -140,7 +158,9 @@ export function CharacterCreationChatPage() {
         </section>
 
         <section className="border border-hairline rounded-md p-md flex flex-col gap-sm">
-          <h2 className="font-sans-ui text-heading-md text-ink">Brouillon de fiche</h2>
+          <h2 className="font-sans-ui text-heading-md text-ink">
+            Brouillon de fiche
+          </h2>
           <p className="font-sans-body text-body-strong text-ink">
             {draft.name ?? 'Personnage sans nom pour le moment'}
           </p>
@@ -155,7 +175,10 @@ export function CharacterCreationChatPage() {
         </section>
 
         {!isCompleted && (
-          <form onSubmit={(event) => void handleSend(event)} className="flex flex-col gap-sm">
+          <form
+            onSubmit={(event) => void handleSend(event)}
+            className="flex flex-col gap-sm"
+          >
             <ActionInput
               value={messageText}
               onChange={(event) => setMessageText(event.target.value)}
@@ -164,7 +187,10 @@ export function CharacterCreationChatPage() {
             />
             {error && <ErrorBanner message={error} />}
             <div className="flex gap-md flex-wrap">
-              <ButtonSecondary type="submit" disabled={sending || !messageText.trim()}>
+              <ButtonSecondary
+                type="submit"
+                disabled={sending || !messageText.trim()}
+              >
                 Envoyer
               </ButtonSecondary>
               <ButtonPrimary

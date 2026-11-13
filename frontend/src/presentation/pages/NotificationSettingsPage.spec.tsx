@@ -30,7 +30,10 @@ function renderPage() {
   return render(
     <MemoryRouter initialEntries={['/settings/notifications']}>
       <Routes>
-        <Route path="/settings/notifications" element={<NotificationSettingsPage />} />
+        <Route
+          path="/settings/notifications"
+          element={<NotificationSettingsPage />}
+        />
         <Route path="/" element={<div>Accueil</div>} />
       </Routes>
     </MemoryRouter>,
@@ -62,7 +65,9 @@ describe('NotificationSettingsPage', () => {
 
   it('offers to enable notifications when supported but not yet subscribed', async () => {
     vi.mocked(pushNotificationManager.isPushSupported).mockReturnValue(true);
-    vi.mocked(pushNotificationManager.getExistingSubscription).mockResolvedValue(null);
+    vi.mocked(
+      pushNotificationManager.getExistingSubscription,
+    ).mockResolvedValue(null);
 
     renderPage();
 
@@ -73,8 +78,12 @@ describe('NotificationSettingsPage', () => {
 
   it('subscribes, registers with the backend, and shows the disable option once enabled', async () => {
     vi.mocked(pushNotificationManager.isPushSupported).mockReturnValue(true);
-    vi.mocked(pushNotificationManager.getExistingSubscription).mockResolvedValue(null);
-    vi.mocked(pushNotificationApiClient.getVapidPublicKey).mockResolvedValue('vapid-public-key');
+    vi.mocked(
+      pushNotificationManager.getExistingSubscription,
+    ).mockResolvedValue(null);
+    vi.mocked(pushNotificationApiClient.getVapidPublicKey).mockResolvedValue(
+      'vapid-public-key',
+    );
     vi.mocked(pushNotificationManager.subscribe).mockResolvedValue({
       endpoint: 'https://push.example.com/subscription/abc',
       keys: { p256dh: 'p256dh-value', auth: 'auth-value' },
@@ -88,7 +97,9 @@ describe('NotificationSettingsPage', () => {
     const user = userEvent.setup();
     renderPage();
 
-    await user.click(await screen.findByRole('button', { name: 'Activer les notifications' }));
+    await user.click(
+      await screen.findByRole('button', { name: 'Activer les notifications' }),
+    );
 
     await waitFor(() => {
       expect(pushNotificationApiClient.register).toHaveBeenCalledWith(
@@ -97,27 +108,39 @@ describe('NotificationSettingsPage', () => {
       );
     });
     expect(
-      await screen.findByRole('button', { name: 'Désactiver les notifications' }),
+      await screen.findByRole('button', {
+        name: 'Désactiver les notifications',
+      }),
     ).toBeInTheDocument();
-    expect(localStorage.getItem('home-jdr:push-subscription-id')).toBe('subscription-1');
+    expect(localStorage.getItem('home-jdr:push-subscription-id')).toBe(
+      'subscription-1',
+    );
   });
 
   it('unsubscribes and unregisters with the backend when disabling', async () => {
     localStorage.setItem('home-jdr:push-subscription-id', 'subscription-1');
     vi.mocked(pushNotificationManager.isPushSupported).mockReturnValue(true);
-    vi.mocked(pushNotificationManager.getExistingSubscription).mockResolvedValue(
-      {} as PushSubscription,
-    );
+    vi.mocked(
+      pushNotificationManager.getExistingSubscription,
+    ).mockResolvedValue({} as PushSubscription);
     vi.mocked(pushNotificationManager.unsubscribe).mockResolvedValue(undefined);
-    vi.mocked(pushNotificationApiClient.unregister).mockResolvedValue(undefined);
+    vi.mocked(pushNotificationApiClient.unregister).mockResolvedValue(
+      undefined,
+    );
 
     const user = userEvent.setup();
     renderPage();
 
-    await user.click(await screen.findByRole('button', { name: 'Désactiver les notifications' }));
+    await user.click(
+      await screen.findByRole('button', {
+        name: 'Désactiver les notifications',
+      }),
+    );
 
     await waitFor(() => {
-      expect(pushNotificationApiClient.unregister).toHaveBeenCalledWith('subscription-1');
+      expect(pushNotificationApiClient.unregister).toHaveBeenCalledWith(
+        'subscription-1',
+      );
     });
     expect(
       await screen.findByRole('button', { name: 'Activer les notifications' }),
@@ -131,14 +154,20 @@ describe('NotificationSettingsPage', () => {
       requestPermission: vi.fn().mockResolvedValue('denied'),
     });
     vi.mocked(pushNotificationManager.isPushSupported).mockReturnValue(true);
-    vi.mocked(pushNotificationManager.getExistingSubscription).mockResolvedValue(null);
+    vi.mocked(
+      pushNotificationManager.getExistingSubscription,
+    ).mockResolvedValue(null);
 
     const user = userEvent.setup();
     renderPage();
 
-    await user.click(await screen.findByRole('button', { name: 'Activer les notifications' }));
+    await user.click(
+      await screen.findByRole('button', { name: 'Activer les notifications' }),
+    );
 
-    expect(await screen.findByText(/permission de notification a été refusée/)).toBeInTheDocument();
+    expect(
+      await screen.findByText(/permission de notification a été refusée/),
+    ).toBeInTheDocument();
     expect(pushNotificationApiClient.register).not.toHaveBeenCalled();
   });
 });

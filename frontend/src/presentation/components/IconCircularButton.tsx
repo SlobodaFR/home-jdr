@@ -9,19 +9,29 @@ import { cx } from './utils/cx';
 // exactly onto Tailwind's built-in numeric scale (w-10/h-10 = 40px,
 // w-12/h-12 = 48px), which still goes through Tailwind config rather than
 // an arbitrary literal value.
-export interface IconCircularButtonProps
-  extends Omit<ButtonHTMLAttributes<HTMLButtonElement>, 'className' | 'children'> {
+export interface IconCircularButtonProps extends Omit<
+  ButtonHTMLAttributes<HTMLButtonElement>,
+  'className' | 'children'
+> {
   icon: ReactNode;
   ariaLabel: string;
   className?: string;
 }
 
-export function IconCircularButton({ icon, ariaLabel, className, ...rest }: IconCircularButtonProps) {
+export function IconCircularButton({
+  icon,
+  ariaLabel,
+  className,
+  ...rest
+}: IconCircularButtonProps) {
   return (
     <button
       type="button"
       aria-label={ariaLabel}
-      className={cx('inline-flex h-12 w-12 items-center justify-center rounded-full', className)}
+      className={cx(
+        'inline-flex h-12 w-12 items-center justify-center rounded-full',
+        className,
+      )}
       {...rest}
     >
       <span className="flex h-10 w-10 items-center justify-center rounded-full bg-parchment text-ink">

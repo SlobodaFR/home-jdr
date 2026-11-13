@@ -14,11 +14,19 @@ export interface TurnLogEntryProps {
   className?: string;
 }
 
-export function TurnLogEntry({ author, actionText, narration, diceChip, className }: TurnLogEntryProps) {
+export function TurnLogEntry({
+  author,
+  actionText,
+  narration,
+  diceChip,
+  className,
+}: TurnLogEntryProps) {
   return (
     <div className={cx('border-b border-hairline pb-lg', className)}>
       <p className="font-sans-body text-body-strong text-ink">{author}</p>
-      <p className="font-sans-body text-body-md text-mute mt-xxs">{actionText}</p>
+      <p className="font-sans-body text-body-md text-mute mt-xxs">
+        {actionText}
+      </p>
       {diceChip ? <div className="mt-sm">{diceChip}</div> : null}
       <MarkdownText className="font-sans-body text-body-md text-ink mt-sm">
         {narration}

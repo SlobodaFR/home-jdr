@@ -8,7 +8,10 @@ describe('BackButton', () => {
     render(
       <MemoryRouter initialEntries={['/sessions/abc/map']}>
         <Routes>
-          <Route path="/sessions/:id/map" element={<BackButton to="/sessions/abc" />} />
+          <Route
+            path="/sessions/:id/map"
+            element={<BackButton to="/sessions/abc" />}
+          />
           <Route path="/sessions/abc" element={<p>Session home</p>} />
         </Routes>
       </MemoryRouter>,

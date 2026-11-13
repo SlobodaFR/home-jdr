@@ -17,8 +17,10 @@ export interface NotificationOnboardingBannerProps {
 
 const INSTRUCTIONS: Record<Platform, string> = {
   ios: "Ouvre le menu de partage de Safari (icône avec une flèche vers le haut) puis choisis « Sur l'écran d'accueil ».",
-  android: "Ouvre le menu (⋮) de Chrome puis choisis « Ajouter à l'écran d'accueil » ou « Installer l'application ».",
-  other: 'Utilise le menu de ton navigateur pour installer ou épingler cette page.',
+  android:
+    "Ouvre le menu (⋮) de Chrome puis choisis « Ajouter à l'écran d'accueil » ou « Installer l'application ».",
+  other:
+    'Utilise le menu de ton navigateur pour installer ou épingler cette page.',
 };
 
 /**
@@ -55,9 +57,12 @@ export function NotificationOnboardingBanner({
       )}
     >
       <p className="font-sans-ui text-body-strong text-ink">
-        Ajoute home-jdr à ton écran d&apos;accueil pour recevoir les notifications
+        Ajoute home-jdr à ton écran d&apos;accueil pour recevoir les
+        notifications
       </p>
-      <p className="font-sans-body text-body-md text-ash">{INSTRUCTIONS[platform]}</p>
+      <p className="font-sans-body text-body-md text-ash">
+        {INSTRUCTIONS[platform]}
+      </p>
       <button
         type="button"
         onClick={dismiss}

@@ -17,13 +17,17 @@ async function sendJson(path: string, method: string): Promise<Response> {
 }
 
 async function extractErrorMessage(response: Response): Promise<string> {
-  const body = (await response.json().catch(() => null)) as { message?: string } | null;
+  const body = (await response.json().catch(() => null)) as {
+    message?: string;
+  } | null;
   return body?.message ?? `La requete a echoue (${response.status})`;
 }
 
 export const apiClient = {
   async fetchCurrentUser(): Promise<CurrentUser | null> {
-    const response = await fetch(`${BASE_URL}/auth/me`, { credentials: 'include' });
+    const response = await fetch(`${BASE_URL}/auth/me`, {
+      credentials: 'include',
+    });
     if (!response.ok) {
       return null;
     }
@@ -34,14 +38,18 @@ export const apiClient = {
     await sendJson('/auth/logout', 'POST');
   },
   async fetchMyProfile(): Promise<UserProfile> {
-    const response = await fetch(`${BASE_URL}/user-profiles/me`, { credentials: 'include' });
+    const response = await fetch(`${BASE_URL}/user-profiles/me`, {
+      credentials: 'include',
+    });
     if (!response.ok) {
       throw new Error(await extractErrorMessage(response));
     }
     return (await response.json()) as UserProfile;
   },
   async fetchGameSystems(): Promise<GameSystem[]> {
-    const response = await fetch(`${BASE_URL}/game-systems`, { credentials: 'include' });
+    const response = await fetch(`${BASE_URL}/game-systems`, {
+      credentials: 'include',
+    });
     if (!response.ok) {
       throw new Error(await extractErrorMessage(response));
     }
@@ -59,7 +67,9 @@ export const apiClient = {
     return (await response.json()) as GameSystem;
   },
   async fetchUsageStats(): Promise<UsageStats> {
-    const response = await fetch(`${BASE_URL}/admin/usage`, { credentials: 'include' });
+    const response = await fetch(`${BASE_URL}/admin/usage`, {
+      credentials: 'include',
+    });
     if (!response.ok) {
       throw new Error(await extractErrorMessage(response));
     }
@@ -74,7 +84,9 @@ export const apiClient = {
       throw new Error(await extractErrorMessage(response));
     }
   },
-  async updateDailyLlmQuota(value: number): Promise<{ key: string; value: string }> {
+  async updateDailyLlmQuota(
+    value: number,
+  ): Promise<{ key: string; value: string }> {
     const response = await fetch(`${BASE_URL}/admin/settings/daily-llm-quota`, {
       method: 'PATCH',
       credentials: 'include',

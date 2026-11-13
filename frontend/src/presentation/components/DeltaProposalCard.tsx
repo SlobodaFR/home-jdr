@@ -47,7 +47,9 @@ export function DeltaProposalCard({
             className="flex items-center justify-between font-sans-body text-body-md text-ink"
           >
             <span>{delta.label}</span>
-            <span className="font-sans-body text-body-strong">{delta.value}</span>
+            <span className="font-sans-body text-body-strong">
+              {delta.value}
+            </span>
           </li>
         ))}
       </ul>

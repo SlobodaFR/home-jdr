@@ -1,4 +1,11 @@
-import { createContext, ReactNode, useCallback, useContext, useMemo, useState } from 'react';
+import {
+  createContext,
+  ReactNode,
+  useCallback,
+  useContext,
+  useMemo,
+  useState,
+} from 'react';
 
 // Global error/notification pattern (CLAUDE.md > sober tone, DESIGN.md has no
 // dedicated toast token — built from existing tokens: canvas surface,
@@ -44,7 +51,10 @@ export function ToastProvider({ children }: { children: ReactNode }) {
     [dismissToast],
   );
 
-  const value = useMemo(() => ({ toasts, showToast, dismissToast }), [toasts, showToast, dismissToast]);
+  const value = useMemo(
+    () => ({ toasts, showToast, dismissToast }),
+    [toasts, showToast, dismissToast],
+  );
 
   return (
     <ToastContext.Provider value={value}>

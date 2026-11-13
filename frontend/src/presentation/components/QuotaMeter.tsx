@@ -26,11 +26,18 @@ export function QuotaMeter({ usedPercent, label, className }: QuotaMeterProps) {
         className="h-1 w-full rounded-sm bg-hairline-soft overflow-hidden"
       >
         <div
-          className={cx('h-full rounded-sm', isOverThreshold ? 'bg-danger' : 'bg-info')}
+          className={cx(
+            'h-full rounded-sm',
+            isOverThreshold ? 'bg-danger' : 'bg-info',
+          )}
           style={{ width: `${clamped}%` }}
         />
       </div>
-      {label ? <p className="font-sans-body text-utility-xs text-mute mt-xxs">{label}</p> : null}
+      {label ? (
+        <p className="font-sans-body text-utility-xs text-mute mt-xxs">
+          {label}
+        </p>
+      ) : null}
     </div>
   );
 }

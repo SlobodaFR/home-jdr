@@ -1,5 +1,8 @@
 import { CustomAttributeType } from '../../domain/game-system';
-import { CharacterSheetSchemaDraft, CustomAttributeDraft } from './character-sheet-schema-draft';
+import {
+  CharacterSheetSchemaDraft,
+  CustomAttributeDraft,
+} from './character-sheet-schema-draft';
 
 interface Props {
   value: CharacterSheetSchemaDraft;
@@ -20,32 +23,46 @@ export function CharacterSheetSchemaEditor({ value, onChange }: Props) {
   function removeInventoryItem(index: number) {
     onChange({
       ...value,
-      inventoryDefaultItems: value.inventoryDefaultItems.filter((_, i) => i !== index),
+      inventoryDefaultItems: value.inventoryDefaultItems.filter(
+        (_, i) => i !== index,
+      ),
     });
   }
 
-  function updateAttribute(index: number, changes: Partial<CustomAttributeDraft>) {
+  function updateAttribute(
+    index: number,
+    changes: Partial<CustomAttributeDraft>,
+  ) {
     const attributes = [...value.customAttributes];
     attributes[index] = { ...attributes[index], ...changes };
     onChange({ ...value, customAttributes: attributes });
   }
 
   function removeAttribute(index: number) {
-    onChange({ ...value, customAttributes: value.customAttributes.filter((_, i) => i !== index) });
+    onChange({
+      ...value,
+      customAttributes: value.customAttributes.filter((_, i) => i !== index),
+    });
   }
 
   return (
     <fieldset className="flex flex-col gap-lg">
-      <legend className="font-heading-md text-ink mb-sm">Fiche de personnage</legend>
+      <legend className="font-heading-md text-ink mb-sm">
+        Fiche de personnage
+      </legend>
 
       <label className="flex flex-col gap-xs">
-        <span className="font-body-strong text-ink">Points de vie de départ</span>
+        <span className="font-body-strong text-ink">
+          Points de vie de départ
+        </span>
         <input
           type="number"
           min={1}
           className={inputClass}
           value={value.hitPointsDefaultMax}
-          onChange={(e) => onChange({ ...value, hitPointsDefaultMax: e.target.value })}
+          onChange={(e) =>
+            onChange({ ...value, hitPointsDefaultMax: e.target.value })
+          }
           required
         />
       </label>
@@ -71,7 +88,12 @@ export function CharacterSheetSchemaEditor({ value, onChange }: Props) {
         ))}
         <button
           type="button"
-          onClick={() => onChange({ ...value, inventoryDefaultItems: [...value.inventoryDefaultItems, ''] })}
+          onClick={() =>
+            onChange({
+              ...value,
+              inventoryDefaultItems: [...value.inventoryDefaultItems, ''],
+            })
+          }
           className="self-start font-button-sm text-ink underline"
         >
           + Ajouter un objet
@@ -79,28 +101,41 @@ export function CharacterSheetSchemaEditor({ value, onChange }: Props) {
       </div>
 
       <div className="flex flex-col gap-sm">
-        <span className="font-body-strong text-ink">Attributs spécifiques au JdR</span>
+        <span className="font-body-strong text-ink">
+          Attributs spécifiques au JdR
+        </span>
         {value.customAttributes.map((attribute, index) => (
-          <div key={index} className="flex flex-col gap-xs border border-hairline rounded-sm p-sm">
+          <div
+            key={index}
+            className="flex flex-col gap-xs border border-hairline rounded-sm p-sm"
+          >
             <div className="flex gap-sm">
               <input
                 className={inputClass}
                 placeholder="clé (ex: strength)"
                 value={attribute.key}
-                onChange={(e) => updateAttribute(index, { key: e.target.value })}
+                onChange={(e) =>
+                  updateAttribute(index, { key: e.target.value })
+                }
               />
               <input
                 className={inputClass}
                 placeholder="Libellé (ex: Force)"
                 value={attribute.label}
-                onChange={(e) => updateAttribute(index, { label: e.target.value })}
+                onChange={(e) =>
+                  updateAttribute(index, { label: e.target.value })
+                }
               />
             </div>
             <div className="flex gap-sm items-center">
               <select
                 className={inputClass}
                 value={attribute.type}
-                onChange={(e) => updateAttribute(index, { type: e.target.value as CustomAttributeType })}
+                onChange={(e) =>
+                  updateAttribute(index, {
+                    type: e.target.value as CustomAttributeType,
+                  })
+                }
               >
                 <option value="number">Nombre</option>
                 <option value="text">Texte</option>
@@ -109,7 +144,9 @@ export function CharacterSheetSchemaEditor({ value, onChange }: Props) {
                 className={inputClass}
                 placeholder="Valeur par défaut"
                 value={attribute.default}
-                onChange={(e) => updateAttribute(index, { default: e.target.value })}
+                onChange={(e) =>
+                  updateAttribute(index, { default: e.target.value })
+                }
               />
               <button
                 type="button"

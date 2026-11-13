@@ -7,9 +7,9 @@ import { QuotaExceededClientError } from './session-api-client';
 const BASE_URL = '/api';
 
 async function extractErrorMessage(response: Response): Promise<string> {
-  const body = (await response.json().catch(() => null)) as
-    | { message?: string | string[] }
-    | null;
+  const body = (await response.json().catch(() => null)) as {
+    message?: string | string[];
+  } | null;
   const message = body?.message;
   if (Array.isArray(message)) {
     return message.join(', ');
@@ -26,14 +26,20 @@ async function parseJsonOrThrow<T>(response: Response): Promise<T> {
 
 export const characterCreationApiClient = {
   async getById(id: string): Promise<CharacterCreationSession> {
-    const response = await fetch(`${BASE_URL}/character-creation-sessions/${id}`, {
-      credentials: 'include',
-    });
+    const response = await fetch(
+      `${BASE_URL}/character-creation-sessions/${id}`,
+      {
+        credentials: 'include',
+      },
+    );
     return parseJsonOrThrow<CharacterCreationSession>(response);
   },
 
   /** Throws `QuotaExceededClientError` on HTTP 429 (daily LLM quota exhausted) - same contract as `sessionApiClient.submitTurnAction`. */
-  async sendMessage(id: string, message: string): Promise<CharacterCreationSession> {
+  async sendMessage(
+    id: string,
+    message: string,
+  ): Promise<CharacterCreationSession> {
     const response = await fetch(
       `${BASE_URL}/character-creation-sessions/${id}/messages`,
       {
