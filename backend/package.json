@@ -4,13 +4,12 @@
   "private": true,
   "scripts": {
     "build": "nest build && node scripts/copy-frontend.mjs",
-    "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
     "start": "nest start",
     "start:dev": "nest start --watch",
     "start:prod": "node dist/main",
-    "lint": "eslint \"{src,test}/**/*.ts\"",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "typecheck": "tsc --noEmit -p tsconfig.json"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.700.0",
@@ -33,7 +32,6 @@
     "web-push": "^3.6.7"
   },
   "devDependencies": {
-    "@eslint/js": "^9.18.0",
     "@nestjs/cli": "^10.4.0",
     "@nestjs/schematics": "^10.2.0",
     "@nestjs/testing": "^10.4.0",
@@ -44,18 +42,12 @@
     "@types/pdf-parse": "^1.1.4",
     "@types/supertest": "^6.0.2",
     "@types/web-push": "^3.6.4",
-    "eslint": "^9.18.0",
-    "eslint-config-prettier": "^9.1.0",
-    "eslint-plugin-prettier": "^5.2.1",
-    "globals": "^15.14.0",
-    "prettier": "^3.4.2",
     "source-map-support": "^0.5.21",
     "supertest": "^7.0.0",
     "ts-loader": "^9.5.1",
     "ts-node": "^10.9.2",
     "tsconfig-paths": "^4.2.0",
     "typescript": "^5.6.3",
-    "typescript-eslint": "^8.20.0",
     "vitest": "^5.1.0",
     "unplugin-swc": "^2.0.0",
     "@swc/core": "^1.16.22"
