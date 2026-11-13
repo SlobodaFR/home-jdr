@@ -42,21 +42,25 @@ describe('detectPlatform', () => {
 
 describe('isStandaloneDisplayMode', () => {
   afterEach(() => {
-    vi.restoreAllMocks();
+    vi.unstubAllGlobals();
   });
 
   it('returns false in a regular browser tab', () => {
-    vi.spyOn(window, 'matchMedia').mockReturnValue({
-      matches: false,
-    } as MediaQueryList);
+    // jsdom n'implémente pas matchMedia : on le fournit au lieu de l'espionner.
+    vi.stubGlobal(
+      'matchMedia',
+      vi.fn(() => ({ matches: false }) as MediaQueryList),
+    );
 
     expect(isStandaloneDisplayMode()).toBe(false);
   });
 
   it('returns true when display-mode: standalone matches', () => {
-    vi.spyOn(window, 'matchMedia').mockReturnValue({
-      matches: true,
-    } as MediaQueryList);
+    // jsdom n'implémente pas matchMedia : on le fournit au lieu de l'espionner.
+    vi.stubGlobal(
+      'matchMedia',
+      vi.fn(() => ({ matches: true }) as MediaQueryList),
+    );
 
     expect(isStandaloneDisplayMode()).toBe(true);
   });
