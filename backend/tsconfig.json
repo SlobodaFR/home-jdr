@@ -1,6 +1,6 @@
 {
   "compilerOptions": {
-    "module": "commonjs",
+    "module": "nodenext",
     "declaration": true,
     "removeComments": true,
     "emitDecoratorMetadata": true,
@@ -9,7 +9,7 @@
     "target": "ES2021",
     "sourceMap": true,
     "outDir": "./dist",
-    "incremental": true,
+    "incremental": false,
     "skipLibCheck": true,
     "strict": true,
     "strictNullChecks": true,
@@ -19,7 +19,9 @@
     "noFallthroughCasesInSwitch": false,
     "esModuleInterop": true,
     "types": ["node", "multer", "vitest/globals"],
-    "rootDir": "./src"
+    "rootDir": "./src",
+    "moduleResolution": "nodenext",
+    "lib": ["ES2023"]
   },
   "include": ["src"]
 }
