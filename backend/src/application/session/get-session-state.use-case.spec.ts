@@ -106,7 +106,7 @@ describe('GetSessionStateUseCase', () => {
     const turnResolutionRepository = new InMemoryTurnResolutionRepository(
       resolutions,
     );
-    const findRecentSpy = jest.spyOn(
+    const findRecentSpy = vi.spyOn(
       turnResolutionRepository,
       'findRecentBySessionId',
     );

@@ -1,3 +1,4 @@
+import type { Mock } from 'vitest';
 import { ConfigService } from '@nestjs/config';
 import { OpenAiGameMasterAdapter } from './openai-game-master.adapter';
 import {
@@ -15,7 +16,7 @@ function buildHarness(): LlmGameMasterContractHarness {
   const adapter = new OpenAiGameMasterAdapter(
     fakeConfig({ OPENAI_API_KEY: 'test-api-key' }),
   );
-  const mockFetch = jest.fn();
+  const mockFetch = vi.fn();
   global.fetch = mockFetch;
 
   return {
@@ -150,7 +151,7 @@ describe('OpenAiGameMasterAdapter', () => {
       diceFacts: [],
     });
 
-    const mockFetch = global.fetch as unknown as jest.Mock;
+    const mockFetch = global.fetch as unknown as Mock;
     const [url, init] = mockFetch.mock.calls[0] as [string, RequestInit];
     expect(url).toBe('https://api.openai.com/v1/chat/completions');
     expect((init.headers as Record<string, string>).Authorization).toBe(
@@ -179,7 +180,7 @@ describe('OpenAiGameMasterAdapter', () => {
       draftCharacter: {},
     });
 
-    const mockFetch = global.fetch as unknown as jest.Mock;
+    const mockFetch = global.fetch as unknown as Mock;
     const [, init] = mockFetch.mock.calls[0] as [string, RequestInit];
     const body = JSON.parse(init.body as string) as {
       tool_choice?: { function: { name: string } };
@@ -234,7 +235,7 @@ describe('OpenAiGameMasterAdapter', () => {
     const adapter = new OpenAiGameMasterAdapter(
       fakeConfig({ OPENAI_API_KEY: 'test-api-key' }),
     );
-    const mockFetch = jest.fn().mockResolvedValueOnce({
+    const mockFetch = vi.fn().mockResolvedValueOnce({
       ok: true,
       status: 200,
       json: () =>

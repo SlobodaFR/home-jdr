@@ -172,7 +172,7 @@ describe('NarrateSessionOpeningUseCase', () => {
     const { useCase, llm } = buildUseCase({
       gameSessionRepository: new InMemoryGameSessionRepository([]),
     });
-    const narrateOpeningSpy = jest.spyOn(llm, 'narrateOpening');
+    const narrateOpeningSpy = vi.spyOn(llm, 'narrateOpening');
 
     const result = await useCase.execute({ sessionId: 'missing-session' });
 
@@ -186,7 +186,7 @@ describe('NarrateSessionOpeningUseCase', () => {
     const { useCase, session, llm, gameSessionRepository } = buildUseCase({
       usageQuotaPort,
     });
-    const narrateOpeningSpy = jest.spyOn(llm, 'narrateOpening');
+    const narrateOpeningSpy = vi.spyOn(llm, 'narrateOpening');
 
     const result = await useCase.execute({ sessionId: session.id });
 
