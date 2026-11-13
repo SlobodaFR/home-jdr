@@ -18,6 +18,12 @@
     "test": "npm run test:backend && npm run test:frontend"
   },
   "engines": {
-    "node": ">=20"
+    "node": ">=26"
+  },
+  "allowScripts": {
+    "better-sqlite3": true,
+    "esbuild": true,
+    "@nestjs/core": false,
+    "fsevents": false
   }
 }
