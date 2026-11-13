@@ -361,7 +361,7 @@ describe('ResolveSceneUseCase', () => {
       }),
     ];
 
-    const summarizeSpy = jest.spyOn(llm, 'summarize');
+    const summarizeSpy = vi.spyOn(llm, 'summarize');
 
     await useCase.resolve(session, submissions);
 
@@ -381,7 +381,7 @@ describe('ResolveSceneUseCase', () => {
         actionText: 'Action',
       }),
     ];
-    const summarizeSpy = jest.spyOn(llm, 'summarize');
+    const summarizeSpy = vi.spyOn(llm, 'summarize');
 
     await useCase.resolve(session, submissions);
 
@@ -429,7 +429,7 @@ describe('ResolveSceneUseCase', () => {
       const { useCase, session, diceRoller, llm } = buildUseCase({
         usageQuotaPort,
       });
-      const resolveSceneSpy = jest.spyOn(llm, 'resolveScene');
+      const resolveSceneSpy = vi.spyOn(llm, 'resolveScene');
       const submissions = [
         TurnSubmission.create({
           sessionId: session.id,

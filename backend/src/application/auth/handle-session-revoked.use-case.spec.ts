@@ -15,11 +15,11 @@ class InMemoryRevokedSessionRepository extends RevokedSessionRepository {
 
 describe('HandleSessionRevokedUseCase', () => {
   beforeEach(() => {
-    jest.useFakeTimers().setSystemTime(new Date('2026-06-01T00:00:00Z'));
+    vi.useFakeTimers().setSystemTime(new Date('2026-06-01T00:00:00Z'));
   });
 
   afterEach(() => {
-    jest.useRealTimers();
+    vi.useRealTimers();
   });
 
   it('records the current time as the revocation timestamp for the user', async () => {

@@ -1,3 +1,4 @@
+import type { Mock } from 'vitest';
 import { ConfigService } from '@nestjs/config';
 import { ClaudeGameMasterAdapter } from './claude-game-master.adapter';
 import {
@@ -15,7 +16,7 @@ function buildHarness(): LlmGameMasterContractHarness {
   const adapter = new ClaudeGameMasterAdapter(
     fakeConfig({ ANTHROPIC_API_KEY: 'test-api-key' }),
   );
-  const mockFetch = jest.fn();
+  const mockFetch = vi.fn();
   global.fetch = mockFetch;
 
   return {
@@ -127,7 +128,7 @@ describe('ClaudeGameMasterAdapter', () => {
       diceFacts: [],
     });
 
-    const mockFetch = global.fetch as unknown as jest.Mock;
+    const mockFetch = global.fetch as unknown as Mock;
     const [url, init] = mockFetch.mock.calls[0] as [string, RequestInit];
     expect(url).toBe('https://api.anthropic.com/v1/messages');
     expect((init.headers as Record<string, string>)['x-api-key']).toBe(
@@ -156,7 +157,7 @@ describe('ClaudeGameMasterAdapter', () => {
       draftCharacter: {},
     });
 
-    const mockFetch = global.fetch as unknown as jest.Mock;
+    const mockFetch = global.fetch as unknown as Mock;
     const [, init] = mockFetch.mock.calls[0] as [string, RequestInit];
     const body = JSON.parse(init.body as string) as {
       tool_choice?: { name: string };
@@ -203,7 +204,7 @@ describe('ClaudeGameMasterAdapter', () => {
       diceFacts: [],
     });
 
-    const mockFetch = global.fetch as unknown as jest.Mock;
+    const mockFetch = global.fetch as unknown as Mock;
     const [, init] = mockFetch.mock.calls[0] as [string, RequestInit];
     const body = JSON.parse(init.body as string) as {
       system?: {

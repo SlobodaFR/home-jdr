@@ -234,7 +234,7 @@ describe('SendCharacterCreationMessageUseCase', () => {
       ),
       usageQuotaPort,
     });
-    const assistSpy = jest.spyOn(llm, 'assistCharacterCreation');
+    const assistSpy = vi.spyOn(llm, 'assistCharacterCreation');
 
     await expect(
       useCase.execute({
