@@ -73,7 +73,8 @@ export interface ResolveSceneToolCharacterDelta {
 
 export interface ResolveSceneToolInput {
   narration_text: string;
-  character_deltas: ResolveSceneToolCharacterDelta[];
+  /** Required by the tool schema, but the model may still omit it. */
+  character_deltas?: ResolveSceneToolCharacterDelta[];
 }
 
 export function toSceneResolutionOutput(
@@ -261,13 +262,13 @@ export const ASSIST_CHARACTER_CREATION_TOOL_SCHEMA = {
 
 export interface AssistCharacterCreationToolInput {
   assistant_message: string;
-  draft_updates: {
+  draft_updates?: {
     name?: string;
     hit_points_max?: number;
     inventory?: string[];
     custom_attribute_changes?: Record<string, number | string>;
   };
-  ready_to_finalize: boolean;
+  ready_to_finalize?: boolean;
 }
 
 export function toCharacterCreationAssistOutput(

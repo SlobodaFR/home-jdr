@@ -60,7 +60,7 @@ describe('characterApiClient', () => {
           name: '',
           schema,
         }),
-      ).rejects.toThrow();
+      ).rejects.toThrow(Error);
     });
   });
 

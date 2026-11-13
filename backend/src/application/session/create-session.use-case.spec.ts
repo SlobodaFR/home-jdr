@@ -228,6 +228,6 @@ describe('CreateSessionUseCase', () => {
         createdByUserRole: 'adult',
         charactersVisibleToOthers: false,
       }),
-    ).rejects.toThrow();
+    ).rejects.toThrow(Error);
   });
 });

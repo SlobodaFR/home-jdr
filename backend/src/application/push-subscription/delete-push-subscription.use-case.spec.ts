@@ -26,7 +26,9 @@ describe('DeletePushSubscriptionUseCase', () => {
     const repository = new InMemoryPushSubscriptionRepository([subscription]);
     const useCase = new DeletePushSubscriptionUseCase(repository);
 
-    await expect(useCase.execute(subscription.id, 'user-2')).rejects.toThrow();
+    await expect(useCase.execute(subscription.id, 'user-2')).rejects.toThrow(
+      Error,
+    );
     await expect(repository.findById(subscription.id)).resolves.not.toBeNull();
   });
 
@@ -34,6 +36,8 @@ describe('DeletePushSubscriptionUseCase', () => {
     const repository = new InMemoryPushSubscriptionRepository();
     const useCase = new DeletePushSubscriptionUseCase(repository);
 
-    await expect(useCase.execute('missing-id', 'user-1')).rejects.toThrow();
+    await expect(useCase.execute('missing-id', 'user-1')).rejects.toThrow(
+      Error,
+    );
   });
 });

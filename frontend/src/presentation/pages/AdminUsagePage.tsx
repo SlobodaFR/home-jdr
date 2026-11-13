@@ -35,7 +35,7 @@ export function AdminUsagePage() {
   }, []);
 
   useEffect(() => {
-    refresh();
+    void refresh();
   }, [refresh]);
 
   async function handleSubmit(event: FormEvent) {

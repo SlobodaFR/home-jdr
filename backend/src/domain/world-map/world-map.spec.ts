@@ -28,7 +28,7 @@ describe('WorldMap', () => {
           imageStorageKey: 'world-maps/session-1/map.png',
           generationPrompt: 'Carte du monde',
         }),
-      ).toThrow();
+      ).toThrow(Error);
     });
 
     it('rejects a blank imageStorageKey', () => {
@@ -38,7 +38,7 @@ describe('WorldMap', () => {
           imageStorageKey: '   ',
           generationPrompt: 'Carte du monde',
         }),
-      ).toThrow();
+      ).toThrow(Error);
     });
   });
 });

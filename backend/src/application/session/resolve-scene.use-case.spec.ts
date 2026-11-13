@@ -417,7 +417,7 @@ describe('ResolveSceneUseCase', () => {
       new InMemoryUsageQuotaPort(),
     );
 
-    await expect(useCase.resolve(session, [])).rejects.toThrow();
+    await expect(useCase.resolve(session, [])).rejects.toThrow(Error);
   });
 
   it(

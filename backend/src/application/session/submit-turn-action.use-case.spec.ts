@@ -195,7 +195,7 @@ describe('SubmitTurnActionUseCase', () => {
           userId: 'user-3-mid-creation',
           actionText: 'Je voudrais agir aussi',
         }),
-      ).rejects.toThrow();
+      ).rejects.toThrow(Error);
     },
   );
 
@@ -256,7 +256,7 @@ describe('SubmitTurnActionUseCase', () => {
         userId: 'not-a-player',
         actionText: 'Action',
       }),
-    ).rejects.toThrow();
+    ).rejects.toThrow(Error);
   });
 
   it('rejects a submission while the session is already resolving', async () => {
@@ -278,7 +278,7 @@ describe('SubmitTurnActionUseCase', () => {
         userId: 'user-1',
         actionText: 'Action',
       }),
-    ).rejects.toThrow();
+    ).rejects.toThrow(Error);
   });
 
   it('opens the next turn when a new submission arrives after narrating', async () => {

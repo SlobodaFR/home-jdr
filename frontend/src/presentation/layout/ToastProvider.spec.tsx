@@ -33,6 +33,6 @@ describe('ToastProvider', () => {
       useToast();
       return null;
     }
-    expect(() => render(<Broken />)).toThrow();
+    expect(() => render(<Broken />)).toThrow(Error);
   });
 });

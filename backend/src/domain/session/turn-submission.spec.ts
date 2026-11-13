@@ -19,11 +19,11 @@ describe('TurnSubmission', () => {
   });
 
   it('rejects a blank action text', () => {
-    expect(() => createSubmission({ actionText: '   ' })).toThrow();
+    expect(() => createSubmission({ actionText: '   ' })).toThrow(Error);
   });
 
   it('rejects a turnNumber below 1', () => {
-    expect(() => createSubmission({ turnNumber: 0 })).toThrow();
+    expect(() => createSubmission({ turnNumber: 0 })).toThrow(Error);
   });
 
   it('defaults submittedAt to now', () => {

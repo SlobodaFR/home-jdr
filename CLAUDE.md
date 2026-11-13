@@ -66,8 +66,9 @@ tu es en train de violer l'architecture — reviens en arrière.
   `tdd-integration-patterns` déjà disponibles dans l'environnement Claude
   Code de l'utilisateur — les consulter avant d'écrire des tests, ne pas
   improviser un style de test différent.
-- **Tests** : `npm test` lance backend (jest) + frontend (vitest), comme
-  `home-budget`.
+- **Tests** : `npm test` lance backend + frontend (Vitest), comme
+  `home-budget`. Lint avec Oxlint (`npm run lint`), format avec Oxfmt
+  (`npm run format`), types avec `npm run typecheck`.
 
 ## Sécurité & argent réel — points d'attention spécifiques à ce projet
 

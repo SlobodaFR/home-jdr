@@ -40,11 +40,15 @@ describe('PushSubscription', () => {
   });
 
   it('rejects a blank userId', () => {
-    expect(() => PushSubscription.create(props({ userId: '   ' }))).toThrow();
+    expect(() => PushSubscription.create(props({ userId: '   ' }))).toThrow(
+      Error,
+    );
   });
 
   it('rejects a blank endpoint', () => {
-    expect(() => PushSubscription.create(props({ endpoint: '   ' }))).toThrow();
+    expect(() => PushSubscription.create(props({ endpoint: '   ' }))).toThrow(
+      Error,
+    );
   });
 
   it('rejects blank keys', () => {
@@ -52,12 +56,12 @@ describe('PushSubscription', () => {
       PushSubscription.create(
         props({ keys: { p256dh: '', auth: 'auth-value' } }),
       ),
-    ).toThrow();
+    ).toThrow(Error);
     expect(() =>
       PushSubscription.create(
         props({ keys: { p256dh: 'p256dh-value', auth: '' } }),
       ),
-    ).toThrow();
+    ).toThrow(Error);
   });
 
   it('returns a defensive copy of keys', () => {

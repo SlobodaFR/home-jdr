@@ -32,21 +32,21 @@ describe('CharacterCreationSession', () => {
           gameSystemId: 'game-system-1',
           userId: 'user-1',
         }),
-      ).toThrow();
+      ).toThrow(Error);
       expect(() =>
         CharacterCreationSession.create({
           gameSessionId: 'session-1',
           gameSystemId: '   ',
           userId: 'user-1',
         }),
-      ).toThrow();
+      ).toThrow(Error);
       expect(() =>
         CharacterCreationSession.create({
           gameSessionId: 'session-1',
           gameSystemId: 'game-system-1',
           userId: '   ',
         }),
-      ).toThrow();
+      ).toThrow(Error);
     });
   });
 
@@ -112,7 +112,7 @@ describe('CharacterCreationSession', () => {
           userMessage: 'Encore un message ?',
           assistantMessage: 'Non, la fiche est validee.',
         }),
-      ).toThrow();
+      ).toThrow(Error);
     });
   });
 
@@ -128,7 +128,7 @@ describe('CharacterCreationSession', () => {
     it('throws when completing an already-completed session', () => {
       const session = createSession().complete();
 
-      expect(() => session.complete()).toThrow();
+      expect(() => session.complete()).toThrow(Error);
     });
   });
 });

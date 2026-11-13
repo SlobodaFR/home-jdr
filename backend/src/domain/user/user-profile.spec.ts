@@ -11,7 +11,7 @@ describe('UserProfile', () => {
   it('rejects an unknown role', () => {
     expect(() =>
       UserProfile.create({ userId: 'user-1', role: 'superadmin' as never }),
-    ).toThrow();
+    ).toThrow(Error);
   });
 
   it('withRole() returns a new instance with the role changed', () => {

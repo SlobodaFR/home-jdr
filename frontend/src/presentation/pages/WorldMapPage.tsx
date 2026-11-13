@@ -260,8 +260,8 @@ export function WorldMapPage() {
           />
           {view.pins.map((pin) => {
             const isDragging = draggingPinId === pin.id && dragPosition;
-            const x = isDragging ? dragPosition!.x : pin.positionX;
-            const y = isDragging ? dragPosition!.y : pin.positionY;
+            const x = isDragging ? dragPosition.x : pin.positionX;
+            const y = isDragging ? dragPosition.y : pin.positionY;
             return (
               <div
                 key={pin.id}

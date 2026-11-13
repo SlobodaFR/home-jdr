@@ -98,7 +98,9 @@ export class MapPin {
     >,
   ): MapPin {
     const definedChanges = Object.fromEntries(
-      Object.entries(changes).filter(([, value]) => value !== undefined),
+      (Object.entries(changes) as [string, unknown][]).filter(
+        ([, value]) => value !== undefined,
+      ),
     );
     return new MapPin({ ...this.props, ...definedChanges });
   }

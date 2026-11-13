@@ -28,7 +28,7 @@ describe('GetCharacterCreationSessionUseCase', () => {
       new InMemoryCharacterCreationSessionRepository(),
     );
 
-    await expect(useCase.execute('missing', 'user-1')).rejects.toThrow();
+    await expect(useCase.execute('missing', 'user-1')).rejects.toThrow(Error);
   });
 
   it('throws ForbiddenException when the requester does not own the session', async () => {
@@ -40,6 +40,6 @@ describe('GetCharacterCreationSessionUseCase', () => {
 
     await expect(
       useCase.execute(creationSession.id, 'someone-else'),
-    ).rejects.toThrow();
+    ).rejects.toThrow(Error);
   });
 });

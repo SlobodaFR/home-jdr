@@ -175,7 +175,7 @@ describe('WorldMapPage', () => {
       x: 0,
       y: 0,
       toJSON: () => ({}),
-    } as DOMRect);
+    });
 
     fireEvent.click(container, { clientX: 400, clientY: 250 });
 

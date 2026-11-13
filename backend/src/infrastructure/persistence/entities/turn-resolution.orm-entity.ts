@@ -23,7 +23,7 @@ export class TurnResolutionOrmEntity {
   narrationText!: string;
 
   @Column({ type: 'simple-json', name: 'dice_rolls', default: '[]' })
-  diceRolls!: TurnResolutionDiceRoll[];
+  diceRolls!: TurnResolutionDiceRoll[] | null;
 
   @CreateDateColumn({ type: 'datetime', name: 'resolved_at' })
   resolvedAt!: Date;

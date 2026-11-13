@@ -91,7 +91,6 @@ describe('pushNotificationManager', () => {
         pushManager: { subscribe: vi.fn().mockResolvedValue(fakeSubscription) },
       };
       vi.stubGlobal('navigator', {
-        ...navigator,
         serviceWorker: { ready: Promise.resolve(registration) },
       });
 
@@ -115,13 +114,12 @@ describe('pushNotificationManager', () => {
         pushManager: { subscribe: vi.fn().mockResolvedValue(fakeSubscription) },
       };
       vi.stubGlobal('navigator', {
-        ...navigator,
         serviceWorker: { ready: Promise.resolve(registration) },
       });
 
       await expect(
         pushNotificationManager.subscribe('aGVsbG8'),
-      ).rejects.toThrow();
+      ).rejects.toThrow(Error);
     });
   });
 
@@ -134,7 +132,6 @@ describe('pushNotificationManager', () => {
         },
       };
       vi.stubGlobal('navigator', {
-        ...navigator,
         serviceWorker: { ready: Promise.resolve(registration) },
         PushManager: {},
       });
@@ -150,7 +147,6 @@ describe('pushNotificationManager', () => {
         pushManager: { getSubscription: vi.fn().mockResolvedValue(null) },
       };
       vi.stubGlobal('navigator', {
-        ...navigator,
         serviceWorker: { ready: Promise.resolve(registration) },
         PushManager: {},
       });

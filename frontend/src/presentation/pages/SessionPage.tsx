@@ -129,19 +129,18 @@ export function SessionPage() {
   // Mechanical actions come from the session's GameSystem, loaded once the
   // session state resolves its gameSystemId (see tasks/04-llm-orchestration.md
   // - "action mécanique" dropdown, populated from GameSystem.mechanicalActions).
+  const gameSystemId = state?.session.gameSystemId;
   useEffect(() => {
-    if (!state) {
+    if (!gameSystemId) {
       return;
     }
     apiClient
       .fetchGameSystems()
       .then((systems) => {
-        setGameSystem(
-          systems.find((s) => s.id === state.session.gameSystemId) ?? null,
-        );
+        setGameSystem(systems.find((s) => s.id === gameSystemId) ?? null);
       })
       .catch(() => setGameSystem(null));
-  }, [state?.session.gameSystemId]);
+  }, [gameSystemId]);
 
   // Character list, gated server-side by charactersVisibleToOthers: the
   // caller only ever gets back what they're allowed to see (own sheet, or

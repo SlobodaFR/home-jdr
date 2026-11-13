@@ -24,7 +24,10 @@ export function detectPlatform(
 
 /** True once the app runs installed (not in a regular browser tab). */
 export function isStandaloneDisplayMode(): boolean {
-  if (window.matchMedia?.('(display-mode: standalone)').matches) {
+  if (
+    typeof window.matchMedia === 'function' &&
+    window.matchMedia('(display-mode: standalone)').matches
+  ) {
     return true;
   }
   // iOS/iPadOS Safari legacy, non-standard property - has no

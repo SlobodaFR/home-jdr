@@ -64,7 +64,10 @@
         "typescript/no-unsafe-assignment": "off",
         "typescript/no-unsafe-member-access": "off",
         "typescript/no-non-null-assertion": "off",
-        "typescript/no-unnecessary-condition": "off"
+        "typescript/no-unnecessary-condition": "off",
+        "typescript/unbound-method": "off",
+        "vitest/require-mock-type-parameters": "off",
+        "typescript/no-unsafe-argument": "warn"
       }
     }
   ]

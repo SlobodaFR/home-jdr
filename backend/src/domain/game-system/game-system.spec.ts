@@ -38,7 +38,9 @@ describe('GameSystem', () => {
   });
 
   it('rejects an empty name', () => {
-    expect(() => GameSystem.create({ ...baseProps, name: '  ' })).toThrow();
+    expect(() => GameSystem.create({ ...baseProps, name: '  ' })).toThrow(
+      Error,
+    );
   });
 
   it('rejects a character sheet schema without a positive hitPoints.defaultMax', () => {

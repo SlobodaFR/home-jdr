@@ -48,6 +48,6 @@ describe('RejectCharacterDeltaUseCase', () => {
       new InMemoryPendingCharacterDeltaRepository(),
     );
 
-    await expect(useCase.execute('missing')).rejects.toThrow();
+    await expect(useCase.execute('missing')).rejects.toThrow(Error);
   });
 });

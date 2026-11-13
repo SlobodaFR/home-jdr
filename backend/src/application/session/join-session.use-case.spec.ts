@@ -126,7 +126,7 @@ describe('JoinSessionUseCase', () => {
         userId: 'user-2',
         userRole: 'adult',
       }),
-    ).rejects.toThrow();
+    ).rejects.toThrow(Error);
   });
 
   it('rejects a child account joining a session whose JdR is not adapted for children, with a clear message', async () => {

@@ -101,7 +101,9 @@ describe('ListCharactersForSessionUseCase', () => {
       new InMemorySessionPlayerRepository(),
     );
 
-    await expect(useCase.execute(session.id, 'not-a-player')).rejects.toThrow();
+    await expect(useCase.execute(session.id, 'not-a-player')).rejects.toThrow(
+      Error,
+    );
   });
 
   it('throws when the session does not exist', async () => {
@@ -111,6 +113,6 @@ describe('ListCharactersForSessionUseCase', () => {
       new InMemorySessionPlayerRepository(),
     );
 
-    await expect(useCase.execute('missing', 'user-1')).rejects.toThrow();
+    await expect(useCase.execute('missing', 'user-1')).rejects.toThrow(Error);
   });
 });

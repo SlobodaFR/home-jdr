@@ -22,7 +22,7 @@ describe('TurnResolution', () => {
         turnNumber: 0,
         narrationText: 'texte',
       }),
-    ).toThrow();
+    ).toThrow(Error);
   });
 
   it('defaults diceRolls to an empty array for a pure-narration turn', () => {
