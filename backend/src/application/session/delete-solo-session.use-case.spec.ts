@@ -96,7 +96,10 @@ describe('DeleteSoloSessionUseCase', () => {
     const session = buildSession();
     const gameSessionRepository = new InMemoryGameSessionRepository([session]);
     const sessionPlayerRepository = new InMemorySessionPlayerRepository([]);
-    const useCase = buildUseCase(gameSessionRepository, sessionPlayerRepository);
+    const useCase = buildUseCase(
+      gameSessionRepository,
+      sessionPlayerRepository,
+    );
 
     await useCase.execute({ sessionId: session.id, userId: 'user-1' });
 
@@ -109,7 +112,10 @@ describe('DeleteSoloSessionUseCase', () => {
     const session = buildSession();
     const gameSessionRepository = new InMemoryGameSessionRepository([session]);
     const sessionPlayerRepository = new InMemorySessionPlayerRepository([]);
-    const useCase = buildUseCase(gameSessionRepository, sessionPlayerRepository);
+    const useCase = buildUseCase(
+      gameSessionRepository,
+      sessionPlayerRepository,
+    );
 
     await expect(
       useCase.execute({ sessionId: session.id, userId: 'intruder' }),
