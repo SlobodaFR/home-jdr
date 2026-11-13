@@ -39,7 +39,12 @@ export function AppShell({ navItems, children, header }: AppShellProps) {
         {header}
         <nav aria-label="Sections" className="flex flex-col gap-xs">
           {navItems.map((item) => (
-            <NavLink key={item.key} to={item.to} className={navLinkClassName} aria-label={item.label}>
+            <NavLink
+              key={item.key}
+              to={item.to}
+              className={navLinkClassName}
+              aria-label={item.label}
+            >
               {item.icon}
               <span>{item.label}</span>
             </NavLink>
@@ -54,7 +59,9 @@ export function AppShell({ navItems, children, header }: AppShellProps) {
           </header>
         ) : null}
 
-        <main className="flex-1 px-lg py-xl desktop:py-section">{children}</main>
+        <main className="flex-1 px-lg py-xl desktop:py-section">
+          {children}
+        </main>
 
         <nav
           aria-label="Sections"

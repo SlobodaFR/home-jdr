@@ -20,7 +20,7 @@ describe('SessionPlayer', () => {
         userId: 'user-1',
         characterId: 'character-1',
       }),
-    ).toThrow();
+    ).toThrow(Error);
   });
 
   it('rejects a blank userId', () => {
@@ -30,7 +30,7 @@ describe('SessionPlayer', () => {
         userId: '   ',
         characterId: 'character-1',
       }),
-    ).toThrow();
+    ).toThrow(Error);
   });
 
   it('rejects a blank characterId', () => {
@@ -40,6 +40,6 @@ describe('SessionPlayer', () => {
         userId: 'user-1',
         characterId: '   ',
       }),
-    ).toThrow();
+    ).toThrow(Error);
   });
 });

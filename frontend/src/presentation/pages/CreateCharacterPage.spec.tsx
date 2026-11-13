@@ -9,12 +9,17 @@ vi.mock('../../infrastructure/character-api-client', () => ({
   characterApiClient: { create: vi.fn() },
 }));
 
-function renderPage(initialEntry = '/characters/new?gameSystemId=gs-1&sessionId=session-1') {
+function renderPage(
+  initialEntry = '/characters/new?gameSystemId=gs-1&sessionId=session-1',
+) {
   return render(
     <MemoryRouter initialEntries={[initialEntry]}>
       <Routes>
         <Route path="/characters/new" element={<CreateCharacterPage />} />
-        <Route path="/characters/:id" element={<div>Fiche personnage chargée</div>} />
+        <Route
+          path="/characters/:id"
+          element={<div>Fiche personnage chargée</div>}
+        />
       </Routes>
     </MemoryRouter>,
   );
@@ -29,7 +34,9 @@ describe('CreateCharacterPage', () => {
     const user = userEvent.setup();
     renderPage();
 
-    await user.click(screen.getByRole('button', { name: 'Créer mon personnage' }));
+    await user.click(
+      screen.getByRole('button', { name: 'Créer mon personnage' }),
+    );
 
     expect(
       screen.getByText('Le nom du personnage est requis.'),
@@ -55,7 +62,9 @@ describe('CreateCharacterPage', () => {
     renderPage();
 
     await user.type(screen.getByLabelText('Nom du personnage'), 'Aragorn');
-    await user.click(screen.getByRole('button', { name: 'Créer mon personnage' }));
+    await user.click(
+      screen.getByRole('button', { name: 'Créer mon personnage' }),
+    );
 
     await waitFor(() => {
       expect(characterApiClient.create).toHaveBeenCalledWith(

@@ -3,7 +3,10 @@ import { AdminSessionView } from '../../domain/admin-session';
 import { SessionStatus } from '../../domain/session';
 import { adminSessionsApiClient } from '../../infrastructure/admin-sessions-api-client';
 import { BackButton } from '../components/BackButton';
-import { SessionStatusPill, SessionStatusVariant } from '../components/SessionStatusPill';
+import {
+  SessionStatusPill,
+  SessionStatusVariant,
+} from '../components/SessionStatusPill';
 
 function statusVariant(status: SessionStatus): SessionStatusVariant {
   return status === 'resolving' ? 'resolving' : 'waiting';
@@ -29,7 +32,9 @@ export function AdminSessionsPage() {
     adminSessionsApiClient
       .fetchAll()
       .then(setSessions)
-      .catch((err: unknown) => setError(err instanceof Error ? err.message : 'Chargement impossible'))
+      .catch((err: unknown) =>
+        setError(err instanceof Error ? err.message : 'Chargement impossible'),
+      )
       .finally(() => setLoading(false));
   }, []);
 
@@ -67,7 +72,9 @@ export function AdminSessionsPage() {
             <div className="flex flex-col gap-xxs">
               <span className="font-caption-sm text-mute">Participants :</span>
               {session.participants.length === 0 ? (
-                <span className="font-caption-sm text-mute">Aucun joueur actif.</span>
+                <span className="font-caption-sm text-mute">
+                  Aucun joueur actif.
+                </span>
               ) : (
                 <ul className="flex flex-col gap-xxs">
                   {session.participants.map((participant) => (
@@ -76,7 +83,9 @@ export function AdminSessionsPage() {
                       className="font-body-md text-ink"
                     >
                       {participant.characterName}{' '}
-                      <span className="font-caption-sm text-mute">({participant.userId})</span>
+                      <span className="font-caption-sm text-mute">
+                        ({participant.userId})
+                      </span>
                     </li>
                   ))}
                 </ul>

@@ -39,7 +39,10 @@ tâche donnée plutôt que d'improviser un contournement silencieux.
 ### Tests
 
 ```bash
-npm test   # backend (jest) + frontend (vitest)
+npm test   # backend + frontend (Vitest)
+npm run lint           # Oxlint (type-aware)
+npm run format:check   # Oxfmt (`npm run format` pour corriger)
+npm run typecheck      # tsc backend + frontend
 ```
 
 ## Build & Docker
@@ -53,7 +56,7 @@ L'image unique sert le frontend buildé sur `/` et l'API sur `/api`.
 
 ## Déploiement
 
-- CI : `.github/workflows/ci.yml` (lint, type-check, tests, build, vérif
+- CI : `.github/workflows/ci.yml` (lint, format, type-check, tests, build, vérif
   build Docker sur PR).
 - Publication d'image : `.github/workflows/build-and-publish.yml` (push sur
   `main` ou release → GHCR).

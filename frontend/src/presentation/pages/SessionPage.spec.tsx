@@ -1,10 +1,19 @@
-import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
+import {
+  cleanup,
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+} from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { apiClient } from '../../infrastructure/api-client';
 import { characterApiClient } from '../../infrastructure/character-api-client';
-import { QuotaExceededClientError, sessionApiClient } from '../../infrastructure/session-api-client';
+import {
+  QuotaExceededClientError,
+  sessionApiClient,
+} from '../../infrastructure/session-api-client';
 import { SessionPage } from './SessionPage';
 
 vi.mock('../../infrastructure/session-api-client', async () => {
@@ -26,7 +35,10 @@ vi.mock('../../infrastructure/session-api-client', async () => {
 
 const mockedNavigate = vi.fn();
 vi.mock('react-router-dom', async () => {
-  const actual = await vi.importActual<typeof import('react-router-dom')>('react-router-dom');
+  const actual =
+    await vi.importActual<typeof import('react-router-dom')>(
+      'react-router-dom',
+    );
   return { ...actual, useNavigate: () => mockedNavigate };
 });
 
@@ -42,7 +54,9 @@ vi.mock('../../infrastructure/character-api-client', () => ({
 }));
 
 vi.mock('../auth/AuthProvider', () => ({
-  useAuth: () => ({ user: { id: 'user-1', email: 'user@test.dev', name: 'Test User' } }),
+  useAuth: () => ({
+    user: { id: 'user-1', email: 'user@test.dev', name: 'Test User' },
+  }),
 }));
 
 const baseSession = {
@@ -65,9 +79,17 @@ const gameSystem = {
   adaptedForChildren: false,
   rulesText: 'regles',
   rulesSourceFileName: 'rules.pdf',
-  characterSheetSchema: { hitPoints: { defaultMax: 30 }, inventory: { defaultItems: [] }, customAttributes: [] },
+  characterSheetSchema: {
+    hitPoints: { defaultMax: 30 },
+    inventory: { defaultItems: [] },
+    customAttributes: [],
+  },
   mechanicalActions: [
-    { actionKey: 'melee-attack', label: 'Attaque au corps a corps', diceFormula: '1d20+3' },
+    {
+      actionKey: 'melee-attack',
+      label: 'Attaque au corps a corps',
+      diceFormula: '1d20+3',
+    },
   ],
   createdAt: '2026-01-01T00:00:00.000Z',
 };
@@ -85,7 +107,10 @@ function renderPage() {
 describe('SessionPage', () => {
   beforeEach(() => {
     vi.mocked(characterApiClient.listBySession).mockResolvedValue([]);
-    vi.mocked(apiClient.fetchMyProfile).mockResolvedValue({ userId: 'user-1', role: 'adult' });
+    vi.mocked(apiClient.fetchMyProfile).mockResolvedValue({
+      userId: 'user-1',
+      role: 'adult',
+    });
   });
 
   afterEach(() => {
@@ -179,7 +204,11 @@ describe('SessionPage', () => {
     await user.click(screen.getByRole('button', { name: 'Valider' }));
 
     await waitFor(() => {
-      expect(sessionApiClient.validateDelta).toHaveBeenCalledWith('session-1', 1, 'delta-1');
+      expect(sessionApiClient.validateDelta).toHaveBeenCalledWith(
+        'session-1',
+        1,
+        'delta-1',
+      );
     });
     expect(sessionApiClient.getState).toHaveBeenCalledTimes(2);
   });
@@ -225,7 +254,11 @@ describe('SessionPage', () => {
     await user.click(screen.getByRole('button', { name: 'Ignorer' }));
 
     await waitFor(() => {
-      expect(sessionApiClient.rejectDelta).toHaveBeenCalledWith('session-1', 1, 'delta-1');
+      expect(sessionApiClient.rejectDelta).toHaveBeenCalledWith(
+        'session-1',
+        1,
+        'delta-1',
+      );
     });
   });
 
@@ -251,7 +284,9 @@ describe('SessionPage', () => {
     fireEvent.change(screen.getByPlaceholderText('Que faites-vous ?'), {
       target: { value: 'Je frappe le gobelin' },
     });
-    await user.click(screen.getByRole('button', { name: 'Soumettre mon action' }));
+    await user.click(
+      screen.getByRole('button', { name: 'Soumettre mon action' }),
+    );
 
     await waitFor(() => {
       expect(sessionApiClient.submitTurnAction).toHaveBeenCalledWith(
@@ -279,11 +314,15 @@ describe('SessionPage', () => {
     fireEvent.change(await screen.findByPlaceholderText('Que faites-vous ?'), {
       target: { value: "J'ouvre la porte" },
     });
-    await user.click(screen.getByRole('button', { name: 'Soumettre mon action' }));
+    await user.click(
+      screen.getByRole('button', { name: 'Soumettre mon action' }),
+    );
 
     await waitFor(() => {
       expect(
-        screen.getByText('Le MJ numérique a atteint sa limite du jour, réessaie plus tard'),
+        screen.getByText(
+          'Le MJ numérique a atteint sa limite du jour, réessaie plus tard',
+        ),
       ).toBeInTheDocument();
     });
   });
@@ -291,7 +330,13 @@ describe('SessionPage', () => {
   it('shows "Supprimer la partie" for a solo session and deletes it on confirm', async () => {
     vi.mocked(sessionApiClient.getState).mockResolvedValue({
       session: baseSession,
-      players: [{ userId: 'user-1', characterId: 'character-1', hasSubmittedCurrentTurn: false }],
+      players: [
+        {
+          userId: 'user-1',
+          characterId: 'character-1',
+          hasSubmittedCurrentTurn: false,
+        },
+      ],
       recentTurns: [],
     });
     vi.mocked(apiClient.fetchGameSystems).mockResolvedValue([gameSystem]);
@@ -301,8 +346,12 @@ describe('SessionPage', () => {
     const user = userEvent.setup();
     renderPage();
 
-    const deleteButton = await screen.findByRole('button', { name: 'Supprimer la partie' });
-    expect(screen.queryByRole('button', { name: 'Quitter la partie' })).not.toBeInTheDocument();
+    const deleteButton = await screen.findByRole('button', {
+      name: 'Supprimer la partie',
+    });
+    expect(
+      screen.queryByRole('button', { name: 'Quitter la partie' }),
+    ).not.toBeInTheDocument();
     await user.click(deleteButton);
 
     await waitFor(() => {
@@ -326,8 +375,12 @@ describe('SessionPage', () => {
     const user = userEvent.setup();
     renderPage();
 
-    const deleteButton = await screen.findByRole('button', { name: 'Supprimer la partie' });
-    expect(screen.queryByRole('button', { name: 'Quitter la partie' })).not.toBeInTheDocument();
+    const deleteButton = await screen.findByRole('button', {
+      name: 'Supprimer la partie',
+    });
+    expect(
+      screen.queryByRole('button', { name: 'Quitter la partie' }),
+    ).not.toBeInTheDocument();
     await user.click(deleteButton);
 
     await waitFor(() => {
@@ -341,7 +394,13 @@ describe('SessionPage', () => {
   it('does not delete a solo session when the confirm dialog is dismissed', async () => {
     vi.mocked(sessionApiClient.getState).mockResolvedValue({
       session: baseSession,
-      players: [{ userId: 'user-1', characterId: 'character-1', hasSubmittedCurrentTurn: false }],
+      players: [
+        {
+          userId: 'user-1',
+          characterId: 'character-1',
+          hasSubmittedCurrentTurn: false,
+        },
+      ],
       recentTurns: [],
     });
     vi.mocked(apiClient.fetchGameSystems).mockResolvedValue([gameSystem]);
@@ -350,7 +409,9 @@ describe('SessionPage', () => {
     const user = userEvent.setup();
     renderPage();
 
-    await user.click(await screen.findByRole('button', { name: 'Supprimer la partie' }));
+    await user.click(
+      await screen.findByRole('button', { name: 'Supprimer la partie' }),
+    );
 
     expect(sessionApiClient.deleteSession).not.toHaveBeenCalled();
     expect(mockedNavigate).not.toHaveBeenCalled();
@@ -360,20 +421,34 @@ describe('SessionPage', () => {
     vi.mocked(sessionApiClient.getState).mockResolvedValue({
       session: baseSession,
       players: [
-        { userId: 'user-1', characterId: 'character-1', hasSubmittedCurrentTurn: false },
-        { userId: 'user-2', characterId: 'character-2', hasSubmittedCurrentTurn: false },
+        {
+          userId: 'user-1',
+          characterId: 'character-1',
+          hasSubmittedCurrentTurn: false,
+        },
+        {
+          userId: 'user-2',
+          characterId: 'character-2',
+          hasSubmittedCurrentTurn: false,
+        },
       ],
       recentTurns: [],
     });
     vi.mocked(apiClient.fetchGameSystems).mockResolvedValue([gameSystem]);
-    vi.mocked(sessionApiClient.leaveSession).mockResolvedValue({ sessionDeleted: false });
+    vi.mocked(sessionApiClient.leaveSession).mockResolvedValue({
+      sessionDeleted: false,
+    });
     vi.spyOn(window, 'confirm').mockReturnValue(true);
 
     const user = userEvent.setup();
     renderPage();
 
-    const leaveButton = await screen.findByRole('button', { name: 'Quitter la partie' });
-    expect(screen.queryByRole('button', { name: 'Supprimer la partie' })).not.toBeInTheDocument();
+    const leaveButton = await screen.findByRole('button', {
+      name: 'Quitter la partie',
+    });
+    expect(
+      screen.queryByRole('button', { name: 'Supprimer la partie' }),
+    ).not.toBeInTheDocument();
     await user.click(leaveButton);
 
     await waitFor(() => {
@@ -388,19 +463,31 @@ describe('SessionPage', () => {
     vi.mocked(sessionApiClient.getState).mockResolvedValue({
       session: baseSession,
       players: [
-        { userId: 'user-1', characterId: 'character-1', hasSubmittedCurrentTurn: false },
-        { userId: 'user-2', characterId: 'character-2', hasSubmittedCurrentTurn: false },
+        {
+          userId: 'user-1',
+          characterId: 'character-1',
+          hasSubmittedCurrentTurn: false,
+        },
+        {
+          userId: 'user-2',
+          characterId: 'character-2',
+          hasSubmittedCurrentTurn: false,
+        },
       ],
       recentTurns: [],
     });
     vi.mocked(apiClient.fetchGameSystems).mockResolvedValue([gameSystem]);
-    vi.mocked(sessionApiClient.leaveSession).mockResolvedValue({ sessionDeleted: true });
+    vi.mocked(sessionApiClient.leaveSession).mockResolvedValue({
+      sessionDeleted: true,
+    });
     vi.spyOn(window, 'confirm').mockReturnValue(true);
 
     const user = userEvent.setup();
     renderPage();
 
-    await user.click(await screen.findByRole('button', { name: 'Quitter la partie' }));
+    await user.click(
+      await screen.findByRole('button', { name: 'Quitter la partie' }),
+    );
 
     await waitFor(() => {
       expect(mockedNavigate).toHaveBeenCalledWith('/');
@@ -442,7 +529,9 @@ describe('SessionPage', () => {
     renderPage();
 
     await waitFor(() => {
-      expect(screen.getByText('Aucun tour résolu pour le moment.')).toBeInTheDocument();
+      expect(
+        screen.getByText('Aucun tour résolu pour le moment.'),
+      ).toBeInTheDocument();
     });
     expect(screen.queryByText('Ouverture de la scène')).not.toBeInTheDocument();
   });

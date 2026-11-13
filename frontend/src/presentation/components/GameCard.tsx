@@ -13,7 +13,14 @@ export interface GameCardProps {
   className?: string;
 }
 
-export function GameCard({ gameName, sessionName, lastActivityLabel, statusSlot, onClick, className }: GameCardProps) {
+export function GameCard({
+  gameName,
+  sessionName,
+  lastActivityLabel,
+  statusSlot,
+  onClick,
+  className,
+}: GameCardProps) {
   const interactiveProps = onClick
     ? { onClick, role: 'button' as const, tabIndex: 0 }
     : {};
@@ -29,9 +36,13 @@ export function GameCard({ gameName, sessionName, lastActivityLabel, statusSlot,
       )}
     >
       <p className="font-sans-ui text-heading-md text-ink">{gameName}</p>
-      <p className="font-sans-body text-body-strong text-ink mt-xxs">{sessionName}</p>
+      <p className="font-sans-body text-body-strong text-ink mt-xxs">
+        {sessionName}
+      </p>
       {statusSlot ? <div className="mt-sm">{statusSlot}</div> : null}
-      <p className="font-sans-body text-caption-sm text-mute mt-sm">{lastActivityLabel}</p>
+      <p className="font-sans-body text-caption-sm text-mute mt-sm">
+        {lastActivityLabel}
+      </p>
     </div>
   );
 }

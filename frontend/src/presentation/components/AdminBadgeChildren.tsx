@@ -10,7 +10,10 @@ export interface AdminBadgeChildrenProps {
   className?: string;
 }
 
-export function AdminBadgeChildren({ label = 'Adapté enfants', className }: AdminBadgeChildrenProps) {
+export function AdminBadgeChildren({
+  label = 'Adapté enfants',
+  className,
+}: AdminBadgeChildrenProps) {
   return (
     <span
       className={cx(

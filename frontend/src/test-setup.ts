@@ -12,7 +12,7 @@ afterEach(() => {
 // every test file) rather than per-spec, since any component may start
 // relying on it (see NotificationOnboardingBanner/NotificationSettingsPage,
 // tasks/06-notifications-push.md).
-if (typeof globalThis.localStorage === 'undefined' || !globalThis.localStorage) {
+if (!(globalThis.localStorage as Storage | undefined)) {
   class InMemoryStorage implements Storage {
     private store = new Map<string, string>();
 

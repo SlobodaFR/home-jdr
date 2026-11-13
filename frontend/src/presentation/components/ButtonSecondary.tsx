@@ -3,12 +3,19 @@ import { cx } from './utils/cx';
 
 // DESIGN.md > Components > Boutons > button-secondary
 // bg canvas / border 1px hairline / text ink / typography.button-md / rounded.lg
-export interface ButtonSecondaryProps extends Omit<ButtonHTMLAttributes<HTMLButtonElement>, 'className'> {
+export interface ButtonSecondaryProps extends Omit<
+  ButtonHTMLAttributes<HTMLButtonElement>,
+  'className'
+> {
   children: ReactNode;
   className?: string;
 }
 
-export function ButtonSecondary({ children, className, ...rest }: ButtonSecondaryProps) {
+export function ButtonSecondary({
+  children,
+  className,
+  ...rest
+}: ButtonSecondaryProps) {
   return (
     <button
       type="button"

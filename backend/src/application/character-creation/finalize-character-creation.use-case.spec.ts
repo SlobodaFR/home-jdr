@@ -297,7 +297,7 @@ describe('FinalizeCharacterCreationUseCase', () => {
         characterCreationSessionId: creationSession.id,
         userId: 'someone-else',
       }),
-    ).rejects.toThrow();
+    ).rejects.toThrow(Error);
   });
 
   it('rejects finalizing an already-completed session', async () => {
@@ -319,7 +319,7 @@ describe('FinalizeCharacterCreationUseCase', () => {
         characterCreationSessionId: creationSession.id,
         userId: 'user-1',
       }),
-    ).rejects.toThrow();
+    ).rejects.toThrow(Error);
   });
 
   describe('opening narration trigger', () => {

@@ -31,7 +31,7 @@ describe('MapPin', () => {
           positionY: 0.5,
           createdByUserId: 'user-1',
         }),
-      ).toThrow();
+      ).toThrow(Error);
     });
 
     it.each([-0.1, 1.1])(
@@ -45,7 +45,7 @@ describe('MapPin', () => {
             positionY: 0.5,
             createdByUserId: 'user-1',
           }),
-        ).toThrow();
+        ).toThrow(Error);
       },
     );
 
@@ -60,7 +60,7 @@ describe('MapPin', () => {
             positionY,
             createdByUserId: 'user-1',
           }),
-        ).toThrow();
+        ).toThrow(Error);
       },
     );
 
@@ -73,7 +73,7 @@ describe('MapPin', () => {
           positionY: 1,
           createdByUserId: 'user-1',
         }),
-      ).not.toThrow();
+      ).not.toThrow(Error);
     });
   });
 
@@ -92,7 +92,7 @@ describe('MapPin', () => {
     it('rejects moving a pin out of the 0-1 range', () => {
       const pin = createPin();
 
-      expect(() => pin.update({ positionX: 1.5 })).toThrow();
+      expect(() => pin.update({ positionX: 1.5 })).toThrow(Error);
     });
 
     it('leaves fields untouched when their change is undefined (partial update)', () => {

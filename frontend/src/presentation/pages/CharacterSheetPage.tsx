@@ -40,7 +40,9 @@ export function CharacterSheetPage() {
     <main className="min-h-screen bg-canvas px-lg py-section">
       <div className="flex items-center gap-md mb-xl">
         <BackButton to={`/sessions/${character.sessionId}`} />
-        <h1 className="font-sans-ui text-heading-xl text-ink">Fiche personnage</h1>
+        <h1 className="font-sans-ui text-heading-xl text-ink">
+          Fiche personnage
+        </h1>
       </div>
       <CharacterSheet character={character} />
     </main>

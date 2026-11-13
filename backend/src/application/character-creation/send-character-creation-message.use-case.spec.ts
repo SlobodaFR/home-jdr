@@ -204,7 +204,7 @@ describe('SendCharacterCreationMessageUseCase', () => {
         userId: 'someone-else',
         message: 'Salut',
       }),
-    ).rejects.toThrow();
+    ).rejects.toThrow(Error);
   });
 
   it('rejects a message once the creation session is already completed', async () => {
@@ -221,7 +221,7 @@ describe('SendCharacterCreationMessageUseCase', () => {
         userId: 'user-1',
         message: 'Salut',
       }),
-    ).rejects.toThrow();
+    ).rejects.toThrow(Error);
   });
 
   it('throws QuotaExceededError and never calls the LLM when the daily quota is exhausted', async () => {

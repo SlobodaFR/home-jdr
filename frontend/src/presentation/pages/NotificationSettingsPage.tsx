@@ -40,7 +40,9 @@ export function NotificationSettingsPage() {
     setError(null);
     try {
       if (Notification.permission === 'denied') {
-        setError('Les notifications sont bloquées pour ce site dans ton navigateur.');
+        setError(
+          'Les notifications sont bloquées pour ce site dans ton navigateur.',
+        );
         return;
       }
       if (Notification.permission === 'default') {
@@ -51,20 +53,29 @@ export function NotificationSettingsPage() {
         }
       }
 
-      const vapidPublicKey = await pushNotificationApiClient.getVapidPublicKey();
+      const vapidPublicKey =
+        await pushNotificationApiClient.getVapidPublicKey();
       if (!vapidPublicKey) {
         setError(
-          "Les notifications push ne sont pas configurées côté serveur pour le moment.",
+          'Les notifications push ne sont pas configurées côté serveur pour le moment.',
         );
         return;
       }
 
-      const { endpoint, keys } = await pushNotificationManager.subscribe(vapidPublicKey);
-      const subscription = await pushNotificationApiClient.register(endpoint, keys);
+      const { endpoint, keys } =
+        await pushNotificationManager.subscribe(vapidPublicKey);
+      const subscription = await pushNotificationApiClient.register(
+        endpoint,
+        keys,
+      );
       localStorage.setItem(SUBSCRIPTION_ID_KEY, subscription.id);
       setStatus('enabled');
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Impossible d'activer les notifications.");
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Impossible d'activer les notifications.",
+      );
     } finally {
       setBusy(false);
     }
@@ -83,7 +94,9 @@ export function NotificationSettingsPage() {
       setStatus('disabled');
     } catch (err) {
       setError(
-        err instanceof Error ? err.message : 'Impossible de désactiver les notifications.',
+        err instanceof Error
+          ? err.message
+          : 'Impossible de désactiver les notifications.',
       );
     } finally {
       setBusy(false);
@@ -99,7 +112,9 @@ export function NotificationSettingsPage() {
 
       <NotificationOnboardingBanner />
 
-      {status === 'loading' && <p className="font-sans-body text-body-md text-mute">Chargement...</p>}
+      {status === 'loading' && (
+        <p className="font-sans-body text-body-md text-mute">Chargement...</p>
+      )}
 
       {status === 'unsupported' && (
         <p className="font-sans-body text-body-md text-ash">
@@ -126,7 +141,9 @@ export function NotificationSettingsPage() {
         </div>
       )}
 
-      {error && <p className="font-sans-body text-body-md text-danger">{error}</p>}
+      {error && (
+        <p className="font-sans-body text-body-md text-danger">{error}</p>
+      )}
 
       <ButtonSecondary onClick={() => navigate('/')}>Retour</ButtonSecondary>
     </main>

@@ -1,4 +1,10 @@
-import { render, screen, waitFor, cleanup, fireEvent } from '@testing-library/react';
+import {
+  render,
+  screen,
+  waitFor,
+  cleanup,
+  fireEvent,
+} from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { afterEach, describe, expect, it, vi } from 'vitest';
@@ -82,30 +88,45 @@ describe('WorldMapPage', () => {
       logout: vi.fn(),
     });
     vi.mocked(sessionApiClient.getState).mockResolvedValue(sessionState);
-    vi.mocked(worldMapApiClient.get).mockResolvedValue({ worldMap, pins: [pin] });
+    vi.mocked(worldMapApiClient.get).mockResolvedValue({
+      worldMap,
+      pins: [pin],
+    });
 
     renderPage();
 
     await waitFor(() => {
-      expect(screen.getByRole('button', { name: 'Régénérer la carte' })).toBeInTheDocument();
+      expect(
+        screen.getByRole('button', { name: 'Régénérer la carte' }),
+      ).toBeInTheDocument();
     });
   });
 
   it('hides the regenerate button from a non-creator player', async () => {
     vi.mocked(useAuth).mockReturnValue({
-      user: { id: 'player-1', email: 'player@test.dev', name: 'Player', avatarUrl: '' },
+      user: {
+        id: 'player-1',
+        email: 'player@test.dev',
+        name: 'Player',
+        avatarUrl: '',
+      },
       loading: false,
       logout: vi.fn(),
     });
     vi.mocked(sessionApiClient.getState).mockResolvedValue(sessionState);
-    vi.mocked(worldMapApiClient.get).mockResolvedValue({ worldMap, pins: [pin] });
+    vi.mocked(worldMapApiClient.get).mockResolvedValue({
+      worldMap,
+      pins: [pin],
+    });
 
     renderPage();
 
     await waitFor(() => {
       expect(screen.getByAltText('Carte du monde')).toBeInTheDocument();
     });
-    expect(screen.queryByRole('button', { name: 'Régénérer la carte' })).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole('button', { name: 'Régénérer la carte' }),
+    ).not.toBeInTheDocument();
   });
 
   it('renders a pin positioned from its relative coordinates', async () => {
@@ -115,11 +136,16 @@ describe('WorldMapPage', () => {
       logout: vi.fn(),
     });
     vi.mocked(sessionApiClient.getState).mockResolvedValue(sessionState);
-    vi.mocked(worldMapApiClient.get).mockResolvedValue({ worldMap, pins: [pin] });
+    vi.mocked(worldMapApiClient.get).mockResolvedValue({
+      worldMap,
+      pins: [pin],
+    });
 
     renderPage();
 
-    const pinButton = await screen.findByRole('button', { name: 'Le village de Bree' });
+    const pinButton = await screen.findByRole('button', {
+      name: 'Le village de Bree',
+    });
     const wrapper = pinButton.parentElement as HTMLElement;
     expect(wrapper.style.left).toBe('40%');
     expect(wrapper.style.top).toBe('60%');
@@ -149,7 +175,7 @@ describe('WorldMapPage', () => {
       x: 0,
       y: 0,
       toJSON: () => ({}),
-    } as DOMRect);
+    });
 
     fireEvent.click(container, { clientX: 400, clientY: 250 });
 
@@ -167,17 +193,26 @@ describe('WorldMapPage', () => {
 
   it('shows an access-denied message when the API rejects the request', async () => {
     vi.mocked(useAuth).mockReturnValue({
-      user: { id: 'stranger', email: 'stranger@test.dev', name: 'Stranger', avatarUrl: '' },
+      user: {
+        id: 'stranger',
+        email: 'stranger@test.dev',
+        name: 'Stranger',
+        avatarUrl: '',
+      },
       loading: false,
       logout: vi.fn(),
     });
-    vi.mocked(sessionApiClient.getState).mockRejectedValue(new Error('Forbidden'));
+    vi.mocked(sessionApiClient.getState).mockRejectedValue(
+      new Error('Forbidden'),
+    );
     vi.mocked(worldMapApiClient.get).mockRejectedValue(new Error('Forbidden'));
 
     renderPage();
 
     await waitFor(() => {
-      expect(screen.getByText('Impossible de charger la carte.')).toBeInTheDocument();
+      expect(
+        screen.getByText('Impossible de charger la carte.'),
+      ).toBeInTheDocument();
     });
   });
 });

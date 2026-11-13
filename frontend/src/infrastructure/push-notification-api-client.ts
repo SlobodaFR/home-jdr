@@ -1,11 +1,14 @@
-import { PushSubscriptionKeys, PushSubscriptionRecord } from '../domain/push-notification';
+import {
+  PushSubscriptionKeys,
+  PushSubscriptionRecord,
+} from '../domain/push-notification';
 
 const BASE_URL = '/api';
 
 async function extractErrorMessage(response: Response): Promise<string> {
-  const body = (await response.json().catch(() => null)) as
-    | { message?: string | string[] }
-    | null;
+  const body = (await response.json().catch(() => null)) as {
+    message?: string | string[];
+  } | null;
   const message = body?.message;
   if (Array.isArray(message)) {
     return message.join(', ');
@@ -22,9 +25,12 @@ async function parseJsonOrThrow<T>(response: Response): Promise<T> {
 
 export const pushNotificationApiClient = {
   async getVapidPublicKey(): Promise<string | null> {
-    const response = await fetch(`${BASE_URL}/push-subscriptions/vapid-public-key`, {
-      credentials: 'include',
-    });
+    const response = await fetch(
+      `${BASE_URL}/push-subscriptions/vapid-public-key`,
+      {
+        credentials: 'include',
+      },
+    );
     const body = await parseJsonOrThrow<{ publicKey: string | null }>(response);
     return body.publicKey;
   },

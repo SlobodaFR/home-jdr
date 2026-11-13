@@ -7,7 +7,10 @@ import {
   toCharacterSheetSchema,
 } from './character-sheet-schema-draft';
 import { CharacterSheetSchemaEditor } from './CharacterSheetSchemaEditor';
-import { MechanicalActionDraft, toMechanicalActions } from './mechanical-action-draft';
+import {
+  MechanicalActionDraft,
+  toMechanicalActions,
+} from './mechanical-action-draft';
 import { MechanicalActionsEditor } from './MechanicalActionsEditor';
 
 interface Props {
@@ -23,10 +26,11 @@ export function CreateGameSystemForm({ onCreated }: Props) {
   const [description, setDescription] = useState('');
   const [adaptedForChildren, setAdaptedForChildren] = useState(false);
   const [rulesFile, setRulesFile] = useState<File | null>(null);
-  const [characterSheetSchema, setCharacterSheetSchema] = useState<CharacterSheetSchemaDraft>(
-    emptyCharacterSheetSchemaDraft(),
-  );
-  const [mechanicalActions, setMechanicalActions] = useState<MechanicalActionDraft[]>([]);
+  const [characterSheetSchema, setCharacterSheetSchema] =
+    useState<CharacterSheetSchemaDraft>(emptyCharacterSheetSchemaDraft());
+  const [mechanicalActions, setMechanicalActions] = useState<
+    MechanicalActionDraft[]
+  >([]);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -44,8 +48,14 @@ export function CreateGameSystemForm({ onCreated }: Props) {
       formData.append('name', name);
       formData.append('description', description);
       formData.append('adaptedForChildren', String(adaptedForChildren));
-      formData.append('characterSheetSchema', JSON.stringify(toCharacterSheetSchema(characterSheetSchema)));
-      formData.append('mechanicalActions', JSON.stringify(toMechanicalActions(mechanicalActions)));
+      formData.append(
+        'characterSheetSchema',
+        JSON.stringify(toCharacterSheetSchema(characterSheetSchema)),
+      );
+      formData.append(
+        'mechanicalActions',
+        JSON.stringify(toMechanicalActions(mechanicalActions)),
+      );
       formData.append('rulesFile', rulesFile);
 
       const created = await apiClient.createGameSystem(formData);
@@ -65,7 +75,10 @@ export function CreateGameSystemForm({ onCreated }: Props) {
   }
 
   return (
-    <form onSubmit={(e) => void handleSubmit(e)} className="flex flex-col gap-xl">
+    <form
+      onSubmit={(e) => void handleSubmit(e)}
+      className="flex flex-col gap-xl"
+    >
       <div className="flex flex-col gap-sm">
         <label className="flex flex-col gap-xs">
           <span className="font-body-strong text-ink">Nom du JdR</span>
@@ -107,9 +120,15 @@ export function CreateGameSystemForm({ onCreated }: Props) {
         </label>
       </div>
 
-      <CharacterSheetSchemaEditor value={characterSheetSchema} onChange={setCharacterSheetSchema} />
+      <CharacterSheetSchemaEditor
+        value={characterSheetSchema}
+        onChange={setCharacterSheetSchema}
+      />
 
-      <MechanicalActionsEditor value={mechanicalActions} onChange={setMechanicalActions} />
+      <MechanicalActionsEditor
+        value={mechanicalActions}
+        onChange={setMechanicalActions}
+      />
 
       {error && <p className="font-body-md text-danger">{error}</p>}
 

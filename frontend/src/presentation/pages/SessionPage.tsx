@@ -2,21 +2,34 @@ import { FormEvent, useCallback, useEffect, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { Character } from '../../domain/character';
 import { GameSystem, MechanicalAction } from '../../domain/game-system';
-import { DiceRoll, PendingCharacterDeltaView, SessionState } from '../../domain/session';
+import {
+  DiceRoll,
+  PendingCharacterDeltaView,
+  SessionState,
+} from '../../domain/session';
 import { apiClient } from '../../infrastructure/api-client';
 import { characterApiClient } from '../../infrastructure/character-api-client';
-import { QuotaExceededClientError, sessionApiClient } from '../../infrastructure/session-api-client';
+import {
+  QuotaExceededClientError,
+  sessionApiClient,
+} from '../../infrastructure/session-api-client';
 import { useAuth } from '../auth/AuthProvider';
 import { ActionInput } from '../components/ActionInput';
 import { BackButton } from '../components/BackButton';
 import { ButtonDanger } from '../components/ButtonDanger';
 import { ButtonPrimary } from '../components/ButtonPrimary';
 import { ButtonSecondary } from '../components/ButtonSecondary';
-import { DeltaProposalCard, DeltaProposalItem } from '../components/DeltaProposalCard';
+import {
+  DeltaProposalCard,
+  DeltaProposalItem,
+} from '../components/DeltaProposalCard';
 import { DiceRollChip } from '../components/DiceRollChip';
 import { InviteCodeBadge } from '../components/InviteCodeBadge';
 import { MarkdownText } from '../components/MarkdownText';
-import { SessionStatusPill, SessionStatusVariant } from '../components/SessionStatusPill';
+import {
+  SessionStatusPill,
+  SessionStatusVariant,
+} from '../components/SessionStatusPill';
 import { TurnLogEntry } from '../components/TurnLogEntry';
 import { CharacterSheet } from '../character/CharacterSheet';
 import { AppHeader } from '../layout/AppHeader';
@@ -34,7 +47,9 @@ const POLL_INTERVAL_MS = 3500;
 /** No mechanical action selected - a free, non-mechanical action (see tasks/04-llm-orchestration.md - "Note UX"). */
 const FREE_ACTION_VALUE = '';
 
-function statusVariant(status: SessionState['session']['status']): SessionStatusVariant {
+function statusVariant(
+  status: SessionState['session']['status'],
+): SessionStatusVariant {
   return status === 'resolving' ? 'resolving' : 'waiting';
 }
 
@@ -45,7 +60,9 @@ function statusLabel(state: SessionState): string {
   if (state.session.status === 'narrating') {
     return 'Scène résolue - au tour suivant';
   }
-  const submitted = state.players.filter((p) => p.hasSubmittedCurrentTurn).length;
+  const submitted = state.players.filter(
+    (p) => p.hasSubmittedCurrentTurn,
+  ).length;
   return `${submitted}/${state.players.length} joueurs ont soumis`;
 }
 
@@ -53,7 +70,9 @@ function diceRollLabel(roll: DiceRoll): string {
   return `${roll.formula} = ${roll.total}`;
 }
 
-function deltaProposalItems(delta: PendingCharacterDeltaView): DeltaProposalItem[] {
+function deltaProposalItems(
+  delta: PendingCharacterDeltaView,
+): DeltaProposalItem[] {
   const items: DeltaProposalItem[] = [];
   if (delta.hitPoints !== undefined) {
     items.push({
@@ -83,9 +102,12 @@ export function SessionPage() {
   const [characters, setCharacters] = useState<Character[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [actionText, setActionText] = useState('');
-  const [mechanicalActionKey, setMechanicalActionKey] = useState(FREE_ACTION_VALUE);
+  const [mechanicalActionKey, setMechanicalActionKey] =
+    useState(FREE_ACTION_VALUE);
   const [submitting, setSubmitting] = useState(false);
-  const [pendingDeltaAction, setPendingDeltaAction] = useState<string | null>(null);
+  const [pendingDeltaAction, setPendingDeltaAction] = useState<string | null>(
+    null,
+  );
   const [leavingOrDeleting, setLeavingOrDeleting] = useState(false);
 
   const refresh = useCallback(() => {
@@ -107,17 +129,18 @@ export function SessionPage() {
   // Mechanical actions come from the session's GameSystem, loaded once the
   // session state resolves its gameSystemId (see tasks/04-llm-orchestration.md
   // - "action mécanique" dropdown, populated from GameSystem.mechanicalActions).
+  const gameSystemId = state?.session.gameSystemId;
   useEffect(() => {
-    if (!state) {
+    if (!gameSystemId) {
       return;
     }
     apiClient
       .fetchGameSystems()
       .then((systems) => {
-        setGameSystem(systems.find((s) => s.id === state.session.gameSystemId) ?? null);
+        setGameSystem(systems.find((s) => s.id === gameSystemId) ?? null);
       })
       .catch(() => setGameSystem(null));
-  }, [state?.session.gameSystemId]);
+  }, [gameSystemId]);
 
   // Character list, gated server-side by charactersVisibleToOthers: the
   // caller only ever gets back what they're allowed to see (own sheet, or
@@ -144,7 +167,9 @@ export function SessionPage() {
       await sessionApiClient.submitTurnAction(
         id,
         actionText,
-        mechanicalActionKey === FREE_ACTION_VALUE ? undefined : mechanicalActionKey,
+        mechanicalActionKey === FREE_ACTION_VALUE
+          ? undefined
+          : mechanicalActionKey,
       );
       setActionText('');
       setMechanicalActionKey(FREE_ACTION_VALUE);
@@ -153,9 +178,13 @@ export function SessionPage() {
       // Never surface a raw technical error to the player on quota
       // exhaustion (see CLAUDE.md / tasks/08-admin-quotas-cost-guardrails.md).
       if (err instanceof QuotaExceededClientError) {
-        setError('Le MJ numérique a atteint sa limite du jour, réessaie plus tard');
+        setError(
+          'Le MJ numérique a atteint sa limite du jour, réessaie plus tard',
+        );
       } else {
-        setError(err instanceof Error ? err.message : "L'envoi de l'action a échoué.");
+        setError(
+          err instanceof Error ? err.message : "L'envoi de l'action a échoué.",
+        );
       }
     } finally {
       setSubmitting(false);
@@ -171,7 +200,9 @@ export function SessionPage() {
       await sessionApiClient.validateDelta(id, turnNumber, deltaId);
       refresh();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'La validation du delta a échoué.');
+      setError(
+        err instanceof Error ? err.message : 'La validation du delta a échoué.',
+      );
     } finally {
       setPendingDeltaAction(null);
     }
@@ -186,7 +217,9 @@ export function SessionPage() {
       await sessionApiClient.rejectDelta(id, turnNumber, deltaId);
       refresh();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Le rejet du delta a échoué.');
+      setError(
+        err instanceof Error ? err.message : 'Le rejet du delta a échoué.',
+      );
     } finally {
       setPendingDeltaAction(null);
     }
@@ -196,7 +229,11 @@ export function SessionPage() {
     if (!id) {
       return;
     }
-    if (!window.confirm('Supprimer definitivement cette partie ? Cette action est irreversible.')) {
+    if (
+      !window.confirm(
+        'Supprimer definitivement cette partie ? Cette action est irreversible.',
+      )
+    ) {
       return;
     }
     setLeavingOrDeleting(true);
@@ -205,7 +242,11 @@ export function SessionPage() {
       await sessionApiClient.deleteSession(id);
       navigate('/');
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'La suppression de la partie a échoué.');
+      setError(
+        err instanceof Error
+          ? err.message
+          : 'La suppression de la partie a échoué.',
+      );
       setLeavingOrDeleting(false);
     }
   }
@@ -223,7 +264,11 @@ export function SessionPage() {
       await sessionApiClient.leaveSession(id);
       navigate('/');
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Le fait de quitter la partie a échoué.');
+      setError(
+        err instanceof Error
+          ? err.message
+          : 'Le fait de quitter la partie a échoué.',
+      );
       setLeavingOrDeleting(false);
     }
   }
@@ -244,140 +289,188 @@ export function SessionPage() {
     );
   }
 
-  const mechanicalActions: MechanicalAction[] = gameSystem?.mechanicalActions ?? [];
+  const mechanicalActions: MechanicalAction[] =
+    gameSystem?.mechanicalActions ?? [];
 
   return (
     <AppShell navItems={navItems} header={<AppHeader />}>
       <div className="flex flex-col gap-xl">
-      <div className="flex items-center justify-between flex-wrap gap-sm">
-        <div className="flex items-center gap-md">
-          <BackButton to="/" />
-          <h1 className="font-sans-ui text-heading-xl text-ink truncate">{state.session.name}</h1>
-        </div>
-        <div className="flex items-center gap-md flex-wrap">
-          <Link to={`/sessions/${state.session.id}/map`} className="font-sans-body text-link-md text-ink underline">
-            Carte du monde
-          </Link>
-          <InviteCodeBadge code={state.session.inviteCode} />
-          {(state.players.length === 1 ||
-            (state.players.length === 0 && state.session.createdByUserId === user?.id)) && (
-            <ButtonDanger onClick={() => void handleDeleteSession()} disabled={leavingOrDeleting}>
-              Supprimer la partie
-            </ButtonDanger>
-          )}
-          {state.players.length > 1 && (
-            <ButtonSecondary onClick={() => void handleLeaveSession()} disabled={leavingOrDeleting}>
-              Quitter la partie
-            </ButtonSecondary>
-          )}
-        </div>
-      </div>
-
-      <SessionStatusPill variant={statusVariant(state.session.status)} label={statusLabel(state)} />
-
-      {characters.length > 0 && (
-        <section className="flex flex-col gap-sm">
-          <h2 className="font-sans-ui text-heading-md text-ink">
-            {state.session.charactersVisibleToOthers ? 'Personnages de la partie' : 'Mon personnage'}
-          </h2>
-          <div className="flex flex-col gap-md">
-            {characters.map((character) => (
-              <Link
-                key={character.id}
-                to={`/characters/${character.id}`}
-                className="block border border-hairline rounded-md p-md hover:border-ink"
-              >
-                {character.ownerUserId === user?.id && (
-                  <span className="font-sans-body text-caption-sm text-mute float-right">Moi</span>
-                )}
-                <CharacterSheet character={character} compact />
-              </Link>
-            ))}
+        <div className="flex items-center justify-between flex-wrap gap-sm">
+          <div className="flex items-center gap-md">
+            <BackButton to="/" />
+            <h1 className="font-sans-ui text-heading-xl text-ink truncate">
+              {state.session.name}
+            </h1>
           </div>
-        </section>
-      )}
+          <div className="flex items-center gap-md flex-wrap">
+            <Link
+              to={`/sessions/${state.session.id}/map`}
+              className="font-sans-body text-link-md text-ink underline"
+            >
+              Carte du monde
+            </Link>
+            <InviteCodeBadge code={state.session.inviteCode} />
+            {(state.players.length === 1 ||
+              (state.players.length === 0 &&
+                state.session.createdByUserId === user?.id)) && (
+              <ButtonDanger
+                onClick={() => void handleDeleteSession()}
+                disabled={leavingOrDeleting}
+              >
+                Supprimer la partie
+              </ButtonDanger>
+            )}
+            {state.players.length > 1 && (
+              <ButtonSecondary
+                onClick={() => void handleLeaveSession()}
+                disabled={leavingOrDeleting}
+              >
+                Quitter la partie
+              </ButtonSecondary>
+            )}
+          </div>
+        </div>
 
-      {state.session.openingNarrationText && (
-        <section className="flex flex-col gap-sm border border-hairline bg-parchment rounded-md px-lg py-md">
-          <span className="font-sans-ui text-caption-md text-mute uppercase">Ouverture de la scène</span>
-          <MarkdownText className="font-sans-body text-body-md text-ink">
-            {state.session.openingNarrationText}
-          </MarkdownText>
-        </section>
-      )}
+        <SessionStatusPill
+          variant={statusVariant(state.session.status)}
+          label={statusLabel(state)}
+        />
 
-      <section className="flex flex-col gap-md">
-        {state.recentTurns.length === 0 && (
-          <p className="font-sans-body text-body-md text-mute">Aucun tour résolu pour le moment.</p>
-        )}
-        {[...state.recentTurns].reverse().map((turn) => {
-          const pendingDeltas = turn.pendingDeltas.filter((delta) => delta.status === 'pending');
-          return (
-            <div key={turn.turnNumber} className="flex flex-col gap-md">
-              <TurnLogEntry
-                author={`Tour ${turn.turnNumber}`}
-                actionText=""
-                narration={turn.narrationText}
-                diceChip={
-                  turn.diceRolls.length > 0 ? (
-                    <div className="flex flex-col gap-xs">
-                      {turn.diceRolls.map((roll) => (
-                        <div key={`${roll.playerId}-${roll.actionKey}`} className="flex items-center gap-sm">
-                          <span className="font-sans-body text-caption-sm text-mute">{roll.actionLabel}</span>
-                          <DiceRollChip label={diceRollLabel(roll)} />
-                        </div>
-                      ))}
-                    </div>
-                  ) : undefined
-                }
-              />
-              {pendingDeltas.map((delta) => (
-                <DeltaProposalCard
-                  key={delta.id}
-                  deltas={deltaProposalItems(delta)}
-                  onValidate={() => void handleValidateDelta(turn.turnNumber, delta.id)}
-                  onReject={() => void handleRejectDelta(turn.turnNumber, delta.id)}
-                  className={pendingDeltaAction === delta.id ? 'opacity-50 pointer-events-none' : undefined}
-                />
+        {characters.length > 0 && (
+          <section className="flex flex-col gap-sm">
+            <h2 className="font-sans-ui text-heading-md text-ink">
+              {state.session.charactersVisibleToOthers
+                ? 'Personnages de la partie'
+                : 'Mon personnage'}
+            </h2>
+            <div className="flex flex-col gap-md">
+              {characters.map((character) => (
+                <Link
+                  key={character.id}
+                  to={`/characters/${character.id}`}
+                  className="block border border-hairline rounded-md p-md hover:border-ink"
+                >
+                  {character.ownerUserId === user?.id && (
+                    <span className="font-sans-body text-caption-sm text-mute float-right">
+                      Moi
+                    </span>
+                  )}
+                  <CharacterSheet character={character} compact />
+                </Link>
               ))}
             </div>
-          );
-        })}
-      </section>
-
-      <form onSubmit={(event) => void handleSubmit(event)} className="flex flex-col gap-sm">
-        {mechanicalActions.length > 0 && (
-          <label className="flex flex-col gap-xxs">
-            <span className="font-sans-ui text-caption-md text-mute">Action mécanique</span>
-            <select
-              value={mechanicalActionKey}
-              onChange={(event) => setMechanicalActionKey(event.target.value)}
-              disabled={submitting || state.session.status === 'resolving'}
-              className="w-full bg-canvas text-ink font-sans-body text-body-md rounded-sm border border-hairline px-md py-sm"
-            >
-              <option value={FREE_ACTION_VALUE}>Aucune / action libre</option>
-              {mechanicalActions.map((action) => (
-                <option key={action.actionKey} value={action.actionKey}>
-                  {action.label}
-                </option>
-              ))}
-            </select>
-          </label>
+          </section>
         )}
-        <ActionInput
-          value={actionText}
-          onChange={(event) => setActionText(event.target.value)}
-          placeholder="Que faites-vous ?"
-          disabled={submitting || state.session.status === 'resolving'}
-        />
-        {error && <ErrorBanner message={error} />}
-        <ButtonPrimary
-          type="submit"
-          disabled={submitting || state.session.status === 'resolving' || !actionText.trim()}
+
+        {state.session.openingNarrationText && (
+          <section className="flex flex-col gap-sm border border-hairline bg-parchment rounded-md px-lg py-md">
+            <span className="font-sans-ui text-caption-md text-mute uppercase">
+              Ouverture de la scène
+            </span>
+            <MarkdownText className="font-sans-body text-body-md text-ink">
+              {state.session.openingNarrationText}
+            </MarkdownText>
+          </section>
+        )}
+
+        <section className="flex flex-col gap-md">
+          {state.recentTurns.length === 0 && (
+            <p className="font-sans-body text-body-md text-mute">
+              Aucun tour résolu pour le moment.
+            </p>
+          )}
+          {[...state.recentTurns].reverse().map((turn) => {
+            const pendingDeltas = turn.pendingDeltas.filter(
+              (delta) => delta.status === 'pending',
+            );
+            return (
+              <div key={turn.turnNumber} className="flex flex-col gap-md">
+                <TurnLogEntry
+                  author={`Tour ${turn.turnNumber}`}
+                  actionText=""
+                  narration={turn.narrationText}
+                  diceChip={
+                    turn.diceRolls.length > 0 ? (
+                      <div className="flex flex-col gap-xs">
+                        {turn.diceRolls.map((roll) => (
+                          <div
+                            key={`${roll.playerId}-${roll.actionKey}`}
+                            className="flex items-center gap-sm"
+                          >
+                            <span className="font-sans-body text-caption-sm text-mute">
+                              {roll.actionLabel}
+                            </span>
+                            <DiceRollChip label={diceRollLabel(roll)} />
+                          </div>
+                        ))}
+                      </div>
+                    ) : undefined
+                  }
+                />
+                {pendingDeltas.map((delta) => (
+                  <DeltaProposalCard
+                    key={delta.id}
+                    deltas={deltaProposalItems(delta)}
+                    onValidate={() =>
+                      void handleValidateDelta(turn.turnNumber, delta.id)
+                    }
+                    onReject={() =>
+                      void handleRejectDelta(turn.turnNumber, delta.id)
+                    }
+                    className={
+                      pendingDeltaAction === delta.id
+                        ? 'opacity-50 pointer-events-none'
+                        : undefined
+                    }
+                  />
+                ))}
+              </div>
+            );
+          })}
+        </section>
+
+        <form
+          onSubmit={(event) => void handleSubmit(event)}
+          className="flex flex-col gap-sm"
         >
-          Soumettre mon action
-        </ButtonPrimary>
-      </form>
+          {mechanicalActions.length > 0 && (
+            <label className="flex flex-col gap-xxs">
+              <span className="font-sans-ui text-caption-md text-mute">
+                Action mécanique
+              </span>
+              <select
+                value={mechanicalActionKey}
+                onChange={(event) => setMechanicalActionKey(event.target.value)}
+                disabled={submitting || state.session.status === 'resolving'}
+                className="w-full bg-canvas text-ink font-sans-body text-body-md rounded-sm border border-hairline px-md py-sm"
+              >
+                <option value={FREE_ACTION_VALUE}>Aucune / action libre</option>
+                {mechanicalActions.map((action) => (
+                  <option key={action.actionKey} value={action.actionKey}>
+                    {action.label}
+                  </option>
+                ))}
+              </select>
+            </label>
+          )}
+          <ActionInput
+            value={actionText}
+            onChange={(event) => setActionText(event.target.value)}
+            placeholder="Que faites-vous ?"
+            disabled={submitting || state.session.status === 'resolving'}
+          />
+          {error && <ErrorBanner message={error} />}
+          <ButtonPrimary
+            type="submit"
+            disabled={
+              submitting ||
+              state.session.status === 'resolving' ||
+              !actionText.trim()
+            }
+          >
+            Soumettre mon action
+          </ButtonPrimary>
+        </form>
       </div>
     </AppShell>
   );

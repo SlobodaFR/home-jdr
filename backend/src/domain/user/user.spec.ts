@@ -15,9 +15,9 @@ describe('User', () => {
   });
 
   it('rejects an invalid email address', () => {
-    expect(() =>
-      User.create({ ...baseProps, email: 'not-an-email' }),
-    ).toThrow();
+    expect(() => User.create({ ...baseProps, email: 'not-an-email' })).toThrow(
+      Error,
+    );
   });
 
   it('returns a copy with the refreshed profile fields', () => {

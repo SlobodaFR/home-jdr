@@ -56,7 +56,7 @@ describe('Character', () => {
           schema,
           now: new Date('2026-01-01'),
         }),
-      ).toThrow();
+      ).toThrow(Error);
     });
   });
 

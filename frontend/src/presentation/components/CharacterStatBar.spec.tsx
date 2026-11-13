@@ -14,7 +14,14 @@ describe('CharacterStatBar', () => {
   });
 
   it('renders the critical variant using accent-blood exclusively', () => {
-    render(<CharacterStatBar label="Points de vie" current={2} max={20} isCritical />);
+    render(
+      <CharacterStatBar
+        label="Points de vie"
+        current={2}
+        max={20}
+        isCritical
+      />,
+    );
 
     const label = screen.getByText('Points de vie');
     expect(label.className).toContain('text-accent-blood');

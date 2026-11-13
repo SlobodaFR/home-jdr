@@ -133,7 +133,7 @@ describe('GetSessionStateUseCase', () => {
       new InMemoryPendingCharacterDeltaRepository(),
     );
 
-    await expect(useCase.execute('unknown')).rejects.toThrow();
+    await expect(useCase.execute('unknown')).rejects.toThrow(Error);
   });
 
   it('includes the pending character deltas proposed for each recent turn', async () => {

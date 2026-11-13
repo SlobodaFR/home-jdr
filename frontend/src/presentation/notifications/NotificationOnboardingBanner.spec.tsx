@@ -16,13 +16,17 @@ describe('NotificationOnboardingBanner', () => {
   });
 
   it('shows iOS-specific instructions on iOS', () => {
-    render(<NotificationOnboardingBanner platform="ios" isStandalone={false} />);
+    render(
+      <NotificationOnboardingBanner platform="ios" isStandalone={false} />,
+    );
 
     expect(screen.getByRole('status').textContent).toContain('Safari');
   });
 
   it('shows Android-specific instructions on Android', () => {
-    render(<NotificationOnboardingBanner platform="android" isStandalone={false} />);
+    render(
+      <NotificationOnboardingBanner platform="android" isStandalone={false} />,
+    );
 
     expect(screen.getByRole('status').textContent).toContain('Chrome');
   });
@@ -36,7 +40,9 @@ describe('NotificationOnboardingBanner', () => {
     expect(screen.queryByRole('status')).not.toBeInTheDocument();
 
     unmount();
-    render(<NotificationOnboardingBanner platform="android" isStandalone={false} />);
+    render(
+      <NotificationOnboardingBanner platform="android" isStandalone={false} />,
+    );
     expect(screen.queryByRole('status')).not.toBeInTheDocument();
   });
 });

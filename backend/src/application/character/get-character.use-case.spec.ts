@@ -97,7 +97,7 @@ describe('GetCharacterUseCase', () => {
       sessionPlayerRepository,
     );
 
-    await expect(useCase.execute('char-1', 'user-2')).rejects.toThrow();
+    await expect(useCase.execute('char-1', 'user-2')).rejects.toThrow(Error);
   });
 
   it('rejects a non-player from fetching another character even in a visible session', async () => {
@@ -118,7 +118,7 @@ describe('GetCharacterUseCase', () => {
       new InMemorySessionPlayerRepository(),
     );
 
-    await expect(useCase.execute('char-1', 'stranger')).rejects.toThrow();
+    await expect(useCase.execute('char-1', 'stranger')).rejects.toThrow(Error);
   });
 
   it('throws NotFoundException when the character does not exist', async () => {
@@ -128,6 +128,6 @@ describe('GetCharacterUseCase', () => {
       new InMemorySessionPlayerRepository(),
     );
 
-    await expect(useCase.execute('missing', 'user-1')).rejects.toThrow();
+    await expect(useCase.execute('missing', 'user-1')).rejects.toThrow(Error);
   });
 });

@@ -14,6 +14,7 @@ fonctionnalités des tâches suivantes.
 Cloner ou consulter en lecture `SlobodaFR/home-budget` (et si besoin
 `SlobodaFR/home-auth` pour le détail du contrat OAuth2/JWKS) et répliquer
 strictement :
+
 - La structure npm workspaces (`backend`, `frontend`).
 - La configuration Dockerfile mono-image (Nest sert le build React statique).
 - Le module d'authentification (`AuthModule`, `JwtAuthGuard`, endpoints
@@ -37,7 +38,7 @@ strictement :
   intégration du flow OAuth2 (redirection login, gestion de session via
   cookies httpOnly, écran "connecté en tant que...").
 - `.github/workflows/deploy.yml` (ou équivalent) répliquant le pipeline SSH
-  + 1Password de `home-budget`.
+  - 1Password de `home-budget`.
 - `docker-compose` ou doc de dev local (`npm run dev:backend`,
   `npm run dev:frontend`) comme dans `home-budget`.
 

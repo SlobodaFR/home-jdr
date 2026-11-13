@@ -8,7 +8,10 @@ import { sessionApiClient } from '../../infrastructure/session-api-client';
 import { ButtonPrimary } from '../components/ButtonPrimary';
 import { ButtonSecondary } from '../components/ButtonSecondary';
 import { GameCard } from '../components/GameCard';
-import { SessionStatusPill, SessionStatusVariant } from '../components/SessionStatusPill';
+import {
+  SessionStatusPill,
+  SessionStatusVariant,
+} from '../components/SessionStatusPill';
 import { AppHeader } from '../layout/AppHeader';
 import { AppShell } from '../layout/AppShell';
 import { ErrorBanner } from '../layout/ErrorBanner';
@@ -49,7 +52,10 @@ export function HomePage() {
   }, []);
 
   function gameNameFor(gameSystemId: string): string {
-    return gameSystems.find((system) => system.id === gameSystemId)?.name ?? gameSystemId;
+    return (
+      gameSystems.find((system) => system.id === gameSystemId)?.name ??
+      gameSystemId
+    );
   }
 
   return (
@@ -57,24 +63,33 @@ export function HomePage() {
       <div className="flex flex-col gap-xl">
         <div>
           <h1 className="font-sans-ui text-heading-xl text-ink">Mes parties</h1>
-          {user && <p className="font-sans-body text-body-md text-ash mt-xxs">Bonjour, {user.name}.</p>}
+          {user && (
+            <p className="font-sans-body text-body-md text-ash mt-xxs">
+              Bonjour, {user.name}.
+            </p>
+          )}
         </div>
 
         <NotificationOnboardingBanner />
 
         <div className="flex gap-md flex-wrap">
-          <ButtonPrimary onClick={() => navigate('/sessions/new')}>Créer une partie</ButtonPrimary>
+          <ButtonPrimary onClick={() => navigate('/sessions/new')}>
+            Créer une partie
+          </ButtonPrimary>
           <ButtonSecondary onClick={() => navigate('/sessions/join')}>
             Rejoindre une partie
           </ButtonSecondary>
         </div>
 
         {error && <ErrorBanner message={error} />}
-        {loading && <p className="font-sans-body text-body-md text-mute">Chargement...</p>}
+        {loading && (
+          <p className="font-sans-body text-body-md text-mute">Chargement...</p>
+        )}
 
         {!loading && sessions.length === 0 && !error && (
           <p className="font-sans-body text-body-md text-mute">
-            Aucune partie pour le moment. Créez-en une ou rejoignez-en une avec un code.
+            Aucune partie pour le moment. Créez-en une ou rejoignez-en une avec
+            un code.
           </p>
         )}
 

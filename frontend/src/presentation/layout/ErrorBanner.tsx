@@ -17,7 +17,12 @@ const VARIANT_CLASSES: Record<ErrorBannerVariant, string> = {
   info: 'bg-canvas text-info border-info',
 };
 
-export function ErrorBanner({ message, variant = 'danger', onDismiss, className }: ErrorBannerProps) {
+export function ErrorBanner({
+  message,
+  variant = 'danger',
+  onDismiss,
+  className,
+}: ErrorBannerProps) {
   return (
     <div
       role="alert"

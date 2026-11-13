@@ -7,7 +7,9 @@ afterEach(cleanup);
 describe('ErrorBanner', () => {
   it('renders the message and role=alert', () => {
     render(<ErrorBanner message="Connexion perdue avec le serveur" />);
-    expect(screen.getByRole('alert').textContent).toContain('Connexion perdue avec le serveur');
+    expect(screen.getByRole('alert').textContent).toContain(
+      'Connexion perdue avec le serveur',
+    );
   });
 
   it('calls onDismiss when the close button is clicked', () => {

@@ -20,7 +20,9 @@ describe('AppShell', () => {
 
     expect(screen.getByText('Contenu de la page')).toBeTruthy();
     // Present twice: once in the sidebar nav, once in the bottom nav.
-    expect(screen.getAllByRole('link', { name: 'Mes parties' })).toHaveLength(2);
+    expect(screen.getAllByRole('link', { name: 'Mes parties' })).toHaveLength(
+      2,
+    );
     expect(screen.getAllByRole('link', { name: 'Carte' })).toHaveLength(2);
   });
 });

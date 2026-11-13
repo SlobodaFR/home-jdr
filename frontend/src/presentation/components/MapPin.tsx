@@ -11,7 +11,12 @@ export interface MapPinProps {
   className?: string;
 }
 
-export function MapPin({ label, active = false, onClick, className }: MapPinProps) {
+export function MapPin({
+  label,
+  active = false,
+  onClick,
+  className,
+}: MapPinProps) {
   return (
     <button
       type="button"

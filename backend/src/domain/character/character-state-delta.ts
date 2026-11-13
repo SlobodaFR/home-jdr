@@ -24,7 +24,7 @@ export class CharacterStateDelta {
       hitPoints: props.hitPoints,
       inventoryAdd: [...(props.inventoryAdd ?? [])],
       inventoryRemove: [...(props.inventoryRemove ?? [])],
-      customAttributeChanges: { ...(props.customAttributeChanges ?? {}) },
+      customAttributeChanges: { ...props.customAttributeChanges },
     });
   }
 
@@ -41,7 +41,7 @@ export class CharacterStateDelta {
   }
 
   get customAttributeChanges(): Record<string, number | string> {
-    return { ...(this.props.customAttributeChanges ?? {}) };
+    return { ...this.props.customAttributeChanges };
   }
 
   isEmpty(): boolean {

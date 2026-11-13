@@ -20,12 +20,29 @@ export interface CharacterSheetSchema {
 }
 
 /**
+ * Shape of a schema before validation: it comes from a request body or a JSON
+ * column, so nothing about it can be trusted at runtime.
+ */
+interface UnvalidatedCharacterSheetSchema {
+  hitPoints?: { defaultMax?: unknown } | null;
+  inventory?: { defaultItems?: unknown } | null;
+  customAttributes?: unknown;
+}
+
+interface UnvalidatedCustomAttribute {
+  key?: string;
+  label?: string;
+  type?: string;
+  default?: unknown;
+}
+
+/**
  * Structural validation, enforced on create and update. A safety net behind
  * the DTO validation already performed at the HTTP boundary - domain
  * invariants must hold regardless of the caller.
  */
 export function validateCharacterSheetSchema(
-  schema: CharacterSheetSchema,
+  schema: UnvalidatedCharacterSheetSchema | null | undefined,
 ): void {
   if (!schema || typeof schema !== 'object') {
     throw new Error('characterSheetSchema is required');
@@ -33,7 +50,7 @@ export function validateCharacterSheetSchema(
   if (
     !schema.hitPoints ||
     !Number.isInteger(schema.hitPoints.defaultMax) ||
-    schema.hitPoints.defaultMax < 1
+    (schema.hitPoints.defaultMax as number) < 1
   ) {
     throw new Error(
       'characterSheetSchema.hitPoints.defaultMax must be a positive integer',
@@ -42,7 +59,9 @@ export function validateCharacterSheetSchema(
   if (
     !schema.inventory ||
     !Array.isArray(schema.inventory.defaultItems) ||
-    schema.inventory.defaultItems.some((item) => typeof item !== 'string')
+    schema.inventory.defaultItems.some(
+      (item: unknown) => typeof item !== 'string',
+    )
   ) {
     throw new Error(
       'characterSheetSchema.inventory.defaultItems must be an array of strings',
@@ -53,7 +72,7 @@ export function validateCharacterSheetSchema(
   }
 
   const seenKeys = new Set<string>();
-  for (const attribute of schema.customAttributes) {
+  for (const attribute of schema.customAttributes as UnvalidatedCustomAttribute[]) {
     if (!attribute.key || !attribute.label) {
       throw new Error('Each custom attribute requires a key and a label');
     }

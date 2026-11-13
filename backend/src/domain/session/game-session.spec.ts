@@ -54,7 +54,7 @@ describe('GameSession', () => {
           inviteCode: 'XK4R2P',
           createdByUserId: 'user-1',
         }),
-      ).toThrow();
+      ).toThrow(Error);
     });
 
     it('rejects a blank invite code', () => {
@@ -65,7 +65,7 @@ describe('GameSession', () => {
           inviteCode: '   ',
           createdByUserId: 'user-1',
         }),
-      ).toThrow();
+      ).toThrow(Error);
     });
   });
 
@@ -88,19 +88,19 @@ describe('GameSession', () => {
     it('rejects beginResolving from a status other than waiting_for_players', () => {
       const session = createSession().beginResolving();
 
-      expect(() => session.beginResolving()).toThrow();
+      expect(() => session.beginResolving()).toThrow(Error);
     });
 
     it('rejects completeResolution from a status other than resolving', () => {
       const session = createSession();
 
-      expect(() => session.completeResolution()).toThrow();
+      expect(() => session.completeResolution()).toThrow(Error);
     });
 
     it('rejects startNextTurn from a status other than narrating', () => {
       const session = createSession();
 
-      expect(() => session.startNextTurn()).toThrow();
+      expect(() => session.startNextTurn()).toThrow(Error);
     });
   });
 

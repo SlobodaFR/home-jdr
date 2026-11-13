@@ -39,7 +39,9 @@ export function JoinSessionPage() {
       navigate(`/character-creation/${session.characterCreationSessionId}`);
     } catch (err) {
       setError(
-        err instanceof Error ? err.message : 'Impossible de rejoindre cette partie.',
+        err instanceof Error
+          ? err.message
+          : 'Impossible de rejoindre cette partie.',
       );
     } finally {
       setSubmitting(false);
@@ -50,16 +52,25 @@ export function JoinSessionPage() {
     <AppShell navItems={navItems} header={<AppHeader />}>
       <div className="flex items-center gap-md mb-xl">
         <BackButton to="/" />
-        <h1 className="font-sans-ui text-heading-xl text-ink">Rejoindre une partie</h1>
+        <h1 className="font-sans-ui text-heading-xl text-ink">
+          Rejoindre une partie
+        </h1>
       </div>
 
-      <form onSubmit={(event) => void handleSubmit(event)} className="flex flex-col gap-lg max-w-sm">
+      <form
+        onSubmit={(event) => void handleSubmit(event)}
+        className="flex flex-col gap-lg max-w-sm"
+      >
         <label className="flex flex-col gap-xs">
-          <span className="font-sans-body text-body-strong text-ink">Code d&apos;invitation</span>
+          <span className="font-sans-body text-body-strong text-ink">
+            Code d&apos;invitation
+          </span>
           <input
             className="border border-hairline rounded-sm px-md py-md font-mono-ui text-label-dice text-ink bg-canvas focus:border-2 focus:border-ink outline-none uppercase tracking-widest text-center"
             value={inviteCode}
-            onChange={(event) => setInviteCode(event.target.value.toUpperCase())}
+            onChange={(event) =>
+              setInviteCode(event.target.value.toUpperCase())
+            }
             placeholder="XK4R2P"
             maxLength={12}
             autoComplete="off"
@@ -76,7 +87,9 @@ export function JoinSessionPage() {
           <ButtonPrimary type="submit" disabled={submitting}>
             {submitting ? 'Connexion...' : 'Rejoindre'}
           </ButtonPrimary>
-          <ButtonSecondary onClick={() => navigate('/')}>Annuler</ButtonSecondary>
+          <ButtonSecondary onClick={() => navigate('/')}>
+            Annuler
+          </ButtonSecondary>
         </div>
       </form>
     </AppShell>

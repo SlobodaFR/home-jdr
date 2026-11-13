@@ -9,9 +9,7 @@ import {
 describe('detectPlatform', () => {
   it('detects iPhone/iPad user agents as iOS', () => {
     expect(
-      detectPlatform(
-        'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X)',
-      ),
+      detectPlatform('Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X)'),
     ).toBe('ios');
   });
 
@@ -24,9 +22,9 @@ describe('detectPlatform', () => {
       value: 0,
       configurable: true,
     });
-    expect(
-      detectPlatform('Mozilla/5.0 (Windows NT 10.0; Win64; x64)'),
-    ).toBe('other');
+    expect(detectPlatform('Mozilla/5.0 (Windows NT 10.0; Win64; x64)')).toBe(
+      'other',
+    );
   });
 
   it('detects a touch-capable "Macintosh" UA (iPadOS 13+) as iOS', () => {
@@ -85,13 +83,14 @@ describe('pushNotificationManager', () => {
     it('subscribes via the service worker registration and returns endpoint + keys', async () => {
       const fakeSubscription = {
         endpoint: 'https://push.example.com/subscription/abc',
-        toJSON: () => ({ keys: { p256dh: 'p256dh-value', auth: 'auth-value' } }),
+        toJSON: () => ({
+          keys: { p256dh: 'p256dh-value', auth: 'auth-value' },
+        }),
       };
       const registration = {
         pushManager: { subscribe: vi.fn().mockResolvedValue(fakeSubscription) },
       };
       vi.stubGlobal('navigator', {
-        ...navigator,
         serviceWorker: { ready: Promise.resolve(registration) },
       });
 
@@ -115,11 +114,12 @@ describe('pushNotificationManager', () => {
         pushManager: { subscribe: vi.fn().mockResolvedValue(fakeSubscription) },
       };
       vi.stubGlobal('navigator', {
-        ...navigator,
         serviceWorker: { ready: Promise.resolve(registration) },
       });
 
-      await expect(pushNotificationManager.subscribe('aGVsbG8')).rejects.toThrow();
+      await expect(
+        pushNotificationManager.subscribe('aGVsbG8'),
+      ).rejects.toThrow(Error);
     });
   });
 
@@ -132,7 +132,6 @@ describe('pushNotificationManager', () => {
         },
       };
       vi.stubGlobal('navigator', {
-        ...navigator,
         serviceWorker: { ready: Promise.resolve(registration) },
         PushManager: {},
       });
@@ -148,13 +147,14 @@ describe('pushNotificationManager', () => {
         pushManager: { getSubscription: vi.fn().mockResolvedValue(null) },
       };
       vi.stubGlobal('navigator', {
-        ...navigator,
         serviceWorker: { ready: Promise.resolve(registration) },
         PushManager: {},
       });
       vi.stubGlobal('PushManager', {});
 
-      await expect(pushNotificationManager.unsubscribe()).resolves.toBeUndefined();
+      await expect(
+        pushNotificationManager.unsubscribe(),
+      ).resolves.toBeUndefined();
     });
   });
 });

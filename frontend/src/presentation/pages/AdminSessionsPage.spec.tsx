@@ -55,8 +55,12 @@ describe('AdminSessionsPage', () => {
 
     expect(screen.getByText('Enquete a Arkham')).toBeInTheDocument();
     expect(screen.getByText("L'Appel de Cthulhu")).toBeInTheDocument();
-    expect(screen.getByText('Investigateur A', { exact: false })).toBeInTheDocument();
-    expect(screen.getByText('Investigateur B', { exact: false })).toBeInTheDocument();
+    expect(
+      screen.getByText('Investigateur A', { exact: false }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText('Investigateur B', { exact: false }),
+    ).toBeInTheDocument();
   });
 
   it('shows an empty state when there are no sessions', async () => {
@@ -69,7 +73,9 @@ describe('AdminSessionsPage', () => {
     );
 
     await waitFor(() => {
-      expect(screen.getByText('Aucune partie pour le moment.')).toBeInTheDocument();
+      expect(
+        screen.getByText('Aucune partie pour le moment.'),
+      ).toBeInTheDocument();
     });
   });
 

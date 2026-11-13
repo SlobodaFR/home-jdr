@@ -17,6 +17,8 @@ describe('TurnLogEntry', () => {
     expect(screen.getByText('Alice')).toBeTruthy();
     expect(screen.getByText('tente de crocheter la serrure')).toBeTruthy();
     expect(screen.getByText('d20+3 = 17')).toBeTruthy();
-    expect(screen.getByText('Le mécanisme cède dans un cliquetis sec.')).toBeTruthy();
+    expect(
+      screen.getByText('Le mécanisme cède dans un cliquetis sec.'),
+    ).toBeTruthy();
   });
 });

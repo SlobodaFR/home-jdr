@@ -27,7 +27,11 @@ export function CharacterStatBar({
   const isCritical = current / safeMax <= criticalThreshold;
 
   return (
-    <div data-testid="character-stat-bar" data-critical={isCritical} className="w-full">
+    <div
+      data-testid="character-stat-bar"
+      data-critical={isCritical}
+      className="w-full"
+    >
       <div className="flex items-center justify-between mb-xxs">
         <span
           className={`font-body-strong ${compact ? 'text-caption-md' : ''} ${

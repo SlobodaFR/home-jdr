@@ -58,7 +58,7 @@ describe('ValidateCharacterDeltaUseCase', () => {
       new ApplyCharacterDeltaUseCase(new InMemoryCharacterRepository()),
     );
 
-    await expect(useCase.execute('missing')).rejects.toThrow();
+    await expect(useCase.execute('missing')).rejects.toThrow(Error);
   });
 
   it('throws when the delta is already validated (no double-apply)', async () => {
@@ -81,7 +81,7 @@ describe('ValidateCharacterDeltaUseCase', () => {
 
     await useCase.execute(pending.id);
 
-    await expect(useCase.execute(pending.id)).rejects.toThrow();
+    await expect(useCase.execute(pending.id)).rejects.toThrow(Error);
     const updatedCharacter = await characterRepository.findById('character-1');
     expect(updatedCharacter?.hitPointsCurrent).toBe(25); // only applied once
   });

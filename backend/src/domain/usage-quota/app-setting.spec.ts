@@ -9,6 +9,6 @@ describe('AppSetting', () => {
   });
 
   it('rejects a blank key', () => {
-    expect(() => AppSetting.create({ key: '   ', value: '80' })).toThrow();
+    expect(() => AppSetting.create({ key: '   ', value: '80' })).toThrow(Error);
   });
 });

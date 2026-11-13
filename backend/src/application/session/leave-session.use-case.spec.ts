@@ -223,7 +223,7 @@ describe('LeaveSessionUseCase', () => {
 
     await expect(
       useCase.execute({ sessionId: session.id, userId: 'intruder' }),
-    ).rejects.toThrow();
+    ).rejects.toThrow(Error);
     await expect(
       gameSessionRepository.findById(session.id),
     ).resolves.not.toBeNull();
@@ -241,6 +241,6 @@ describe('LeaveSessionUseCase', () => {
 
     await expect(
       useCase.execute({ sessionId: 'nope', userId: 'user-1' }),
-    ).rejects.toThrow();
+    ).rejects.toThrow(Error);
   });
 });

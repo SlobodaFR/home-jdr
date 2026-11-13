@@ -20,9 +20,9 @@ export interface JoinSessionInput {
 }
 
 async function extractErrorMessage(response: Response): Promise<string> {
-  const body = (await response.json().catch(() => null)) as
-    | { message?: string | string[] }
-    | null;
+  const body = (await response.json().catch(() => null)) as {
+    message?: string | string[];
+  } | null;
   const message = body?.message;
   if (Array.isArray(message)) {
     return message.join(', ');
@@ -60,7 +60,9 @@ export const sessionApiClient = {
     return parseJsonOrThrow<SessionSummary[]>(response);
   },
 
-  async create(input: CreateSessionInput): Promise<SessionWithCharacterCreation> {
+  async create(
+    input: CreateSessionInput,
+  ): Promise<SessionWithCharacterCreation> {
     const response = await fetch(`${BASE_URL}/sessions`, {
       method: 'POST',
       credentials: 'include',

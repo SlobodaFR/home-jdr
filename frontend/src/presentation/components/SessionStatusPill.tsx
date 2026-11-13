@@ -17,7 +17,11 @@ const VARIANT_CLASSES: Record<SessionStatusVariant, string> = {
   resolving: 'bg-accent-gold-soft text-ink',
 };
 
-export function SessionStatusPill({ variant, label, className }: SessionStatusPillProps) {
+export function SessionStatusPill({
+  variant,
+  label,
+  className,
+}: SessionStatusPillProps) {
   return (
     <span
       data-variant={variant}

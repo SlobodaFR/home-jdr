@@ -19,7 +19,7 @@ describe('PendingCharacterDelta', () => {
   });
 
   it('rejects a turnNumber below 1', () => {
-    expect(() => buildPending({ turnNumber: 0 })).toThrow();
+    expect(() => buildPending({ turnNumber: 0 })).toThrow(Error);
   });
 
   it('rebuilds the CharacterStateDelta VO from the stored payload', () => {
@@ -44,11 +44,11 @@ describe('PendingCharacterDelta', () => {
 
   it('cannot validate a delta that is not pending', () => {
     const validated = buildPending().validate();
-    expect(() => validated.validate()).toThrow();
+    expect(() => validated.validate()).toThrow(Error);
   });
 
   it('cannot reject a delta that is not pending', () => {
     const rejected = buildPending().reject();
-    expect(() => rejected.reject()).toThrow();
+    expect(() => rejected.reject()).toThrow(Error);
   });
 });

@@ -11,7 +11,13 @@ export interface CharacterStatBarProps {
   className?: string;
 }
 
-export function CharacterStatBar({ label, current, max, isCritical = false, className }: CharacterStatBarProps) {
+export function CharacterStatBar({
+  label,
+  current,
+  max,
+  isCritical = false,
+  className,
+}: CharacterStatBarProps) {
   const safeMax = max > 0 ? max : 1;
   const ratio = Math.min(Math.max(current / safeMax, 0), 1);
   const percent = Math.round(ratio * 100);
@@ -40,7 +46,10 @@ export function CharacterStatBar({ label, current, max, isCritical = false, clas
         className="h-2 w-full rounded-sm bg-hairline-soft overflow-hidden"
       >
         <div
-          className={cx('h-full rounded-sm', isCritical ? 'bg-accent-blood' : 'bg-success')}
+          className={cx(
+            'h-full rounded-sm',
+            isCritical ? 'bg-accent-blood' : 'bg-success',
+          )}
           style={{ width: `${percent}%` }}
         />
       </div>

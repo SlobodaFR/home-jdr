@@ -57,6 +57,6 @@ describe('CreateCharacterUseCase', () => {
         name: '   ',
         schema,
       }),
-    ).rejects.toThrow();
+    ).rejects.toThrow(Error);
   });
 });

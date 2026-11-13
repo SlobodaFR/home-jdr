@@ -43,7 +43,7 @@ describe('RandomDiceRollerAdapter', () => {
   it('rejects a malformed formula', () => {
     const adapter = new RandomDiceRollerAdapter(fixedRng([0]));
 
-    expect(() => adapter.roll('not-a-formula')).toThrow();
+    expect(() => adapter.roll('not-a-formula')).toThrow(Error);
   });
 
   it('defaults to Math.random when no rng is injected', () => {
