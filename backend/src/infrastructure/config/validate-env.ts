@@ -11,8 +11,8 @@ const REQUIRED = [
   'MINIO_SECRET_ACCESS_KEY',
 ] as const;
 
-/** Public URLs (OAuth redirects, push, world-map images): https only in production. */
-const HTTPS_URLS = ['AUTH_SERVICE_URL', 'FRONTEND_URL', 'MINIO_ENDPOINT'];
+/** Public URLs (OAuth redirects): https only in production. */
+const HTTPS_URLS = ['AUTH_SERVICE_URL', 'FRONTEND_URL'];
 
 /**
  * Environment validation, run once at startup by ConfigModule. Throwing here stops the service
