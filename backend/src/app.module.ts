@@ -8,6 +8,8 @@ import { ServeStaticModule } from '@nestjs/serve-static';
 import { join } from 'path';
 import { validateEnv } from './infrastructure/config/validate-env';
 import { loggerParams } from './infrastructure/logging/logger.config';
+import { RuntimeHealthMonitor } from './infrastructure/observability/runtime-health.monitor';
+import { HealthController } from './interfaces/http/controllers/health.controller';
 import { DatabaseModule } from './infrastructure/persistence/database.module';
 import { SameOriginGuard } from './interfaces/http/guards/same-origin.guard';
 import { throttlerOptions } from './interfaces/http/throttling';
@@ -34,7 +36,7 @@ import { WorldMapModule } from './interfaces/http/modules/world-map.module';
     DatabaseModule,
     ServeStaticModule.forRoot({
       rootPath: join(__dirname, 'public'),
-      exclude: ['/api*'],
+      exclude: ['/api*', '/healthz*'],
     }),
     AuthModule,
     CharacterModule,
@@ -47,9 +49,11 @@ import { WorldMapModule } from './interfaces/http/modules/world-map.module';
     UsageQuotaModule,
     AdminSessionsModule,
   ],
+  controllers: [HealthController],
   providers: [
     // Attaches the real exception to the request log (serialized through the whitelist).
     { provide: APP_INTERCEPTOR, useClass: LoggerErrorInterceptor },
+    RuntimeHealthMonitor,
     { provide: APP_GUARD, useClass: ThrottlerGuard },
     // Every mutation must come from this origin (cookie auth); see SameOriginGuard.
     { provide: APP_GUARD, useClass: SameOriginGuard },
