@@ -16,6 +16,8 @@ export class QuotaExceededFilter implements ExceptionFilter {
     const response = host.switchToHttp().getResponse<Response>();
     response.status(429).json({
       statusCode: 429,
+      // Lets the client tell a daily-quota 429 from a rate-limit 429 (throttler).
+      code: 'QUOTA_EXCEEDED',
       message: exception.message,
     });
   }

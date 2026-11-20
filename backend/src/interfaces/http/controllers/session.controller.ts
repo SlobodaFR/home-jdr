@@ -11,6 +11,8 @@ import {
   UseFilters,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { Throttle } from '@nestjs/throttler';
+import { LLM_THROTTLE } from '../throttling';
 import { RejectCharacterDeltaUseCase } from '../../../application/character/reject-character-delta.use-case';
 import { ValidateCharacterDeltaUseCase } from '../../../application/character/validate-character-delta.use-case';
 import { CreateSessionUseCase } from '../../../application/session/create-session.use-case';
@@ -225,6 +227,7 @@ export class SessionController {
   // `SubmitTurnActionUseCase`) when the daily LLM quota is exhausted -
   // without this filter it would surface as an opaque 500 (see CLAUDE.md -
   // "Jamais d'appel LLM sans vérification de quota au préalable").
+  @Throttle(LLM_THROTTLE)
   @UseFilters(QuotaExceededFilter)
   @Post(':id/turns')
   async submitTurn(
