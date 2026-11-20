@@ -7,6 +7,7 @@ import { ServeStaticModule } from '@nestjs/serve-static';
 import { join } from 'path';
 import { validateEnv } from './infrastructure/config/validate-env';
 import { DatabaseModule } from './infrastructure/persistence/database.module';
+import { SameOriginGuard } from './interfaces/http/guards/same-origin.guard';
 import { throttlerOptions } from './interfaces/http/throttling';
 import { AdminSessionsModule } from './interfaces/http/modules/admin-sessions.module';
 import { AuthModule } from './interfaces/http/modules/auth.module';
@@ -43,6 +44,10 @@ import { WorldMapModule } from './interfaces/http/modules/world-map.module';
     UsageQuotaModule,
     AdminSessionsModule,
   ],
-  providers: [{ provide: APP_GUARD, useClass: ThrottlerGuard }],
+  providers: [
+    { provide: APP_GUARD, useClass: ThrottlerGuard },
+    // Every mutation must come from this origin (cookie auth); see SameOriginGuard.
+    { provide: APP_GUARD, useClass: SameOriginGuard },
+  ],
 })
 export class AppModule {}
