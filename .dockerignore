@@ -4,3 +4,10 @@
 **/data/*.sqlite
 .git
 tasks
+.env
+**/.env
+.env.*
+!.env.example
+!**/.env.example
+data/
+**/data/
