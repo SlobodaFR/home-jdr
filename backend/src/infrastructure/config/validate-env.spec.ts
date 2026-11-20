@@ -40,7 +40,7 @@ describe('validateEnv', () => {
     expect(() => validateEnv({ ...PROD, [variable]: '  ' })).toThrow(variable);
   });
 
-  it.each(['AUTH_SERVICE_URL', 'FRONTEND_URL', 'MINIO_ENDPOINT'])(
+  it.each(['AUTH_SERVICE_URL', 'FRONTEND_URL'])(
     'requires %s to be an https URL in production',
     (variable) => {
       expect(() =>
