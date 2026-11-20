@@ -1,10 +1,13 @@
 import { Module } from '@nestjs/common';
+import { APP_GUARD } from '@nestjs/core';
+import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { ConfigModule } from '@nestjs/config';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { ServeStaticModule } from '@nestjs/serve-static';
 import { join } from 'path';
 import { validateEnv } from './infrastructure/config/validate-env';
 import { DatabaseModule } from './infrastructure/persistence/database.module';
+import { throttlerOptions } from './interfaces/http/throttling';
 import { AdminSessionsModule } from './interfaces/http/modules/admin-sessions.module';
 import { AuthModule } from './interfaces/http/modules/auth.module';
 import { CharacterCreationModule } from './interfaces/http/modules/character-creation.module';
@@ -23,6 +26,7 @@ import { WorldMapModule } from './interfaces/http/modules/world-map.module';
     // `SubmitTurnActionUseCase`, consumed by
     // `NotifyPlayersTurnPendingUseCase` - see `06-notifications-push.md`).
     EventEmitterModule.forRoot(),
+    ThrottlerModule.forRoot(throttlerOptions),
     DatabaseModule,
     ServeStaticModule.forRoot({
       rootPath: join(__dirname, 'public'),
@@ -39,5 +43,6 @@ import { WorldMapModule } from './interfaces/http/modules/world-map.module';
     UsageQuotaModule,
     AdminSessionsModule,
   ],
+  providers: [{ provide: APP_GUARD, useClass: ThrottlerGuard }],
 })
 export class AppModule {}

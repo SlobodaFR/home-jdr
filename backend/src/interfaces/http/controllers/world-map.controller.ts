@@ -7,6 +7,8 @@ import {
   Patch,
   Post,
 } from '@nestjs/common';
+import { Throttle } from '@nestjs/throttler';
+import { LLM_THROTTLE } from '../throttling';
 import { ConfigService } from '@nestjs/config';
 import { AddMapPinUseCase } from '../../../application/world-map/add-map-pin.use-case';
 import { GenerateWorldMapUseCase } from '../../../application/world-map/generate-world-map.use-case';
@@ -98,6 +100,7 @@ export class WorldMapController {
     return `${endpoint.replace(/\/$/, '')}/${bucket}/${imageStorageKey}`;
   }
 
+  @Throttle(LLM_THROTTLE)
   @Post()
   async generate(
     @Param('id') id: string,

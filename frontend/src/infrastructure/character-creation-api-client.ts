@@ -2,7 +2,7 @@ import {
   CharacterCreationSession,
   FinalizeCharacterCreationResult,
 } from '../domain/character-creation';
-import { QuotaExceededClientError } from './session-api-client';
+import { throwIfQuotaExceeded } from './session-api-client';
 
 const BASE_URL = '/api';
 
@@ -49,9 +49,7 @@ export const characterCreationApiClient = {
         body: JSON.stringify({ message }),
       },
     );
-    if (response.status === 429) {
-      throw new QuotaExceededClientError();
-    }
+    await throwIfQuotaExceeded(response);
     return parseJsonOrThrow<CharacterCreationSession>(response);
   },
 

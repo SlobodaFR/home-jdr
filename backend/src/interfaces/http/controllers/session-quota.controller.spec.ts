@@ -217,7 +217,10 @@ describe('SessionController - quota guard-rail (integration)', () => {
       .send({ actionText: "J'ouvre la porte" });
 
     expect(turnResponse.status).toBe(429);
-    expect(turnResponse.body).toMatchObject({ statusCode: 429 });
+    expect(turnResponse.body).toMatchObject({
+      statusCode: 429,
+      code: 'QUOTA_EXCEEDED',
+    });
     expect(typeof (turnResponse.body as { message: string }).message).toBe(
       'string',
     );
