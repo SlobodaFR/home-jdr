@@ -3,6 +3,7 @@ import { ConfigModule } from '@nestjs/config';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { ServeStaticModule } from '@nestjs/serve-static';
 import { join } from 'path';
+import { validateEnv } from './infrastructure/config/validate-env';
 import { DatabaseModule } from './infrastructure/persistence/database.module';
 import { AdminSessionsModule } from './interfaces/http/modules/admin-sessions.module';
 import { AuthModule } from './interfaces/http/modules/auth.module';
@@ -17,7 +18,7 @@ import { WorldMapModule } from './interfaces/http/modules/world-map.module';
 
 @Module({
   imports: [
-    ConfigModule.forRoot({ isGlobal: true }),
+    ConfigModule.forRoot({ isGlobal: true, validate: validateEnv }),
     // Global domain-event bus (e.g. `TurnResolvedEvent`, emitted by
     // `SubmitTurnActionUseCase`, consumed by
     // `NotifyPlayersTurnPendingUseCase` - see `06-notifications-push.md`).
