@@ -30,6 +30,23 @@ async function extractErrorMessage(response: Response): Promise<string> {
   return message ?? `La requete a echoue (${response.status})`;
 }
 
+/**
+ * 429 means two things: daily LLM quota exhausted (`code: 'QUOTA_EXCEEDED'`,
+ * curated copy) or rate limit (throttler: its own message is shown instead).
+ */
+export async function throwIfQuotaExceeded(response: Response): Promise<void> {
+  if (response.status !== 429) {
+    return;
+  }
+  const body = (await response
+    .clone()
+    .json()
+    .catch(() => null)) as { code?: string } | null;
+  if (body?.code === 'QUOTA_EXCEEDED') {
+    throw new QuotaExceededClientError();
+  }
+}
+
 async function parseJsonOrThrow<T>(response: Response): Promise<T> {
   if (!response.ok) {
     throw new Error(await extractErrorMessage(response));
@@ -93,9 +110,7 @@ export const sessionApiClient = {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ actionText, mechanicalActionKey }),
     });
-    if (response.status === 429) {
-      throw new QuotaExceededClientError();
-    }
+    await throwIfQuotaExceeded(response);
     return parseJsonOrThrow<SubmitTurnActionResult>(response);
   },
 

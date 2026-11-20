@@ -1,4 +1,6 @@
 import { Body, Controller, Get, Param, Post, UseFilters } from '@nestjs/common';
+import { Throttle } from '@nestjs/throttler';
+import { LLM_THROTTLE } from '../throttling';
 import { FinalizeCharacterCreationUseCase } from '../../../application/character-creation/finalize-character-creation.use-case';
 import { GetCharacterCreationSessionUseCase } from '../../../application/character-creation/get-character-creation-session.use-case';
 import { SendCharacterCreationMessageUseCase } from '../../../application/character-creation/send-character-creation-message.use-case';
@@ -109,6 +111,7 @@ export class CharacterCreationController {
     return toCreationSessionResponse(creationSession);
   }
 
+  @Throttle(LLM_THROTTLE)
   @UseFilters(QuotaExceededFilter)
   @Post(':id/messages')
   async sendMessage(
@@ -124,6 +127,8 @@ export class CharacterCreationController {
     return toCreationSessionResponse(creationSession);
   }
 
+  // Finalizing narrates the session opening (LLM call).
+  @Throttle(LLM_THROTTLE)
   @Post(':id/finalize')
   async finalize(
     @Param('id') id: string,

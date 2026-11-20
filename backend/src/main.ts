@@ -14,6 +14,12 @@ async function bootstrap() {
   applySecurityHeaders(app, {
     imageOrigins: imageOriginFrom(process.env.MINIO_ENDPOINT),
   });
+  // Reverse-proxy hops to trust for X-Forwarded-For (req.ip feeds the rate limit).
+  // Production: 1 (Caddy). Unset locally, otherwise any client could spoof its IP.
+  const trustProxyHops = Number(process.env.TRUST_PROXY_HOPS ?? 0);
+  if (trustProxyHops > 0) {
+    app.set('trust proxy', trustProxyHops);
+  }
   app.setGlobalPrefix('api');
   app.useGlobalPipes(new ValidationPipe({ whitelist: true, transform: true }));
   app.use(cookieParser());
