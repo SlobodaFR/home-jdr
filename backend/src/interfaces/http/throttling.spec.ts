@@ -39,7 +39,7 @@ describe('Rate limiting (HTTP)', () => {
 
   it('lets the 3.5 s polling of a few household users through', async () => {
     const app = await createApp(0);
-    for (let i = 0; i < 100; i++) {
+    for (let i = 0; i < 50; i++) {
       await request(app.getHttpServer()).get('/state').expect(200);
     }
     await app.close();

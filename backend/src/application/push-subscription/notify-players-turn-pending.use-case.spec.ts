@@ -1,3 +1,6 @@
+import { Logger } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
+import { pseudonymize } from '../../domain/shared/pseudonymize';
 import {
   PushNotificationPayload,
   PushNotificationPort,
@@ -31,6 +34,9 @@ function buildSubscription(userId: string, endpoint: string) {
   });
 }
 
+const SECRET = 'a'.repeat(64);
+const config = new ConfigService({ PSEUDONYM_SECRET: SECRET });
+
 describe('NotifyPlayersTurnPendingUseCase', () => {
   it('sends a minimal, non-narrative notification to every subscription of every player of the event', async () => {
     const player1Subscription = buildSubscription(
@@ -49,6 +55,7 @@ describe('NotifyPlayersTurnPendingUseCase', () => {
     const useCase = new NotifyPlayersTurnPendingUseCase(
       repository,
       pushNotificationPort,
+      config,
     );
     const event = new TurnResolvedEvent('session-1', 'La quete du dragon', 2, [
       'user-1',
@@ -89,6 +96,7 @@ describe('NotifyPlayersTurnPendingUseCase', () => {
     const useCase = new NotifyPlayersTurnPendingUseCase(
       repository,
       pushNotificationPort,
+      config,
     );
 
     await useCase.execute(
@@ -104,6 +112,7 @@ describe('NotifyPlayersTurnPendingUseCase', () => {
     const useCase = new NotifyPlayersTurnPendingUseCase(
       repository,
       pushNotificationPort,
+      config,
     );
 
     await useCase.execute(
@@ -141,6 +150,7 @@ describe('NotifyPlayersTurnPendingUseCase', () => {
     const useCase = new NotifyPlayersTurnPendingUseCase(
       repository,
       pushNotificationPort,
+      config,
     );
 
     await useCase.execute(
@@ -154,5 +164,42 @@ describe('NotifyPlayersTurnPendingUseCase', () => {
     expect(pushNotificationPort.calls[0].subscription.id).toBe(
       workingSubscription.id,
     );
+  });
+
+  it('logs a delivery failure without the user id, the endpoint or the error text (no PII)', async () => {
+    const warn = vi
+      .spyOn(Logger.prototype, 'warn')
+      .mockImplementation(() => {});
+    const failingSubscription = buildSubscription(
+      'user-1',
+      'https://push.example.com/subscription/secret-capability-url',
+    );
+    const repository = new InMemoryPushSubscriptionRepository([
+      failingSubscription,
+    ]);
+    class FailingPort extends RecordingPushNotificationPort {
+      send(): Promise<void> {
+        return Promise.reject(
+          new Error(
+            '410 Gone https://push.example.com/subscription/secret-capability-url',
+          ),
+        );
+      }
+    }
+    const useCase = new NotifyPlayersTurnPendingUseCase(
+      repository,
+      new FailingPort(),
+      config,
+    );
+
+    await useCase.execute(
+      new TurnResolvedEvent('session-1', 'La quete du dragon', 1, ['user-1']),
+    );
+
+    const logged = warn.mock.calls.map((call) => String(call[0])).join('\n');
+    expect(logged).toContain(pseudonymize('user-1', SECRET));
+    expect(logged).not.toContain('user-1');
+    expect(logged).not.toContain('secret-capability-url');
+    warn.mockRestore();
   });
 });
