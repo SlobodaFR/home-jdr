@@ -97,6 +97,18 @@ describe('logger configuration', () => {
     expect(logged.message).toBe('SQLITE_BUSY: database is locked');
   });
 
+  it('never throws on an error carrying a non-Error raw property', () => {
+    const error = Object.assign(new Error('provider failed'), {
+      raw: '{"email":"alice@example.com"}',
+    });
+
+    expect(serializers().err(error)).toMatchObject({
+      type: 'Error',
+      message: 'provider failed',
+    });
+    expect(JSON.stringify(serializers().err(error))).not.toContain('alice');
+  });
+
   it('strips API keys from logged error messages and stacks', () => {
     const logged = serializers().err(
       new Error('Incorrect API key provided: sk-proj-AbC_123-xyz'),
