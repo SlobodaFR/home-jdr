@@ -43,12 +43,53 @@ describe('logger configuration', () => {
     expect(serialized).toEqual({ statusCode: 302 });
   });
 
-  it('logs errors by type only: no message or stack', () => {
-    const serialized = serializers().err(
-      new TypeError('INSERT ... VALUES (alice@example.com)'),
-    );
+  it('logs errors through a whitelist: type, message, stack and code only', () => {
+    const error = Object.assign(new Error('SQLITE_BUSY: database is locked'), {
+      name: 'QueryFailedError',
+      code: 'SQLITE_BUSY',
+      query: 'INSERT INTO users (email, name) VALUES (?, ?)',
+      parameters: ['alice@example.com', 'Alice Martin'],
+      driverError: { parameters: ['alice@example.com'] },
+      response: { data: 'alice@example.com' },
+      cause: new Error('alice@example.com'),
+    });
 
-    expect(serialized).toEqual({ type: 'TypeError' });
+    const lines: string[] = [];
+    const stream = new Writable({
+      write(chunk: Buffer, _encoding, callback) {
+        lines.push(chunk.toString());
+        callback();
+      },
+    });
+    const logger = pino(
+      { redact: REDACT_PATHS, serializers: { err: serializers().err } },
+      stream,
+    );
+    logger.error({ err: error }, 'request errored');
+
+    const output = lines.join('');
+    expect(output).not.toContain('alice@example.com');
+    expect(output).not.toContain('Alice Martin');
+    expect(output).not.toContain('INSERT INTO');
+    const logged = (JSON.parse(output) as { err: Record<string, unknown> }).err;
+    expect(Object.keys(logged).sort()).toEqual([
+      'code',
+      'message',
+      'stack',
+      'type',
+    ]);
+    expect(logged.type).toBe('QueryFailedError');
+    expect(logged.code).toBe('SQLITE_BUSY');
+    expect(logged.message).toBe('SQLITE_BUSY: database is locked');
+  });
+
+  it('strips API keys from logged error messages and stacks', () => {
+    const logged = serializers().err(
+      new Error('Incorrect API key provided: sk-proj-AbC_123-xyz'),
+    ) as { message: string; stack: string };
+
+    expect(logged.message).not.toContain('sk-proj');
+    expect(logged.stack).not.toContain('sk-proj');
   });
 
   it('redacts personal and secret fields in structured log objects', () => {

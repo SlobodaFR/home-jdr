@@ -24,6 +24,23 @@ function pathOf(url: string | undefined): string {
   return (url ?? '').split('?')[0];
 }
 
+const API_KEY = /sk-[A-Za-z0-9_-]+/g;
+const stripKeys = (text: string) => text.replace(API_KEY, 'sk-[redacted]');
+
+/**
+ * Whitelist serializer: pino's default copies every enumerable property, and TypeORM's
+ * QueryFailedError carries `query`, `parameters` and `driverError` (emails, names). Only the
+ * type, message, stack and code are kept, with API keys stripped.
+ */
+export function serializeError(err: Error & { code?: unknown }) {
+  return {
+    type: err.name,
+    message: stripKeys(err.message),
+    stack: err.stack === undefined ? undefined : stripKeys(err.stack),
+    code: typeof err.code === 'string' ? err.code : undefined,
+  };
+}
+
 export function loggerParams(nodeEnv: string | undefined): Params {
   return {
     pinoHttp: {
@@ -37,8 +54,7 @@ export function loggerParams(nodeEnv: string | undefined): Params {
         }),
         // No headers: Location carries authorization codes, Set-Cookie the session token.
         res: (res: ServerResponse) => ({ statusCode: res.statusCode }),
-        // Error type only: messages and stacks can embed SQL parameters or LLM provider bodies.
-        err: (err: Error) => ({ type: err.name }),
+        err: serializeError,
       },
       autoLogging: {
         ignore: (req: IncomingMessage) =>
