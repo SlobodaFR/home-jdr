@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { describeProviderFailure } from '../shared/provider-error';
 import { ConfigService } from '@nestjs/config';
 import { ImageGenerationPort } from '../../domain/world-map/image-generation.port';
 
@@ -53,7 +54,11 @@ export class OpenAiImageGenerationAdapter extends ImageGenerationPort {
     if (!response.ok) {
       const errorBody = await response.text().catch(() => '');
       throw new Error(
-        `Image generation failed: ${response.status} ${errorBody.slice(0, 500)}`,
+        describeProviderFailure(
+          'Image generation failed',
+          response.status,
+          errorBody,
+        ),
       );
     }
 

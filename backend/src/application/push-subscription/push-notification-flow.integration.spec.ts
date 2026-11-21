@@ -1,3 +1,4 @@
+import { ConfigService } from '@nestjs/config';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import {
   PushNotificationPayload,
@@ -104,6 +105,7 @@ describe('push notification flow (register -> turn resolves -> notified -> delet
     const notifyPlayersTurnPending = new NotifyPlayersTurnPendingUseCase(
       pushSubscriptionRepository,
       pushNotificationPort,
+      new ConfigService({ PSEUDONYM_SECRET: 'a'.repeat(64) }),
     );
     eventEmitter.on(TURN_RESOLVED_EVENT, (event: TurnResolvedEvent) => {
       void notifyPlayersTurnPending.execute(event);

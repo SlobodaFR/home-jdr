@@ -175,9 +175,11 @@ export class FinalizeCharacterCreationUseCase {
 
       await this.narrateSessionOpening.execute({ sessionId: gameSessionId });
     } catch (error) {
+      // Error type only: the message of a wrapped error can carry its cause (PII).
       this.logger.warn(
-        `Opening narration failed for session "${gameSessionId}" - ignored, character creation still succeeded.`,
-        error instanceof Error ? error.stack : undefined,
+        `Opening narration failed for session "${gameSessionId}" (${
+          error instanceof Error ? error.name : 'unknown'
+        }) - ignored, character creation still succeeded.`,
       );
     }
   }

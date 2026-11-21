@@ -1,11 +1,13 @@
 import { Module } from '@nestjs/common';
-import { APP_GUARD } from '@nestjs/core';
+import { APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
+import { LoggerErrorInterceptor, LoggerModule } from 'nestjs-pino';
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { ConfigModule } from '@nestjs/config';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { ServeStaticModule } from '@nestjs/serve-static';
 import { join } from 'path';
 import { validateEnv } from './infrastructure/config/validate-env';
+import { loggerParams } from './infrastructure/logging/logger.config';
 import { DatabaseModule } from './infrastructure/persistence/database.module';
 import { SameOriginGuard } from './interfaces/http/guards/same-origin.guard';
 import { throttlerOptions } from './interfaces/http/throttling';
@@ -27,6 +29,7 @@ import { WorldMapModule } from './interfaces/http/modules/world-map.module';
     // `SubmitTurnActionUseCase`, consumed by
     // `NotifyPlayersTurnPendingUseCase` - see `06-notifications-push.md`).
     EventEmitterModule.forRoot(),
+    LoggerModule.forRoot(loggerParams(process.env.NODE_ENV)),
     ThrottlerModule.forRoot(throttlerOptions),
     DatabaseModule,
     ServeStaticModule.forRoot({
@@ -45,6 +48,8 @@ import { WorldMapModule } from './interfaces/http/modules/world-map.module';
     AdminSessionsModule,
   ],
   providers: [
+    // Attaches the real exception to the request log (serialized through the whitelist).
+    { provide: APP_INTERCEPTOR, useClass: LoggerErrorInterceptor },
     { provide: APP_GUARD, useClass: ThrottlerGuard },
     // Every mutation must come from this origin (cookie auth); see SameOriginGuard.
     { provide: APP_GUARD, useClass: SameOriginGuard },

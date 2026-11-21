@@ -1,7 +1,9 @@
-import { validateEnv } from './validate-env';
+import { DEV_PSEUDONYM_SECRET, validateEnv } from './validate-env';
 
+const STRONG = 'f'.repeat(64);
 const PROD = {
   NODE_ENV: 'production',
+  PSEUDONYM_SECRET: STRONG,
   AUTH_SERVICE_URL: 'https://auth.sloboda.fr',
   AUTH_CLIENT_ID: 'jdr',
   AUTH_CLIENT_SECRET: 'client-secret',
@@ -14,10 +16,26 @@ const PROD = {
 };
 
 describe('validateEnv', () => {
-  it('accepts anything outside production (local runs and tests need no setup)', () => {
-    expect(validateEnv({})).toEqual({});
-    expect(validateEnv({ NODE_ENV: 'test' })).toEqual({ NODE_ENV: 'test' });
+  it('accepts anything outside production, with a development pseudonym secret', () => {
+    expect(validateEnv({})).toEqual({ PSEUDONYM_SECRET: DEV_PSEUDONYM_SECRET });
+    expect(validateEnv({ NODE_ENV: 'test', PSEUDONYM_SECRET: 'mine' })).toEqual(
+      { NODE_ENV: 'test', PSEUDONYM_SECRET: 'mine' },
+    );
   });
+
+  it.each([
+    ['missing', undefined],
+    ['empty', ''],
+    ['shorter than 32 bytes', 'x'.repeat(31)],
+    ['the development fallback', DEV_PSEUDONYM_SECRET],
+  ])(
+    'refuses a PSEUDONYM_SECRET that is %s in production',
+    (_label, secret) => {
+      expect(() => validateEnv({ ...PROD, PSEUDONYM_SECRET: secret })).toThrow(
+        'PSEUDONYM_SECRET',
+      );
+    },
+  );
 
   it('accepts a complete production environment, optional variables unset', () => {
     expect(validateEnv(PROD)).toEqual(PROD);
