@@ -1,5 +1,8 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { sessionApiClient } from './session-api-client';
+import {
+  QuotaExceededClientError,
+  sessionApiClient,
+} from './session-api-client';
 
 describe('sessionApiClient', () => {
   afterEach(() => {
@@ -120,6 +123,38 @@ describe('sessionApiClient', () => {
         '/api/sessions/session-1/turns',
         expect.objectContaining({ method: 'POST', credentials: 'include' }),
       );
+    });
+  });
+
+  describe('submitTurnAction on HTTP 429', () => {
+    const respond429 = (body: unknown) =>
+      vi.stubGlobal(
+        'fetch',
+        vi.fn().mockResolvedValue(
+          new Response(JSON.stringify(body), {
+            status: 429,
+            headers: { 'Content-Type': 'application/json' },
+          }),
+        ),
+      );
+
+    it('throws QuotaExceededClientError when the daily quota is exhausted', async () => {
+      respond429({ statusCode: 429, code: 'QUOTA_EXCEEDED', message: 'x' });
+
+      await expect(
+        sessionApiClient.submitTurnAction('session-1', 'action'),
+      ).rejects.toBeInstanceOf(QuotaExceededClientError);
+    });
+
+    it('surfaces the rate-limit message instead of the quota copy', async () => {
+      respond429({ statusCode: 429, message: 'Trop de requêtes' });
+
+      const error = await sessionApiClient
+        .submitTurnAction('session-1', 'action')
+        .catch((e: unknown) => e);
+
+      expect(error).not.toBeInstanceOf(QuotaExceededClientError);
+      expect((error as Error).message).toBe('Trop de requêtes');
     });
   });
 
