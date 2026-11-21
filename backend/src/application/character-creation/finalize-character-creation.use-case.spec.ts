@@ -1,3 +1,4 @@
+import { Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { CharacterCreationSession } from '../../domain/character-creation/character-creation-session';
 import { GameSystem } from '../../domain/game-system/game-system';
@@ -323,6 +324,34 @@ describe('FinalizeCharacterCreationUseCase', () => {
   });
 
   describe('opening narration trigger', () => {
+    it('logs a failed opening narration without the error message or stack (no PII)', async () => {
+      const warn = vi
+        .spyOn(Logger.prototype, 'warn')
+        .mockImplementation(() => {});
+      const llm = new RecordingLlmGameMasterPort();
+      llm.narrateOpening = () =>
+        Promise.reject(
+          new Error('INSERT ... VALUES (Grognak, secret narration text)'),
+        );
+      const creationSession = readyCreationSession('user-1', 'Grognak');
+      const { useCase } = buildUseCase({
+        creationSessionRepository:
+          new InMemoryCharacterCreationSessionRepository([creationSession]),
+        llm,
+      });
+
+      await useCase.execute({
+        characterCreationSessionId: creationSession.id,
+        userId: 'user-1',
+      });
+
+      const logged = JSON.stringify(warn.mock.calls);
+      expect(logged).toContain('Opening narration failed');
+      expect(logged).not.toContain('secret narration text');
+      expect(logged).not.toContain('Grognak');
+      warn.mockRestore();
+    });
+
     it('a solo session immediately triggers the opening narration on the only finalize', async () => {
       const creationSession = readyCreationSession('user-1', 'Grognak');
       const { useCase, llm, gameSessionRepository } = buildUseCase({
