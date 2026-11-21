@@ -4,9 +4,13 @@ import { loggerParams, REDACT_PATHS } from './logger.config';
 
 type Serializer = (value: unknown) => unknown;
 
-function serializers(): { req: Serializer; res: Serializer } {
+function serializers(): {
+  req: Serializer;
+  res: Serializer;
+  err: Serializer;
+} {
   const options = loggerParams('production').pinoHttp as {
-    serializers: { req: Serializer; res: Serializer };
+    serializers: { req: Serializer; res: Serializer; err: Serializer };
   };
   return options.serializers;
 }
@@ -37,6 +41,14 @@ describe('logger configuration', () => {
     });
 
     expect(serialized).toEqual({ statusCode: 302 });
+  });
+
+  it('logs errors by type only: no message or stack', () => {
+    const serialized = serializers().err(
+      new TypeError('INSERT ... VALUES (alice@example.com)'),
+    );
+
+    expect(serialized).toEqual({ type: 'TypeError' });
   });
 
   it('redacts personal and secret fields in structured log objects', () => {

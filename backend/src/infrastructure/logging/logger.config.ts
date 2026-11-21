@@ -37,6 +37,8 @@ export function loggerParams(nodeEnv: string | undefined): Params {
         }),
         // No headers: Location carries authorization codes, Set-Cookie the session token.
         res: (res: ServerResponse) => ({ statusCode: res.statusCode }),
+        // Error type only: messages and stacks can embed SQL parameters or LLM provider bodies.
+        err: (err: Error) => ({ type: err.name }),
       },
       autoLogging: {
         ignore: (req: IncomingMessage) =>
