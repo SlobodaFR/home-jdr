@@ -24,7 +24,7 @@ function pathOf(url: string | undefined): string {
   return (url ?? '').split('?')[0];
 }
 
-const API_KEY = /sk-[A-Za-z0-9_-]+/g;
+const API_KEY = /\bsk-[A-Za-z0-9_-]+/g;
 const stripKeys = (text: string) => text.replace(API_KEY, 'sk-[redacted]');
 
 /**
@@ -46,6 +46,9 @@ export function loggerParams(nodeEnv: string | undefined): Params {
     pinoHttp: {
       level: nodeEnv === 'test' ? 'silent' : 'info',
       redact: REDACT_PATHS,
+      // pino-http would otherwise run pino's std serializer first (copies props, concatenates
+      // `cause` messages) and hand serializeError a plain object: it must receive the Error.
+      wrapSerializers: false,
       serializers: {
         // No headers (cookies, tokens), no query string (OAuth code and state), no IP.
         req: (req: IncomingMessage) => ({
