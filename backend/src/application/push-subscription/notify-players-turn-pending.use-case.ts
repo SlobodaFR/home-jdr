@@ -1,7 +1,9 @@
 import { Injectable, Logger } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { OnEvent } from '@nestjs/event-emitter';
 import { PushNotificationPort } from '../../domain/push-subscription/push-notification.port';
 import { PushSubscriptionRepository } from '../../domain/push-subscription/push-subscription.repository';
+import { pseudonymize } from '../../domain/shared/pseudonymize';
 import {
   TURN_RESOLVED_EVENT,
   TurnResolvedEvent,
@@ -23,6 +25,7 @@ export class NotifyPlayersTurnPendingUseCase {
   constructor(
     private readonly pushSubscriptionRepository: PushSubscriptionRepository,
     private readonly pushNotificationPort: PushNotificationPort,
+    private readonly config: ConfigService,
   ) {}
 
   @OnEvent(TURN_RESOLVED_EVENT)
@@ -43,11 +46,13 @@ export class NotifyPlayersTurnPendingUseCase {
       for (const subscription of subscriptions) {
         try {
           await this.pushNotificationPort.send(subscription, payload);
-        } catch (error) {
+        } catch {
+          // No user id, endpoint (a capability URL) or error text in logs: they can carry PII.
           this.logger.warn(
-            `Failed to push-notify subscription ${subscription.id} for user ${userId}: ${
-              error instanceof Error ? error.message : String(error)
-            }`,
+            `Failed to push-notify subscription ${subscription.id} for user ${pseudonymize(
+              userId,
+              this.config.getOrThrow<string>('PSEUDONYM_SECRET'),
+            )}`,
           );
         }
       }

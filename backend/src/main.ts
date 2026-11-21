@@ -1,6 +1,7 @@
 import { NestFactory } from '@nestjs/core';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import { ValidationPipe } from '@nestjs/common';
+import { Logger } from 'nestjs-pino';
 import cookieParser from 'cookie-parser';
 import { AppModule } from './app.module';
 import {
@@ -9,7 +10,10 @@ import {
 } from './interfaces/http/security-headers';
 
 async function bootstrap() {
-  const app = await NestFactory.create<NestExpressApplication>(AppModule);
+  const app = await NestFactory.create<NestExpressApplication>(AppModule, {
+    bufferLogs: true,
+  });
+  app.useLogger(app.get(Logger));
   // First middleware: every response (API and SPA files) gets the security headers.
   applySecurityHeaders(app, {
     imageOrigins: imageOriginFrom(process.env.MINIO_ENDPOINT),
