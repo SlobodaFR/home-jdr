@@ -1,5 +1,6 @@
 import { Writable } from 'stream';
 import pino from 'pino';
+import pinoHttp from 'pino-http';
 import { loggerParams, REDACT_PATHS } from './logger.config';
 
 type Serializer = (value: unknown) => unknown;
@@ -61,17 +62,30 @@ describe('logger configuration', () => {
         callback();
       },
     });
-    const logger = pino(
-      { redact: REDACT_PATHS, serializers: { err: serializers().err } },
+    // Same pipeline as production: nestjs-pino builds its logger through pino-http.
+    const { logger } = pinoHttp({
+      ...(loggerParams('production').pinoHttp as Record<string, unknown>),
       stream,
-    );
+    });
     logger.error({ err: error }, 'request errored');
+    logger.error(
+      {
+        err: new Error('wrapper failed', {
+          cause: new Error('cause leak alice@example.com'),
+        }),
+      },
+      'wrapped',
+    );
 
     const output = lines.join('');
     expect(output).not.toContain('alice@example.com');
     expect(output).not.toContain('Alice Martin');
     expect(output).not.toContain('INSERT INTO');
-    const logged = (JSON.parse(output) as { err: Record<string, unknown> }).err;
+    const logged = (
+      JSON.parse(output.split('\n')[0]) as {
+        err: Record<string, unknown>;
+      }
+    ).err;
     expect(Object.keys(logged).sort()).toEqual([
       'code',
       'message',
