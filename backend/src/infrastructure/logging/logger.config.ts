@@ -32,7 +32,9 @@ const stripKeys = (text: string) => text.replace(API_KEY, 'sk-[redacted]');
  * QueryFailedError carries `query`, `parameters` and `driverError` (emails, names). Only the
  * type, message, stack and code are kept, with API keys stripped.
  */
-export function serializeError(err: Error & { code?: unknown }) {
+export function serializeError(input: Error & { code?: unknown }) {
+  // Some pino-http versions pass an already-serialized error with the original in `.raw`.
+  const err = (input as { raw?: Error & { code?: unknown } }).raw ?? input;
   return {
     type: err.name,
     message: stripKeys(err.message),
