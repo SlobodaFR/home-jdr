@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
-import { APP_GUARD } from '@nestjs/core';
-import { LoggerModule } from 'nestjs-pino';
+import { APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
+import { LoggerErrorInterceptor, LoggerModule } from 'nestjs-pino';
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { ConfigModule } from '@nestjs/config';
 import { EventEmitterModule } from '@nestjs/event-emitter';
@@ -48,6 +48,8 @@ import { WorldMapModule } from './interfaces/http/modules/world-map.module';
     AdminSessionsModule,
   ],
   providers: [
+    // Attaches the real exception to the request log (serialized through the whitelist).
+    { provide: APP_INTERCEPTOR, useClass: LoggerErrorInterceptor },
     { provide: APP_GUARD, useClass: ThrottlerGuard },
     // Every mutation must come from this origin (cookie auth); see SameOriginGuard.
     { provide: APP_GUARD, useClass: SameOriginGuard },

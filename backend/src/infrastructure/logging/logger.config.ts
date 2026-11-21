@@ -25,7 +25,8 @@ function pathOf(url: string | undefined): string {
 }
 
 const API_KEY = /\bsk-[A-Za-z0-9_-]+/g;
-const stripKeys = (text: string) => text.replace(API_KEY, 'sk-[redacted]');
+const stripKeys = (text: unknown) =>
+  typeof text === 'string' ? text.replace(API_KEY, 'sk-[redacted]') : undefined;
 
 /**
  * Whitelist serializer: pino's default copies every enumerable property, and TypeORM's
@@ -34,11 +35,12 @@ const stripKeys = (text: string) => text.replace(API_KEY, 'sk-[redacted]');
  */
 export function serializeError(input: Error & { code?: unknown }) {
   // Some pino-http versions pass an already-serialized error with the original in `.raw`.
-  const err = (input as { raw?: Error & { code?: unknown } }).raw ?? input;
+  const raw = (input as { raw?: unknown }).raw;
+  const err = raw instanceof Error ? (raw as typeof input) : input;
   return {
     type: err.name,
     message: stripKeys(err.message),
-    stack: err.stack === undefined ? undefined : stripKeys(err.stack),
+    stack: stripKeys(err.stack),
     code: typeof err.code === 'string' ? err.code : undefined,
   };
 }
