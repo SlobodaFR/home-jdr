@@ -7,6 +7,7 @@ import { EventEmitterModule } from '@nestjs/event-emitter';
 import { ServeStaticModule } from '@nestjs/serve-static';
 import { join } from 'path';
 import { validateEnv } from './infrastructure/config/validate-env';
+import { FeatureFlagsModule } from './infrastructure/feature-flags/feature-flags.module';
 import { loggerParams } from './infrastructure/logging/logger.config';
 import { RuntimeHealthMonitor } from './infrastructure/observability/runtime-health.monitor';
 import { HealthController } from './interfaces/http/controllers/health.controller';
@@ -33,6 +34,7 @@ import { WorldMapModule } from './interfaces/http/modules/world-map.module';
     EventEmitterModule.forRoot(),
     LoggerModule.forRoot(loggerParams(process.env.NODE_ENV)),
     ThrottlerModule.forRoot(throttlerOptions),
+    FeatureFlagsModule,
     DatabaseModule,
     ServeStaticModule.forRoot({
       rootPath: join(__dirname, 'public'),
