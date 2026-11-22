@@ -112,6 +112,69 @@ d'écriture du `.env` distant — non fait dans cette tâche pour rester dans so
 périmètre déclaré (voir `tasks/README.md` — signaler plutôt que modifier un
 fichier hors périmètre), à faire par la session qui merge/déploie.
 
+## Webhook de déconnexion signé (double acceptation)
+
+`POST /api/auth/disconnect` est le `logoutWebhookUrl` enregistré auprès de home-auth
+(`{ "userId": "..." }`) : appelé lors d'un logout global, il marque l'utilisateur comme révoqué ; tout
+access token émis avant cet instant est ensuite rejeté par `JwtAuthGuard`. Il est authentifié par la
+**signature** de home-auth (contrat PC7) ou, pendant la transition, par l'ancien `?secret=AUTH_WEBHOOK_SECRET`.
+
+En-têtes envoyés par home-auth : `X-Auth-Webhook-Id` (uuid v4), `X-Auth-Webhook-Timestamp` (secondes unix),
+`X-Auth-Webhook-Signature: v1=<hex>[,v1=<hex>]` avec
+`hex = HMAC-SHA256(secret, id + "." + timestamp + "." + rawBody)` ; la clé est la chaîne du secret
+(64 caractères hexadécimaux, en UTF-8, pas ses octets décodés) et `rawBody` les octets reçus.
+
+Vérification (`backend/src/domain/auth/webhook-signature.ts`) :
+
+1. un `id` déjà accepté dans les 10 dernières minutes est un **rejeu**, même si les autres en-têtes sont absents ou mal formés (mémoire du processus : un
+   redémarrage l'oublie ; seul un `id` dont la signature est entièrement valide est retenu) : 401, même
+   avec un `?secret=` valide ;
+2. `|now - timestamp| <= 120 s` ;
+3. chaque entrée `v1=` est décodée (hex, 32 octets) puis comparée au HMAC recalculé par `timingSafeEqual` ;
+   une entrée qui correspond suffit (deux entrées pendant le recouvrement de 24 h après une régénération du
+   secret).
+
+Le vérificateur renvoie `ok`, `replay`, `format`, `window` ou `hmac`.
+
+`rawBody` : `main.ts` crée l'application avec `rawBody: true` (`nestApplicationOptions`, partagé avec les
+tests) ; `req.rawBody` contient les octets exacts du corps JSON.
+
+Double acceptation (`AuthenticateLogoutWebhookUseCase`) : « en-têtes de signature présents » = au moins un
+des trois en-têtes `X-Auth-Webhook-*` non vide.
+
+- Sans aucun en-tête : ancien `?secret=` comparé en `timingSafeEqual`, tant que le flag
+  `auth-webhook-require-signature` vaut `false`.
+- En-têtes présents et signature valide : accepté (INFO).
+- En-têtes présents et `id` déjà vu : 401, même avec un `?secret=` valide (contrôlé avant le repli).
+- En-têtes présents mais invalides (`format`, `window`, `hmac`) ou invérifiables (pas de secret de
+  signature, corps brut indisponible) : repli sur le `?secret=`, tant que le flag vaut `false`.
+- Flag à `true` : signature obligatoire, le `?secret=` n'est plus accepté ; sans
+  `AUTH_WEBHOOK_SIGNING_SECRET` configuré, plus rien n'est accepté (échec fermé : ne pas activer le flag
+  avant d'avoir le secret).
+
+Journalisation, sans jamais écrire secret, signature ni identifiant, une ligne par raison toutes les
+5 minutes : INFO pour une acceptation par signature ; WARN pour une acceptation par l'ancien `?secret=`,
+avec la raison `no-signature-headers`, `missing-signing-secret`, `format`, `window`, `hmac` ou
+`raw-body-unavailable`. C'est ce qui permet de vérifier la bascule avant d'activer le flag.
+
+`AUTH_WEBHOOK_SIGNING_SECRET` (optionnel, exactement 64 hexadécimaux **en minuscules**, sans espace,
+1Password : `JDR_AUTH_WEBHOOK_SIGNING_SECRET`) est le secret affiché une seule fois par l'admin de home-auth
+(« Régénérer »). Absent ou vide : seul l'ancien chemin existe. Mal formé (majuscules, espaces, mauvaise
+longueur) : le service refuse de démarrer, y compris hors production.
+
+Vecteurs de test fixes du contrat (publiés par home-auth, recopiés dans
+`backend/src/domain/auth/webhook-signature.spec.ts`) :
+
+|     | secret | id                                     | timestamp    | corps                 | HMAC (hex)                                                         |
+| --- | ------ | -------------------------------------- | ------------ | --------------------- | ------------------------------------------------------------------ |
+| 1   | `S1`   | `3b241101-e2bb-4255-8caf-4136c566a962` | `1700000000` | `{"userId":"u1"}`     | `41294c53497c1d18871786b2d5c3ec091e6b357638e7104d826de50af8813242` |
+| 2   | `S2`   | `3b241101-e2bb-4255-8caf-4136c566a962` | `1700000000` | `{"userId":"u1"}`     | `89de6c4652b33d864427b3091771ed8b9266a99b3bf915b126eb4655a2dce09f` |
+| 3   | `S1`   | `9b2f0f6e-8d3a-4f6b-9c1e-2a7d5e4c1b30` | `1700000123` | `{"userId":"4b8f-é"}` | `d9a2c8cec34058ebb100f8b454ba46b1214cf777000d9aab00dda91205d5a3ac` |
+
+- `S1` = `000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f`
+- `S2` = `ffeeddccbbaa99887766554433221100ffeeddccbbaa99887766554433221100`
+- Recoupement : `printf '%s' '3b241101-e2bb-4255-8caf-4136c566a962.1700000000.{"userId":"u1"}' | openssl dgst -sha256 -hmac <S1>`
+
 ## Feature flags (home-features)
 
 Le service lit des flags booléens dans [home-features](https://features.sloboda.fr) via OFREP
@@ -139,9 +202,10 @@ home-jdr : c'est la copie de celui de home-auth, que tous les services home-* re
 
 ### Flags utilisés
 
-| Clé                        | Défaut du code | Effet                                                                                                                                                                                                                                                                                                   |
-| -------------------------- | -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `auth-verify-token-claims` | `false`        | `true` : `JwksAccessTokenVerifier` vérifie aussi l'audience (`AUTH_CLIENT_ID`), l'émetteur (origine de `AUTH_SERVICE_URL`) et l'algorithme (`RS256`) des access tokens. `false` : seule la signature est vérifiée (comportement historique). Évalué à chaque vérification, sans bloquer (mémo de 30 s). |
+| Clé                              | Défaut du code | Effet                                                                                                                                                                                                                                                                                                   |
+| -------------------------------- | -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `auth-verify-token-claims`       | `false`        | `true` : `JwksAccessTokenVerifier` vérifie aussi l'audience (`AUTH_CLIENT_ID`), l'émetteur (origine de `AUTH_SERVICE_URL`) et l'algorithme (`RS256`) des access tokens. `false` : seule la signature est vérifiée (comportement historique). Évalué à chaque vérification, sans bloquer (mémo de 30 s). |
+| `auth-webhook-require-signature` | `false`        | `true` : `POST /api/auth/disconnect` n'accepte plus que la signature `X-Auth-Webhook-*` (l'ancien `?secret=` est refusé). `false` : signature valide ou ancien `?secret=`.                                                                                                                              |
 
 ## Structure du repo
 
