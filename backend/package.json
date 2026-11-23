@@ -21,6 +21,8 @@
     "@nestjs/serve-static": "^4.0.2",
     "@nestjs/throttler": "^6.8.0",
     "@nestjs/typeorm": "^10.0.2",
+    "@openfeature/ofrep-provider": "^0.2.5",
+    "@openfeature/server-sdk": "^1.23.0",
     "better-sqlite3": "^12.11.1",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.14.1",
