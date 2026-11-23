@@ -75,6 +75,18 @@ stade avec des placeholders — elles seront consommées par les tâches
 `tasks/04-llm-orchestration.md`, `05-world-map.md`, `06-notifications-push.md`
 et `08-admin-quotas-cost-guardrails.md`.
 
+### Télémétrie opérationnelle (PostHog)
+
+| Variable          | Rôle                                                                            |
+| ----------------- | ------------------------------------------------------------------------------- |
+| `POSTHOG_API_KEY` | Clé du projet PostHog. Absente : aucun envoi (le démarrage n'en dépend jamais). |
+| `POSTHOG_HOST`    | Hôte PostHog, défaut `https://eu.i.posthog.com`.                                |
+
+Deux événements anonymes (aucun utilisateur, IP ni URL brute) : `runtime_health` (une fois par
+minute : latence de la boucle d'événements, ELU, mémoire) et `http_request` (méthode, template de
+route, statut, durée ; `/healthz` et le polling `/api/sessions/:id/state` sont exclus). En
+production, `POSTHOG_API_KEY` vient du champ 1Password partagé via `deploy-vps.yml`.
+
 ### Notifications push (clés VAPID)
 
 `VAPID_PUBLIC_KEY`/`VAPID_PRIVATE_KEY` (`backend/.env.example`) sont la paire

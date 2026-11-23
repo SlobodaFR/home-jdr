@@ -14,6 +14,8 @@ async function bootstrap() {
     bufferLogs: true,
   });
   app.useLogger(app.get(Logger));
+  // SIGTERM (each deploy) flushes the telemetry queue (PostHogTelemetry.onApplicationShutdown).
+  app.enableShutdownHooks();
   // First middleware: every response (API and SPA files) gets the security headers.
   applySecurityHeaders(app, {
     imageOrigins: imageOriginFrom(process.env.MINIO_ENDPOINT),
