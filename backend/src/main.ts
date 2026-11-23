@@ -4,6 +4,7 @@ import { ValidationPipe } from '@nestjs/common';
 import { Logger } from 'nestjs-pino';
 import cookieParser from 'cookie-parser';
 import { AppModule } from './app.module';
+import { nestApplicationOptions } from './nest-application-options';
 import {
   applySecurityHeaders,
   imageOriginFrom,
@@ -12,6 +13,7 @@ import {
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule, {
     bufferLogs: true,
+    ...nestApplicationOptions,
   });
   app.useLogger(app.get(Logger));
   // SIGTERM (each deploy) flushes the telemetry queue (PostHogTelemetry.onApplicationShutdown).

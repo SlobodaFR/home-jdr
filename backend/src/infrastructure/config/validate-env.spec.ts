@@ -69,4 +69,58 @@ describe('validateEnv', () => {
       );
     },
   );
+
+  describe('AUTH_WEBHOOK_SIGNING_SECRET (optional)', () => {
+    const hex = 'ab'.repeat(32);
+
+    it('is not required, in production or outside', () => {
+      expect(() => validateEnv(PROD)).not.toThrow();
+      expect(() =>
+        validateEnv({ ...PROD, AUTH_WEBHOOK_SIGNING_SECRET: '' }),
+      ).not.toThrow();
+      expect(() => validateEnv({})).not.toThrow();
+    });
+
+    it('accepts exactly 64 lowercase hexadecimal characters', () => {
+      expect(() =>
+        validateEnv({ ...PROD, AUTH_WEBHOOK_SIGNING_SECRET: hex }),
+      ).not.toThrow();
+      expect(() =>
+        validateEnv({ AUTH_WEBHOOK_SIGNING_SECRET: hex }),
+      ).not.toThrow();
+    });
+
+    it('refuses any other value, everywhere, instead of silently ignoring a bad secret', () => {
+      for (const value of [
+        'abc',
+        'g'.repeat(64),
+        hex.slice(2),
+        `${hex}00`,
+        hex.toUpperCase(),
+        `${'AB'.repeat(16)}${'ab'.repeat(16)}`,
+        ` ${hex}`,
+        `${hex} `,
+        `${hex}\n`,
+        '   ',
+      ]) {
+        expect(() =>
+          validateEnv({ ...PROD, AUTH_WEBHOOK_SIGNING_SECRET: value }),
+        ).toThrow('AUTH_WEBHOOK_SIGNING_SECRET');
+        expect(() =>
+          validateEnv({ AUTH_WEBHOOK_SIGNING_SECRET: value }),
+        ).toThrow('AUTH_WEBHOOK_SIGNING_SECRET');
+      }
+    });
+
+    it('never echoes the value', () => {
+      let message = '';
+      try {
+        validateEnv({ AUTH_WEBHOOK_SIGNING_SECRET: 'very-secret' });
+      } catch (error) {
+        message = error instanceof Error ? error.message : '';
+      }
+      expect(message).toContain('AUTH_WEBHOOK_SIGNING_SECRET');
+      expect(message).not.toContain('very-secret');
+    });
+  });
 });

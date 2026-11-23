@@ -3,6 +3,7 @@ export const DEV_PSEUDONYM_SECRET =
   'dev-only-pseudonym-secret-not-for-production';
 
 const MIN_SECRET_BYTES = 32;
+const SIGNING_SECRET_FORMAT = /^[0-9a-f]{64}$/;
 
 /** Needed by the code at startup or on the first login: no safe default exists. */
 const REQUIRED = [
@@ -28,6 +29,19 @@ const HTTPS_URLS = ['AUTH_SERVICE_URL', 'FRONTEND_URL'];
 export function validateEnv(
   env: Record<string, unknown>,
 ): Record<string, unknown> {
+  // Optional, but a malformed secret would be ignored silently: the webhook would fall back to the
+  // legacy ?secret=. Checked outside production too.
+  const signingSecret = env.AUTH_WEBHOOK_SIGNING_SECRET;
+  if (
+    typeof signingSecret === 'string' &&
+    signingSecret !== '' &&
+    !SIGNING_SECRET_FORMAT.test(signingSecret)
+  ) {
+    throw new Error(
+      'AUTH_WEBHOOK_SIGNING_SECRET must be exactly 64 lowercase hexadecimal characters, without whitespace (the secret shown by home-auth)',
+    );
+  }
+
   const secret =
     typeof env.PSEUDONYM_SECRET === 'string' ? env.PSEUDONYM_SECRET : '';
   if (env.NODE_ENV !== 'production') {
