@@ -59,6 +59,9 @@ export class AuthenticateLogoutWebhookUseCase {
     const { id, timestamp, signature } = request.headers;
     const hasSignatureHeaders = Boolean(id || timestamp || signature);
 
+    // Replay first: refused whatever the raw body, format or window, and even with a valid ?secret=.
+    if (hasSignatureHeaders && this.verifier?.isReplay(id)) return false;
+
     let reason: LegacyReason;
     if (!hasSignatureHeaders) reason = 'no-signature-headers';
     else if (!this.verifier) reason = 'missing-signing-secret';

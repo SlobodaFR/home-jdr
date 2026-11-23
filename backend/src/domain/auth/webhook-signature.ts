@@ -59,6 +59,12 @@ export class WebhookSignatureVerifier {
     private readonly clock: ClockPort,
   ) {}
 
+  /** Was this id already accepted in the last 10 minutes? Check it before anything else. */
+  isReplay(id: string | undefined): boolean {
+    this.forgetExpired(this.clock.now().getTime());
+    return Boolean(id && this.seen.has(id));
+  }
+
   verify(
     headers: WebhookSignatureHeaders,
     rawBody: string | Buffer,
