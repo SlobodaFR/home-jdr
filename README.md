@@ -137,6 +137,12 @@ home-jdr : c'est la copie de celui de home-auth, que tous les services home-* re
 - `OFREP_ENDPOINT`, `OFREP_HEADERS` et `OFREP_TIMEOUT_MS`, que le provider lirait sinon, sont ignorés
   et retirés de l'environnement au démarrage (warn).
 
+### Flags utilisés
+
+| Clé                        | Défaut du code | Effet                                                                                                                                                                                                                                                                                                   |
+| -------------------------- | -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `auth-verify-token-claims` | `false`        | `true` : `JwksAccessTokenVerifier` vérifie aussi l'audience (`AUTH_CLIENT_ID`), l'émetteur (origine de `AUTH_SERVICE_URL`) et l'algorithme (`RS256`) des access tokens. `false` : seule la signature est vérifiée (comportement historique). Évalué à chaque vérification, sans bloquer (mémo de 30 s). |
+
 ## Structure du repo
 
 Voir `tasks/README.md` pour le découpage du travail en lots et leur ordre de
