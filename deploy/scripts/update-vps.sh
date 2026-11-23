@@ -10,7 +10,11 @@ export IMAGE
 export IMAGE_TAG
 
 docker compose pull
-docker compose up -d --remove-orphans
+# Convention harnais deploy-wait-healthy : `docker compose up -d --wait` (repli : boucle docker inspect) ; un conteneur
+# qui n'est pas sain après 180 s fait échouer le déploiement (logs, sauvegarde et restauration affichées), sans retour arrière automatique.
+sh "$DEPLOY_DIR/deploy/scripts/compose-up-healthy.sh" --service jdr \
+  --restore-args "--project jdr --volume jdr-data --mount /app/backend/data --db-path ${DATABASE_PATH:-/app/backend/data/jdr.sqlite}" \
+  -- --remove-orphans
 docker image prune -f
 
 if ! command -v caddy >/dev/null 2>&1; then
