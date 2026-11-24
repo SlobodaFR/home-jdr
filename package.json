@@ -46,5 +46,8 @@
     "*.{ts,tsx,js,mjs,json,md,yml,yaml,css,html}": [
       "oxfmt --no-error-on-unmatched-pattern"
     ]
+  },
+  "overrides": {
+    "multer": "2.5.0"
   }
 }
