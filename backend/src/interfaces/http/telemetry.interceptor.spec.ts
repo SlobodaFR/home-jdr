@@ -17,6 +17,7 @@ import { lastValueFrom, of } from 'rxjs';
 import request from 'supertest';
 import { FakeTelemetry } from '../../application/shared/fake-telemetry';
 import { Telemetry } from '../../domain/shared/telemetry';
+import { STATIC_EXCLUDE } from './static-exclude';
 import { TelemetryInterceptor } from './telemetry.interceptor';
 
 @Controller('sessions')
@@ -73,7 +74,7 @@ describe('HTTP telemetry', () => {
       imports: [
         ServeStaticModule.forRoot({
           rootPath: publicDir,
-          exclude: ['/api', '/api/{*path}', '/healthz', '/healthz/{*path}'],
+          exclude: STATIC_EXCLUDE,
         }),
       ],
       controllers: [SessionsController, HealthController],
