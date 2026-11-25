@@ -37,7 +37,7 @@ describe('SPA fallback exclusions (real ServeStatic setup)', () => {
     app = await NestFactory.create<NestExpressApplication>(TestAppModule, {
       logger: false,
     });
-    app.setGlobalPrefix('api', { exclude: ['healthz'] });
+    app.setGlobalPrefix('api', { exclude: ['healthz', 'healthz/{*path}'] });
     await app.init();
   });
 

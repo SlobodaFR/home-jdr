@@ -29,7 +29,7 @@ async function bootstrap() {
     app.set('trust proxy', trustProxyHops);
   }
   // /healthz stays at the root: internal only, blocked by Caddy (deploy/Caddyfile).
-  app.setGlobalPrefix('api', { exclude: ['healthz'] });
+  app.setGlobalPrefix('api', { exclude: ['healthz', 'healthz/{*path}'] });
   app.useGlobalPipes(new ValidationPipe({ whitelist: true, transform: true }));
   app.use(cookieParser());
   // No CORS: the SPA is served by this same app (same origin) and the Vite dev
