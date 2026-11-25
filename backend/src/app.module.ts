@@ -39,7 +39,7 @@ import { WorldMapModule } from './interfaces/http/modules/world-map.module';
     DatabaseModule,
     ServeStaticModule.forRoot({
       rootPath: join(__dirname, 'public'),
-      exclude: ['/api*', '/healthz*'],
+      exclude: ['/api', '/api/{*path}', '/healthz', '/healthz/{*path}'],
     }),
     AuthModule,
     CharacterModule,

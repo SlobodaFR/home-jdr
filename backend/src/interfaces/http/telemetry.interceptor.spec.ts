@@ -73,7 +73,7 @@ describe('HTTP telemetry', () => {
       imports: [
         ServeStaticModule.forRoot({
           rootPath: publicDir,
-          exclude: ['/api*', '/healthz*'],
+          exclude: ['/api', '/api/{*path}', '/healthz', '/healthz/{*path}'],
         }),
       ],
       controllers: [SessionsController, HealthController],

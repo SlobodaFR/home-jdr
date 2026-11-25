@@ -1,5 +1,5 @@
 import { ConfigService } from '@nestjs/config';
-import { Response } from 'express';
+import type { Response } from 'express';
 import { TokenPair } from '../../domain/auth/oauth-client';
 import {
   ACCESS_TOKEN_COOKIE_NAME,

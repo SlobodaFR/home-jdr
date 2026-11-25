@@ -1,5 +1,5 @@
 import { ArgumentsHost, Catch, ExceptionFilter } from '@nestjs/common';
-import { Response } from 'express';
+import type { Response } from 'express';
 import { QuotaExceededError } from '../../../domain/usage-quota/quota-exceeded.error';
 
 /**
