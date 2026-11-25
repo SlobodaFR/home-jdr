@@ -19,6 +19,10 @@ class FakeOAuthClient extends OAuthClient {
     throw new Error('not implemented');
   }
 
+  logoutUrl(): string {
+    throw new Error('not implemented');
+  }
+
   async exchangeCode(): Promise<TokenPair> {
     return this.tokens;
   }
