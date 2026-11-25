@@ -49,7 +49,7 @@ export function CreateCharacterPage() {
         name,
         schema,
       });
-      navigate(`/characters/${character.id}`);
+      void navigate(`/characters/${character.id}`);
     } catch {
       setError('La création du personnage a échoué.');
     } finally {

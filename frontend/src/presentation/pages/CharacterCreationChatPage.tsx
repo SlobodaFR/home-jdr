@@ -96,7 +96,7 @@ export function CharacterCreationChatPage() {
     setError(null);
     try {
       const result = await characterCreationApiClient.finalize(id);
-      navigate(`/sessions/${result.sessionPlayer.sessionId}`);
+      void navigate(`/sessions/${result.sessionPlayer.sessionId}`);
     } catch (err) {
       setError(
         err instanceof Error

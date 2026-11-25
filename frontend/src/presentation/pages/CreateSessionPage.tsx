@@ -55,7 +55,9 @@ export function CreateSessionPage() {
         name,
         charactersVisibleToOthers,
       });
-      navigate(`/character-creation/${session.characterCreationSessionId}`);
+      void navigate(
+        `/character-creation/${session.characterCreationSessionId}`,
+      );
     } catch (err) {
       setError(
         err instanceof Error
@@ -127,7 +129,7 @@ export function CreateSessionPage() {
           <ButtonPrimary type="submit" disabled={submitting}>
             {submitting ? 'Création...' : 'Créer la partie'}
           </ButtonPrimary>
-          <ButtonSecondary type="button" onClick={() => navigate('/')}>
+          <ButtonSecondary type="button" onClick={() => void navigate('/')}>
             Annuler
           </ButtonSecondary>
         </div>

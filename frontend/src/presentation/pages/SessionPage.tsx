@@ -240,7 +240,7 @@ export function SessionPage() {
     setError(null);
     try {
       await sessionApiClient.deleteSession(id);
-      navigate('/');
+      void navigate('/');
     } catch (err) {
       setError(
         err instanceof Error
@@ -262,7 +262,7 @@ export function SessionPage() {
     setError(null);
     try {
       await sessionApiClient.leaveSession(id);
-      navigate('/');
+      void navigate('/');
     } catch (err) {
       setError(
         err instanceof Error

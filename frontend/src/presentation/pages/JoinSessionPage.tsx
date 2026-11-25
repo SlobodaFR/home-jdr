@@ -36,7 +36,9 @@ export function JoinSessionPage() {
       const session = await sessionApiClient.join({
         inviteCode: inviteCode.trim(),
       });
-      navigate(`/character-creation/${session.characterCreationSessionId}`);
+      void navigate(
+        `/character-creation/${session.characterCreationSessionId}`,
+      );
     } catch (err) {
       setError(
         err instanceof Error
@@ -87,7 +89,7 @@ export function JoinSessionPage() {
           <ButtonPrimary type="submit" disabled={submitting}>
             {submitting ? 'Connexion...' : 'Rejoindre'}
           </ButtonPrimary>
-          <ButtonSecondary onClick={() => navigate('/')}>
+          <ButtonSecondary onClick={() => void navigate('/')}>
             Annuler
           </ButtonSecondary>
         </div>

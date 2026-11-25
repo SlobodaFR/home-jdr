@@ -73,10 +73,10 @@ export function HomePage() {
         <NotificationOnboardingBanner />
 
         <div className="flex gap-md flex-wrap">
-          <ButtonPrimary onClick={() => navigate('/sessions/new')}>
+          <ButtonPrimary onClick={() => void navigate('/sessions/new')}>
             Créer une partie
           </ButtonPrimary>
-          <ButtonSecondary onClick={() => navigate('/sessions/join')}>
+          <ButtonSecondary onClick={() => void navigate('/sessions/join')}>
             Rejoindre une partie
           </ButtonSecondary>
         </div>
@@ -111,7 +111,7 @@ export function HomePage() {
                       label={statusLabel(session.status)}
                     />
                   }
-                  onClick={() => navigate(`/sessions/${session.id}`)}
+                  onClick={() => void navigate(`/sessions/${session.id}`)}
                 />
               ))}
             </div>
