@@ -145,7 +145,9 @@ export function NotificationSettingsPage() {
         <p className="font-sans-body text-body-md text-danger">{error}</p>
       )}
 
-      <ButtonSecondary onClick={() => navigate('/')}>Retour</ButtonSecondary>
+      <ButtonSecondary onClick={() => void navigate('/')}>
+        Retour
+      </ButtonSecondary>
     </main>
   );
 }

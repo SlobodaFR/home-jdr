@@ -15,7 +15,7 @@ export function BackButton({ to, className }: BackButtonProps) {
     <IconCircularButton
       ariaLabel="Retour"
       className={className}
-      onClick={() => (to ? navigate(to) : navigate(-1))}
+      onClick={() => (to ? void navigate(to) : void navigate(-1))}
       icon={
         <svg
           width="20"
