@@ -37,7 +37,7 @@ describe('SPA fallback exclusions (real ServeStatic setup)', () => {
     app = await NestFactory.create<NestExpressApplication>(TestAppModule, {
       logger: false,
     });
-    app.setGlobalPrefix('api', { exclude: ['healthz'] });
+    app.setGlobalPrefix('api', { exclude: ['healthz', 'healthz/{*path}'] });
     await app.init();
   });
 
@@ -46,7 +46,7 @@ describe('SPA fallback exclusions (real ServeStatic setup)', () => {
     rmSync(publicDir, { recursive: true, force: true });
   });
 
-  it.each(['/api/nope', '/api'])(
+  it.each(['/api/nope', '/api', '/healthz/x'])(
     '%s answers 404 with JSON, not index.html',
     async (path) => {
       const res = await request(app.getHttpServer()).get(path).expect(404);
@@ -55,16 +55,6 @@ describe('SPA fallback exclusions (real ServeStatic setup)', () => {
       expect(res.text).not.toContain('spa');
     },
   );
-
-  // Nest 12 scopes its JSON 404 handler to the global prefix (and the exact excluded routes), so
-  // an unknown sub-path of /healthz gets Express's own 404. It must still never be the SPA.
-  it('/healthz/x answers 404, not index.html', async () => {
-    const res = await request(app.getHttpServer())
-      .get('/healthz/x')
-      .expect(404);
-
-    expect(res.text).not.toContain('spa');
-  });
 
   it('still serves the SPA for client-side routes', async () => {
     const res = await request(app.getHttpServer())
