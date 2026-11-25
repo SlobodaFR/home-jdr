@@ -173,7 +173,7 @@ export class AuthController {
 }
 
 function cookieValue(req: Request, name: string): string | undefined {
-  const value: unknown = req.cookies?.[name];
+  const value: unknown = req.cookies[name];
   return typeof value === 'string' && value !== '' ? value : undefined;
 }
 
