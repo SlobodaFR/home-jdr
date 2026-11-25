@@ -34,8 +34,19 @@ export const apiClient = {
     const body = (await response.json()) as { user: CurrentUser };
     return body.user;
   },
-  async logout(): Promise<void> {
-    await sendJson('/auth/logout', 'POST');
+  /**
+   * Local logout. `redirectTo` is home-auth's logout URL when the server runs the
+   * service-initiated flow (PC10), null for a local-only logout.
+   */
+  async logout(): Promise<{ redirectTo: string | null }> {
+    const response = await sendJson('/auth/logout', 'POST');
+    const body = (await response.json().catch(() => null)) as {
+      redirect_to?: unknown;
+    } | null;
+    return {
+      redirectTo:
+        typeof body?.redirect_to === 'string' ? body.redirect_to : null,
+    };
   },
   async fetchMyProfile(): Promise<UserProfile> {
     const response = await fetch(`${BASE_URL}/user-profiles/me`, {

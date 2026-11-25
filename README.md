@@ -206,6 +206,24 @@ home-jdr : c'est la copie de celui de home-auth, que tous les services home-* re
 | -------------------------------- | -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `auth-verify-token-claims`       | `false`        | `true` : `JwksAccessTokenVerifier` vérifie aussi l'audience (`AUTH_CLIENT_ID`), l'émetteur (origine de `AUTH_SERVICE_URL`) et l'algorithme (`RS256`) des access tokens. `false` : seule la signature est vérifiée (comportement historique). Évalué à chaque vérification, sans bloquer (mémo de 30 s). |
 | `auth-webhook-require-signature` | `false`        | `true` : `POST /api/auth/disconnect` n'accepte plus que la signature `X-Auth-Webhook-*` (l'ancien `?secret=` est refusé). `false` : signature valide ou ancien `?secret=`.                                                                                                                              |
+| `auth-rp-initiated-logout`       | `false`        | `true` : `POST /api/auth/logout` renvoie `{ redirect_to }` (URL de déconnexion de home-auth, PC10) que la SPA ouvre par navigation de premier niveau. `false` : déconnexion locale seule (`redirect_to: null`). Flag propre à jdr, distinct de celui de home-auth.                                      |
+
+### Déconnexion initiée par le service (PC10)
+
+Derrière `auth-rp-initiated-logout`. `POST /api/auth/logout` (même origine, `SameOriginGuard`) efface
+toujours `access_token` et `refresh_token` (home-auth ne révoque rien), puis, flag actif, pose le cookie
+`logout_state` (httpOnly, `SameSite=Lax`, `Path=/api/auth`, 10 min, `Secure` en production) et renvoie
+`{ redirect_to }` = `GET <AUTH_SERVICE_URL>/logout?client_id&post_logout_redirect_uri&state[&access_token_hint]`.
+Le hint est l'access token du cookie s'il est valide, sinon un access token obtenu par refresh (3 s max ;
+échec = pas de hint, donc écran de confirmation de home-auth, jamais un signal de déconnexion). Le
+`post_logout_redirect_uri` est `FRONTEND_URL/api/auth/logged-out` (même origine que la redirectUri
+enregistrée). `GET /api/auth/logged-out?state=` compare le `state` au cookie (état absent, répété ou
+différent : `/login` sans bandeau), efface le cookie et redirige vers `/login?logged_out=1` (bandeau
+« Vous avez été déconnecté. », jamais d'`/authorize` automatique). Réponses en `Cache-Control: no-store`.
+
+Ordre d'activation : activer d'abord le flag dans home-auth, puis celui de jdr. Retour arrière : désactiver
+jdr d'abord (ou `FEATURES_PIN_AUTH_RP_INITIATED_LOGOUT=false` + redémarrage). Jdr actif alors que home-auth
+est inactif : l'utilisateur est déconnecté de jdr puis arrive sur un `404` JSON de home-auth.
 
 ## Structure du repo
 
