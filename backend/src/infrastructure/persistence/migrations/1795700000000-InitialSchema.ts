@@ -10,7 +10,7 @@ import { MigrationInterface, QueryRunner } from 'typeorm';
  * is byte-identical to a synchronize-built database.
  *
  * Only ever use the `queryRunner` passed in (never `dataSource.query`): migrations run on the
- * serialized connection. There is deliberately no CLI data source: `down()` drops the data.
+ * serialized connection. There is deliberately no CLI data source, and `down()` refuses to run: it would drop the data.
  */
 export class InitialSchema1795700000000 implements MigrationInterface {
   name = 'InitialSchema1795700000000';
@@ -108,24 +108,10 @@ export class InitialSchema1795700000000 implements MigrationInterface {
     );
   }
 
-  async down(queryRunner: QueryRunner): Promise<void> {
-    await queryRunner.query(`DROP TABLE IF EXISTS "app_settings"`);
-    await queryRunner.query(
-      `DROP TABLE IF EXISTS "character_creation_sessions"`,
+  // Reverting the baseline would drop every table, and the data with them.
+  down(): Promise<void> {
+    return Promise.reject(
+      new Error('baseline migration: revert not supported, restore a backup'),
     );
-    await queryRunner.query(`DROP TABLE IF EXISTS "characters"`);
-    await queryRunner.query(`DROP TABLE IF EXISTS "game_sessions"`);
-    await queryRunner.query(`DROP TABLE IF EXISTS "game_systems"`);
-    await queryRunner.query(`DROP TABLE IF EXISTS "llm_usage_records"`);
-    await queryRunner.query(`DROP TABLE IF EXISTS "map_pins"`);
-    await queryRunner.query(`DROP TABLE IF EXISTS "pending_character_deltas"`);
-    await queryRunner.query(`DROP TABLE IF EXISTS "push_subscriptions"`);
-    await queryRunner.query(`DROP TABLE IF EXISTS "revoked_sessions"`);
-    await queryRunner.query(`DROP TABLE IF EXISTS "session_players"`);
-    await queryRunner.query(`DROP TABLE IF EXISTS "turn_resolutions"`);
-    await queryRunner.query(`DROP TABLE IF EXISTS "turn_submissions"`);
-    await queryRunner.query(`DROP TABLE IF EXISTS "user_profiles"`);
-    await queryRunner.query(`DROP TABLE IF EXISTS "users"`);
-    await queryRunner.query(`DROP TABLE IF EXISTS "world_maps"`);
   }
 }

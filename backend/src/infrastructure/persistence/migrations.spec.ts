@@ -191,6 +191,24 @@ describe('database migrations', () => {
     await ds.destroy();
   });
 
+  // A mistaken `migration:revert` must not wipe production: the baseline refuses.
+  it('refuse to revert the baseline migration and keep the data', async () => {
+    const ds = dataSource(':memory:');
+    await ds.initialize();
+    await ds.runMigrations();
+    for (const sql of await sampleRows(ds)) await ds.query(sql);
+    const rowsBefore = await dumpRows(ds);
+    const tablesBefore = await tablesOf(ds);
+
+    await expect(ds.undoLastMigration()).rejects.toThrow(
+      /baseline migration: revert not supported, restore a backup/,
+    );
+
+    expect(await tablesOf(ds)).toEqual(tablesBefore);
+    expect(await dumpRows(ds)).toEqual(rowsBefore);
+    await ds.destroy();
+  });
+
   // forFeature() with an entity missing from ENTITIES would fail at boot with "No metadata".
   it('list every @Entity file of the entities folder in ENTITIES', async () => {
     const dir = join(__dirname, 'entities');
