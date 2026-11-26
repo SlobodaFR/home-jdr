@@ -4,7 +4,6 @@ import { ConfigModule } from '@nestjs/config';
 import { APP_GUARD } from '@nestjs/core';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import { Test } from '@nestjs/testing';
-import { TypeOrmModule } from '@nestjs/typeorm';
 import request from 'supertest';
 import { nestApplicationOptions } from '../../nest-application-options';
 import { RevokedSessionRepository } from '../../domain/auth/revoked-session.repository';
@@ -14,6 +13,7 @@ import { RevokedSessionOrmEntity } from '../../infrastructure/persistence/entiti
 import { UserOrmEntity } from '../../infrastructure/persistence/entities/user.orm-entity';
 import { SameOriginGuard } from './guards/same-origin.guard';
 import { AuthModule } from './modules/auth.module';
+import { serializedTypeOrmRoot } from '../../test-support/serialized-typeorm';
 
 const SIGNING_SECRET =
   '000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f';
@@ -51,7 +51,7 @@ describe('signed logout webhook (AuthModule behind the global SameOriginGuard, i
             }),
           ],
         }),
-        TypeOrmModule.forRoot({
+        serializedTypeOrmRoot({
           type: 'better-sqlite3',
           database: ':memory:',
           entities: [UserOrmEntity, RevokedSessionOrmEntity],

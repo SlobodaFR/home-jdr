@@ -1,7 +1,6 @@
 import { INestApplication, ValidationPipe } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { Test } from '@nestjs/testing';
-import { TypeOrmModule } from '@nestjs/typeorm';
 import request from 'supertest';
 import { InMemoryImageGenerationPort } from '../../../application/world-map/in-memory-image-generation.port';
 import { InMemoryObjectStoragePort } from '../../../application/world-map/in-memory-object-storage.port';
@@ -20,6 +19,7 @@ import { SessionPlayerOrmEntity } from '../../../infrastructure/persistence/enti
 import { WorldMapOrmEntity } from '../../../infrastructure/persistence/entities/world-map.orm-entity';
 import { WorldMapModule } from '../modules/world-map.module';
 import { CurrentUserPayload } from '../decorators/current-user.decorator';
+import { serializedTypeOrmRoot } from '../../../test-support/serialized-typeorm';
 
 interface TestUser {
   id: string;
@@ -58,7 +58,7 @@ describe('WorldMapController (integration)', () => {
     const moduleRef = await Test.createTestingModule({
       imports: [
         ConfigModule.forRoot({ isGlobal: true, ignoreEnvFile: true }),
-        TypeOrmModule.forRoot({
+        serializedTypeOrmRoot({
           type: 'better-sqlite3',
           database: ':memory:',
           dropSchema: true,

@@ -1,7 +1,6 @@
 import { INestApplication, ValidationPipe } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { Test } from '@nestjs/testing';
-import { TypeOrmModule } from '@nestjs/typeorm';
 import request from 'supertest';
 import { PdfTextExtractorPort } from '../../../domain/game-system/pdf-text-extractor';
 import { GameSession } from '../../../domain/session/game-session';
@@ -12,6 +11,7 @@ import { SessionPlayerOrmEntity } from '../../../infrastructure/persistence/enti
 import { UserProfileOrmEntity } from '../../../infrastructure/persistence/entities/user-profile.orm-entity';
 import { GameSystemModule } from '../modules/game-system.module';
 import { CurrentUserPayload } from '../decorators/current-user.decorator';
+import { serializedTypeOrmRoot } from '../../../test-support/serialized-typeorm';
 
 // The real PdfParseTextExtractor (infrastructure/game-system/pdf-parse-text-extractor.ts)
 // wraps the third-party `pdf-parse` library - consistent with this repo's
@@ -80,7 +80,7 @@ describe('GameSystemController (integration)', () => {
           ignoreEnvFile: true,
           load: [() => ({ ADMIN_EMAILS: 'admin@test.dev' })],
         }),
-        TypeOrmModule.forRoot({
+        serializedTypeOrmRoot({
           type: 'better-sqlite3',
           database: ':memory:',
           dropSchema: true,

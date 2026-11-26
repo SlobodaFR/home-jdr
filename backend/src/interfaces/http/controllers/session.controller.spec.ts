@@ -2,7 +2,6 @@ import { INestApplication, ValidationPipe } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { Test } from '@nestjs/testing';
-import { TypeOrmModule } from '@nestjs/typeorm';
 import request from 'supertest';
 import { CharacterStateDelta } from '../../../domain/character/character-state-delta';
 import { GameSystem } from '../../../domain/game-system/game-system';
@@ -32,6 +31,7 @@ import { WorldMapOrmEntity } from '../../../infrastructure/persistence/entities/
 import { CharacterCreationModule } from '../modules/character-creation.module';
 import { SessionModule } from '../modules/session.module';
 import { CurrentUserPayload } from '../decorators/current-user.decorator';
+import { serializedTypeOrmRoot } from '../../../test-support/serialized-typeorm';
 
 /**
  * `04-llm-orchestration` wires `SceneResolverPort` to the real
@@ -135,7 +135,7 @@ describe('SessionController (integration)', () => {
         // SubmitTurnActionUseCase emits a TurnResolvedEvent on resolution
         // (see 06-notifications-push.md) - needs the event bus available.
         EventEmitterModule.forRoot(),
-        TypeOrmModule.forRoot({
+        serializedTypeOrmRoot({
           type: 'better-sqlite3',
           database: ':memory:',
           dropSchema: true,

@@ -1,7 +1,6 @@
 import { INestApplication, ValidationPipe } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { Test } from '@nestjs/testing';
-import { TypeOrmModule } from '@nestjs/typeorm';
 import request from 'supertest';
 import { Character } from '../../../domain/character/character';
 import { CharacterRepository } from '../../../domain/character/character.repository';
@@ -18,6 +17,7 @@ import { SessionPlayerOrmEntity } from '../../../infrastructure/persistence/enti
 import { UserProfileOrmEntity } from '../../../infrastructure/persistence/entities/user-profile.orm-entity';
 import { AdminSessionsModule } from '../modules/admin-sessions.module';
 import { CurrentUserPayload } from '../decorators/current-user.decorator';
+import { serializedTypeOrmRoot } from '../../../test-support/serialized-typeorm';
 
 const ADMIN_USER: CurrentUserPayload = {
   id: 'admin-1',
@@ -92,7 +92,7 @@ describe('AdminSessionsController (integration)', () => {
           ignoreEnvFile: true,
           load: [() => ({ ADMIN_EMAILS: 'admin@test.dev' })],
         }),
-        TypeOrmModule.forRoot({
+        serializedTypeOrmRoot({
           type: 'better-sqlite3',
           database: ':memory:',
           dropSchema: true,
