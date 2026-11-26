@@ -1,8 +1,9 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { RevokedSessionOrmEntity } from './entities/revoked-session.orm-entity';
-import { UserOrmEntity } from './entities/user.orm-entity';
+import { ENTITIES } from './entities';
+import { MIGRATIONS } from './migrations';
+import { SchemaGuard } from './schema-guard';
 import { serializedDataSourceFactory } from './serialized-connection';
 
 @Module({
@@ -15,14 +16,18 @@ import { serializedDataSourceFactory } from './serialized-connection';
         database: config.get<string>('DATABASE_PATH', 'data/jdr.sqlite'),
         // WAL mode is required for Litestream replication.
         enableWAL: true,
-        entities: [UserOrmEntity, RevokedSessionOrmEntity],
-        synchronize: true,
-        autoLoadEntities: true,
+        entities: ENTITIES,
+        // Schema changes only through reviewed migrations: synchronize could rebuild a SQLite
+        // table and drop data, which Litestream would then replicate.
+        synchronize: false,
+        migrations: MIGRATIONS,
+        migrationsRun: true,
       }),
-      // Before initialize(): schema sync already runs on the serialized connection
+      // Before initialize(): migrations already run on the serialized connection
       // (convention sqlite-serialized-transactions).
       dataSourceFactory: serializedDataSourceFactory,
     }),
   ],
+  providers: [SchemaGuard],
 })
 export class DatabaseModule {}
