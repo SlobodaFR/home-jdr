@@ -1,12 +1,12 @@
 import { INestApplication, ValidationPipe } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { Test } from '@nestjs/testing';
-import { TypeOrmModule } from '@nestjs/typeorm';
 import request from 'supertest';
 import { PushNotificationPort } from '../../../domain/push-subscription/push-notification.port';
 import { PushSubscriptionOrmEntity } from '../../../infrastructure/persistence/entities/push-subscription.orm-entity';
 import { PushSubscriptionModule } from '../modules/push-subscription.module';
 import { CurrentUserPayload } from '../decorators/current-user.decorator';
+import { serializedTypeOrmRoot } from '../../../test-support/serialized-typeorm';
 
 // WebPushAdapter wraps the third-party `web-push` library and needs real
 // VAPID keys to do anything - swapped for a no-op fake here so this suite
@@ -47,7 +47,7 @@ describe('PushSubscriptionController (integration)', () => {
           ignoreEnvFile: true,
           load: [() => ({ VAPID_PUBLIC_KEY: 'test-vapid-public-key' })],
         }),
-        TypeOrmModule.forRoot({
+        serializedTypeOrmRoot({
           type: 'better-sqlite3',
           database: ':memory:',
           dropSchema: true,

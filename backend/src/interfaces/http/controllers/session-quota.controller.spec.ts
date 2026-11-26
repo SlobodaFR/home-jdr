@@ -2,7 +2,6 @@ import { INestApplication, ValidationPipe } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { Test } from '@nestjs/testing';
-import { TypeOrmModule } from '@nestjs/typeorm';
 import request from 'supertest';
 import { Character } from '../../../domain/character/character';
 import { CharacterRepository } from '../../../domain/character/character.repository';
@@ -31,6 +30,7 @@ import { TurnSubmissionOrmEntity } from '../../../infrastructure/persistence/ent
 import { UserProfileOrmEntity } from '../../../infrastructure/persistence/entities/user-profile.orm-entity';
 import { SessionModule } from '../modules/session.module';
 import { CurrentUserPayload } from '../decorators/current-user.decorator';
+import { serializedTypeOrmRoot } from '../../../test-support/serialized-typeorm';
 
 /**
  * Records every `resolveScene()` call so the "no LLM call consumed when
@@ -116,7 +116,7 @@ describe('SessionController - quota guard-rail (integration)', () => {
           load: [() => ({ DAILY_LLM_QUOTA: '1' })],
         }),
         EventEmitterModule.forRoot(),
-        TypeOrmModule.forRoot({
+        serializedTypeOrmRoot({
           type: 'better-sqlite3',
           database: ':memory:',
           dropSchema: true,

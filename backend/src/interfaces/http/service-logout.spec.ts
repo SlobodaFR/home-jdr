@@ -3,7 +3,6 @@ import { ConfigModule } from '@nestjs/config';
 import { APP_GUARD } from '@nestjs/core';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import { Test } from '@nestjs/testing';
-import { TypeOrmModule } from '@nestjs/typeorm';
 import cookieParser from 'cookie-parser';
 import request from 'supertest';
 import { AccessTokenVerifier } from '../../domain/auth/access-token-verifier';
@@ -14,6 +13,7 @@ import { UserOrmEntity } from '../../infrastructure/persistence/entities/user.or
 import { nestApplicationOptions } from '../../nest-application-options';
 import { SameOriginGuard } from './guards/same-origin.guard';
 import { AuthModule } from './modules/auth.module';
+import { serializedTypeOrmRoot } from '../../test-support/serialized-typeorm';
 
 const FRONTEND = 'https://jdr.example.test';
 const AUTH = 'https://auth.example.test';
@@ -53,7 +53,7 @@ describe('service-initiated logout (PC10): POST /auth/logout and GET /auth/logge
             }),
           ],
         }),
-        TypeOrmModule.forRoot({
+        serializedTypeOrmRoot({
           type: 'better-sqlite3',
           database: ':memory:',
           entities: [UserOrmEntity, RevokedSessionOrmEntity],

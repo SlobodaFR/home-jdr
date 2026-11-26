@@ -1,7 +1,6 @@
 import { INestApplication, ValidationPipe } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { Test } from '@nestjs/testing';
-import { TypeOrmModule } from '@nestjs/typeorm';
 import request from 'supertest';
 import { ClockPort } from '../../../domain/shared/clock.port';
 import { LlmUsageRecordRepository } from '../../../domain/usage-quota/llm-usage-record.repository';
@@ -11,6 +10,7 @@ import { LlmUsageRecordOrmEntity } from '../../../infrastructure/persistence/ent
 import { UserProfileOrmEntity } from '../../../infrastructure/persistence/entities/user-profile.orm-entity';
 import { UsageQuotaModule } from '../modules/usage-quota.module';
 import { CurrentUserPayload } from '../decorators/current-user.decorator';
+import { serializedTypeOrmRoot } from '../../../test-support/serialized-typeorm';
 
 /** Deterministic stand-in for `SystemClockAdapter`, so "today" is stable across the suite. */
 class FixedClockAdapter extends ClockPort {
@@ -53,7 +53,7 @@ describe('AdminUsageController (integration)', () => {
             () => ({ ADMIN_EMAILS: 'admin@test.dev', DAILY_LLM_QUOTA: '10' }),
           ],
         }),
-        TypeOrmModule.forRoot({
+        serializedTypeOrmRoot({
           type: 'better-sqlite3',
           database: ':memory:',
           dropSchema: true,
