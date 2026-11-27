@@ -14,6 +14,8 @@ import { routeOf } from './route-of';
 const UNREPORTED_ROUTES = new Set([
   // Docker healthcheck, every 30 s.
   '/healthz',
+  // Public release identity (convention harnais release-versioning): no auth, one event per call would be a cost amplifier.
+  '/version',
   // The session screen polls the session state every 3.5 s while open (SessionPage POLL_INTERVAL_MS).
   '/api/sessions/:id/state',
 ]);

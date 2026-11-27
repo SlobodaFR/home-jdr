@@ -49,6 +49,14 @@ class SessionsController {
   }
 }
 
+@Controller('version')
+class VersionController {
+  @Get()
+  version(): string {
+    return 'ok';
+  }
+}
+
 @Controller('healthz')
 class HealthController {
   @Get()
@@ -77,7 +85,7 @@ describe('HTTP telemetry', () => {
           exclude: STATIC_EXCLUDE,
         }),
       ],
-      controllers: [SessionsController, HealthController],
+      controllers: [SessionsController, HealthController, VersionController],
       providers: [
         { provide: Telemetry, useValue: telemetry },
         { provide: APP_INTERCEPTOR, useClass: TelemetryInterceptor },
@@ -88,7 +96,7 @@ describe('HTTP telemetry', () => {
       logger: false,
     });
     // Same prefix setup as main.ts.
-    app.setGlobalPrefix('api', { exclude: ['healthz'] });
+    app.setGlobalPrefix('api', { exclude: ['healthz', 'version'] });
     await app.init();
   });
 
@@ -143,6 +151,12 @@ describe('HTTP telemetry', () => {
 
   it('does not report /healthz (polled by Docker)', async () => {
     await request(app.getHttpServer()).get('/healthz').expect(200);
+
+    expect(telemetry.captured).toEqual([]);
+  });
+
+  it('does not report /version (public release identity, cost amplifier)', async () => {
+    await request(app.getHttpServer()).get('/version').expect(200);
 
     expect(telemetry.captured).toEqual([]);
   });
