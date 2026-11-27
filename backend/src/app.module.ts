@@ -11,6 +11,7 @@ import { FeatureFlagsModule } from './infrastructure/feature-flags/feature-flags
 import { loggerParams } from './infrastructure/logging/logger.config';
 import { STATIC_EXCLUDE } from './interfaces/http/static-exclude';
 import { HealthController } from './interfaces/http/controllers/health.controller';
+import { VersionController } from './interfaces/http/controllers/version.controller';
 import { TelemetryModule } from './infrastructure/telemetry/telemetry.module';
 import { DatabaseModule } from './infrastructure/persistence/database.module';
 import { SameOriginGuard } from './interfaces/http/guards/same-origin.guard';
@@ -53,7 +54,7 @@ import { WorldMapModule } from './interfaces/http/modules/world-map.module';
     UsageQuotaModule,
     AdminSessionsModule,
   ],
-  controllers: [HealthController],
+  controllers: [HealthController, VersionController],
   providers: [
     // Attaches the real exception to the request log (serialized through the whitelist).
     { provide: APP_INTERCEPTOR, useClass: LoggerErrorInterceptor },

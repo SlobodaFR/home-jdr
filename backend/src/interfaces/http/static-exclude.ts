@@ -7,4 +7,6 @@ export const STATIC_EXCLUDE = [
   '/api/{*path}',
   '/healthz',
   '/healthz/{*path}',
+  '/version',
+  '/version/{*path}',
 ];

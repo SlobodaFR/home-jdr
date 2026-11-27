@@ -28,7 +28,12 @@ describe('GET /healthz', () => {
       .get('/healthz')
       .expect(200);
 
-    expect(response.body).toEqual({ status: 'ok', runtime: null });
+    expect(response.body).toEqual({
+      status: 'ok',
+      version: 'dev',
+      commit: 'dev',
+      runtime: null,
+    });
   });
 
   it('exposes the last runtime sample', async () => {
@@ -46,6 +51,11 @@ describe('GET /healthz', () => {
       .get('/healthz')
       .expect(200);
 
-    expect(response.body).toEqual({ status: 'ok', runtime: sample });
+    expect(response.body).toEqual({
+      status: 'ok',
+      version: 'dev',
+      commit: 'dev',
+      runtime: sample,
+    });
   });
 });
